@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ProductForm from '../components/ProductForm';
-import { useUserContext } from '../context/UserContext'; // Correct import
+import ProductForm from '../components/ProductForm'; // Import ProductForm
+import { useUserContext } from '../context/UserContext';
 import logo from '../assets/wf-icon.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setUserEmail, setEventTypes, setAccounts, setSelectedAccount } = useUserContext(); // Correct usage
+  const { setUserEmail, setEventTypes, setAccounts } = useUserContext(); // Removed setSelectedAccount
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -15,33 +15,22 @@ const Login = () => {
     console.log('Email:', email);
     console.log('Password:', password);
 
-    // Mock successful login response
-    const loginSuccessful = true;
-
-    if (loginSuccessful) {
+    if (email) {
       setUserEmail(email);
 
-      // Fetch eventTypes data from server
-      const eventTypesResponse = await fetch('/api/eventTypes');
-      const eventTypesData = await eventTypesResponse.json();
-      setEventTypes(eventTypesData);
-      localStorage.setItem('eventTypes', JSON.stringify(eventTypesData));
+      // Simulate fetching eventTypes and accounts data from the server
+      const eventTypesData = []; // Dummy data for now
+      const accountsData = []; // Dummy data for now
 
-      // Fetch accounts data from server
-      const accountsResponse = await fetch(`/api/accounts?email=${email}`);
-      const accountsData = await accountsResponse.json();
+      setEventTypes(eventTypesData);
       setAccounts(accountsData);
 
-      // Default to the first account if there's only one
-      if (accountsData.length === 1) {
-        setSelectedAccount(accountsData[0]);
-      }
+      localStorage.setItem('eventTypes', JSON.stringify(eventTypesData));
 
-      console.log('Event Types Loaded:', eventTypesData);
-      console.log('Accounts Loaded:', accountsData);
-
-      // Navigate to the main page
-      navigate('/main');
+      console.log('Navigating to /admin'); // Log navigation
+      navigate('/admin'); // Navigate to Admin page
+    } else {
+      alert('Please enter a valid email address.');
     }
   };
 
@@ -74,7 +63,9 @@ const Login = () => {
             required
           />
         </div>
-        <button type="submit" className="w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Login</button>
+        <button type="submit" className="w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+          Login
+        </button>
       </ProductForm>
     </div>
   );
