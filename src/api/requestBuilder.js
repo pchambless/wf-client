@@ -1,10 +1,6 @@
-// src/api/requestBuilder.js
-import { fetchEventTypes } from './eventTypes';
-import useLogger from '../hooks/useLogger';
+import { fetchEventTypes } from '../api/api';
 
-const buildRequestBody = async (eventType, clientParams, fileName = 'requestBuilder.js') => {
-  const log = useLogger(fileName);
-
+const buildRequestBody = async (eventType, clientParams, log) => {
   try {
     log(`Fetching event types for eventType: ${eventType}`);
     const eventTypesData = await fetchEventTypes();

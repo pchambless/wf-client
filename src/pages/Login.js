@@ -3,34 +3,55 @@ import { useNavigate } from 'react-router-dom';
 import ProductForm from '../components/ProductForm'; // Import ProductForm
 import { useUserContext } from '../context/UserContext';
 import logo from '../assets/wf-icon.png';
+import useLogger from '../hooks/useLogger';
+import { login, fetchEventTypes, execEventType } from '../api/api'; // Ensure correct import path
+import buildRequestBody from '../api/requestBuilder';
 
 const Login = () => {
+  const fileName = '[Login] ';
+  const log = useLogger(fileName);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setUserEmail, setEventTypes, setAccounts } = useUserContext(); // Removed setSelectedAccount
+  const { setUserEmail, setEventTypes, setAccounts } = useUserContext();
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Email:', email);
-    console.log('Password:', password);
+    log('Login attempt started');
+    log(`Email: ${email}`);
+    log(`Password: ${password}`);
 
-    if (email) {
+    if (!email || !password) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    try {
+      await login(email, password);  // Removed message and userId
+
       setUserEmail(email);
+      log('User logged in successfully');
 
-      // Simulate fetching eventTypes and accounts data from the server
-      const eventTypesData = []; // Dummy data for now
-      const accountsData = []; // Dummy data for now
-
+      // Fetch event types
+      log('Fetching event types');
+      const eventTypesData = await fetchEventTypes();
       setEventTypes(eventTypesData);
-      setAccounts(accountsData);
-
       localStorage.setItem('eventTypes', JSON.stringify(eventTypesData));
+      log('Event types set successfully');
 
-      console.log('Navigating to /admin'); // Log navigation
-      navigate('/admin'); // Navigate to Admin page
-    } else {
-      alert('Please enter a valid email address.');
+      // Fetch user accounts
+      log(`Fetching user accounts for email: ${email}`);
+      const clientParams = { userEmail: email };
+      const requestBody = await buildRequestBody('userAccts', clientParams, log);
+      const accountsData = await execEventType(requestBody.eventType, requestBody.params);
+      setAccounts(accountsData);
+      log('User accounts set successfully');
+
+      log('Navigating to /main');
+      navigate('/main');
+    } catch (error) {
+      log(`Login failed: ${error.message}`);
+      alert('Login failed. Please try again.');
     }
   };
 

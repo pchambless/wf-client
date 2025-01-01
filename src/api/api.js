@@ -1,7 +1,17 @@
-// src/services/api.js
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:3001/api';
+
+// Function to fetch event types
+export const fetchEventTypes = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/util/fetchEventTypes`);
+    return response.data.eventTypes;
+  } catch (error) {
+    console.error('Error fetching event types:', error);
+    throw error;
+  }
+};
 
 // Function to login the user
 export const login = async (userEmail, password) => {
