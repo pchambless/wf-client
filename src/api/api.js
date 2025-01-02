@@ -14,18 +14,31 @@ export const fetchEventTypes = async () => {
 };
 
 // Function to login the user
-export const login = async (userEmail, password) => {
+// api.js
+export const login = async (email, password) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/auth/login`, {
-      userEmail,
-      password
+    const response = await fetch(`http://localhost:3001/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ userEmail: email, password })
     });
-    return response.data;
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Login response data:', data);
+    return data;
   } catch (error) {
-    console.error('Error during login:', error);
+    console.error('Login error:', error);
     throw error;
   }
 };
+
+
 
 // Generic function to execute an event type
 export const execEventType = async (eventType, params) => {

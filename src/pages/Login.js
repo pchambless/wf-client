@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ProductForm from '../components/ProductForm'; // Import ProductForm
+import ProductForm from '../components/ProductForm';
 import { useUserContext } from '../context/UserContext';
 import logo from '../assets/wf-icon.png';
 import useLogger from '../hooks/useLogger';
-import { login, fetchEventTypes, execEventType } from '../api/api'; // Ensure correct import path
+import { login, fetchEventTypes, execEventType } from '../api/api';
 import buildRequestBody from '../api/requestBuilder';
 
 const Login = () => {
   const fileName = '[Login] ';
-  const log = useLogger(fileName);
+  const logAndTime = useLogger(fileName); // Pass fileName to useLogger
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { setUserEmail, setEventTypes, setAccounts } = useUserContext();
@@ -17,9 +17,9 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    log('Login attempt started');
-    log(`Email: ${email}`);
-    log(`Password: ${password}`);
+    logAndTime('Login attempt started');
+    logAndTime(`Email: ${email}`);
+    logAndTime(`Password: ${password}`);
 
     if (!email || !password) {
       alert('Please fill in all fields.');
@@ -27,31 +27,35 @@ const Login = () => {
     }
 
     try {
-      await login(email, password);  // Removed message and userId
+      logAndTime('Sending login request...');
+      const response = await login(email, password);
+      logAndTime('Login response:', response);
+
+      if (!response) {
+        throw new Error('Login failed');
+      }
 
       setUserEmail(email);
-      log('User logged in successfully');
+      logAndTime('User logged in successfully');
 
-      // Fetch event types
-      log('Fetching event types');
+      logAndTime('Fetching event types');
       const eventTypesData = await fetchEventTypes();
       setEventTypes(eventTypesData);
       localStorage.setItem('eventTypes', JSON.stringify(eventTypesData));
-      log('Event types set successfully');
+      logAndTime('Event types set successfully');
 
-      // Fetch user accounts
-      log(`Fetching user accounts for email: ${email}`);
+      logAndTime(`Fetching user accounts for email: ${email}`);
       const clientParams = { userEmail: email };
-      const requestBody = await buildRequestBody('userAccts', clientParams, log);
+      const requestBody = await buildRequestBody('userAccts', clientParams, logAndTime);
       const accountsData = await execEventType(requestBody.eventType, requestBody.params);
       setAccounts(accountsData);
-      log('User accounts set successfully');
+      logAndTime('User accounts set successfully');
 
-      log('Navigating to /main');
+      logAndTime('Navigating to /main');
       navigate('/main');
     } catch (error) {
-      log(`Login failed: ${error.message}`);
-      alert('Login failed. Please try again.');
+      logAndTime(`Login failed: ${error.message}`);
+      alert(fileName , ' Login failed. Please try again.');
     }
   };
 
