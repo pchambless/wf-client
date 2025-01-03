@@ -5,19 +5,22 @@ import DynamicForm from '../../components/DynamicForm';
 import { usePageContext } from '../../context/PageContext';
 import { useVariableContext } from '../../context/VariableContext';
 
+const pageTitle = 'Ingredient Types';
+const fileName = 'IngrType: ';
+
 const IngrType = () => {
   const [ingrTypeList, setIngrTypeList] = useState([]);
   const [eventParams, setEventParams] = useState([]);
   const [formData, setFormData] = useState({});
-  const { fetchTableList, fetchFormColumns } = usePageContext();
+  const [formMode, setFormMode] = useState('add');
+  const { fetchTableList, fetchFormColumns, setPageTitle } = usePageContext();
   const { variables, setVariable } = useVariableContext();
-  const fileName = 'IngrType: ';
 
   // Define a mapping between table columns and form fields along with labels
   const columnToFormFieldMapping = {
     name: { field: 'ingrTypeName', label: 'Ingredient Type Name' },
     description: { field: 'ingrTypeDesc', label: 'Description' },
-    // Add other mappings as needed
+    // Add other mappings as needed, excluding ingrTypeID
   };
 
   // Extract field names and labels for DynamicForm
@@ -25,7 +28,10 @@ const IngrType = () => {
     Object.values(columnToFormFieldMapping).map(({ field, label }) => [field, label])
   );
 
-  // Fetch table data
+  useEffect(() => {
+    setPageTitle(pageTitle);
+  }, [setPageTitle]);
+
   useEffect(() => {
     const fetchTableData = async () => {
       if (variables.acctID) {
@@ -43,49 +49,64 @@ const IngrType = () => {
     fetchTableData();
   }, [variables.acctID, fetchTableList]);
 
-  // Fetch form columns
   useEffect(() => {
-    try {
-      const params = fetchFormColumns('ingrTypeEdit');
-      console.log(fileName, 'Fetched form columns:', params);
-      setEventParams(params);
-    } catch (error) {
-      console.error(fileName, 'Error fetching form columns:', error);
-    }
+    const fetchFormParams = async () => {
+      try {
+        const params = await fetchFormColumns('ingrTypeEdit');
+        console.log(fileName, 'Fetched form columns:', params);
+        setEventParams(params.filter(param => param !== ':ingrTypeID')); // Filter out ingrTypeID
+      } catch (error) {
+        console.error(fileName, 'Error fetching form columns:', error);
+      }
+    };
+
+    fetchFormParams();
   }, [fetchFormColumns]);
 
   const handleRowClick = (row) => {
     console.log(fileName, 'Row clicked:', row);
     setVariable('ingrTypeID', row.id);
+    setFormMode('edit');
 
-    // Populate formData based on the mapping
+    // Populate formData based on the mapping, excluding ingrTypeID
     const updatedFormData = {};
     for (const [column, { field }] of Object.entries(columnToFormFieldMapping)) {
       updatedFormData[field] = row[column];
     }
+    console.log(fileName, 'Updated form data:', updatedFormData);
     setFormData(updatedFormData);
   };
 
   const handleFormSubmit = async (submittedData) => {
     console.log(fileName, 'Form submitted:', submittedData);
-    submittedData['ingrTypeID'] = variables.ingrTypeID;
+    submittedData['ingrTypeID'] = variables.ingrTypeID; // Keep ingrTypeID in the submission data
 
     try {
       await fetchTableList('ingrTypeEdit', submittedData);
       console.log(fileName, 'Update successful');
-      // Optionally refetch the table list to reflect changes
       const data = await fetchTableList('ingrTypeList', { acctID: variables.acctID });
       setIngrTypeList(data);
+      setFormMode('add');
+      setFormData({});
     } catch (error) {
       console.error(fileName, 'Error updating ingredient type:', error);
     }
+  };
+
+  const handleAddNewClick = () => {
+    setFormMode('add');
+    setFormData({});
   };
 
   return (
     <Container>
       <div className="flex flex-row w-full">
         <div className="w-1/2">
-          <Table data={ingrTypeList} onRowClick={handleRowClick} />
+          <Table 
+            data={ingrTypeList} 
+            onRowClick={handleRowClick}
+            onAddNewClick={handleAddNewClick}
+          />
         </div>
         <div className="w-1/2 p-4">
           <DynamicForm
@@ -93,6 +114,7 @@ const IngrType = () => {
             onSubmit={handleFormSubmit}
             initialData={formData}
             fieldLabelMapping={fieldLabelMapping}
+            mode={formMode}
           />
         </div>
       </div>

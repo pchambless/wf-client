@@ -6,12 +6,15 @@ import { useVariableContext } from '../context/VariableContext'; // Import Varia
 import logo from '../assets/wf-icon.png';
 import { useNavigate } from 'react-router-dom';
 import AppNav from '../components/AppNav';
+import { usePageContext } from '../context/PageContext'; // Import usePageContext
+import '../styles/tailwind.css';
 
 const PageHeader = () => {
   const fileName = 'PageHeader: ';
   const { setUserEmail, userEmail } = useUserContext();
   const { getEventTypeData, buildRequestBody, execEventType } = useEventTypeContext();
-  const { variables, setVariable } = useVariableContext(); 
+  const { variables, setVariable } = useVariableContext();
+  const { pageTitle } = usePageContext(); // Destructure pageTitle from context
   const [accountOptions, setAccountOptions] = useState([]);
   const navigate = useNavigate();
 
@@ -78,10 +81,10 @@ const PageHeader = () => {
 
   return (
     <div>
-      <header className="flex items-center justify-between p-4 bg-gray-100 border-b">
+      <header className="flex items-center justify-between p-4 bg-gray-100 border-b border-[#008060] rounded-lg shadow-md">
         <div className="flex items-center">
           <img src={logo} alt="Whatsfresh Logo" className="w-12 h-12 mr-2" />
-          <h1 className="text-2xl font-bold">Page Name</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
         </div>
         <div className="flex items-center space-x-4">
           <Select

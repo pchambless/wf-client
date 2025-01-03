@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import '../styles/tailwind.css';
 
 const AppNav = () => {
   const [activeMenu, setActiveMenu] = useState(null);
@@ -9,31 +10,50 @@ const AppNav = () => {
     setActiveMenu((prevMenu) => (prevMenu === menuName ? null : menuName));
   };
 
-  const navigateToDashboard = () => {
-    navigate('/dashboard');
+  const handleNavigation = (path) => {
+    navigate(path);
+    setActiveMenu(null); // Close the dropdown menu
   };
 
   return (
-    <nav className="flex p-4 space-x-4 bg-gray-200 whitespace-nowrap">
+    <nav className="flex p-2 space-x-2 bg-gray-200 border-t border-[#008060]">
       {/* Dashboard Link */}
-      <div onClick={navigateToDashboard} className="p-2 border rounded cursor-pointer">
+      <div
+        onClick={() => handleNavigation('/dashboard')}
+        className="px-3 py-1 border rounded cursor-pointer"
+      >
         Dashboard
       </div>
 
       {/* Ingredients Dropdown */}
       <div className="relative">
-        <button onClick={() => toggleMenu('ingredients')} className="p-2 border rounded">
+        <button
+          onClick={() => toggleMenu('ingredients')}
+          className="px-3 py-1 border rounded"
+        >
           Ingredients
         </button>
         {activeMenu === 'ingredients' && (
-          <div className="absolute mt-2 bg-white border rounded shadow-lg">
-            <NavLink to="/ingredients" className="block px-4 py-2 hover:bg-gray-100">
+          <div className="absolute mt-1 bg-white border rounded shadow-lg">
+            <NavLink
+              to="/ingredients"
+              className="block px-4 py-2 hover:bg-gray-100"
+              onClick={() => setActiveMenu(null)} // Close the dropdown menu
+            >
               Ingredient Types
             </NavLink>
-            <NavLink to="/ingredients/ingr" className="block px-4 py-2 hover:bg-gray-100">
+            <NavLink
+              to="/ingredients/ingr"
+              className="block px-4 py-2 hover:bg-gray-100"
+              onClick={() => setActiveMenu(null)} // Close the dropdown menu
+            >
               Ingredients
             </NavLink>
-            <NavLink to="/ingredients/ingrbtch" className="block px-4 py-2 hover:bg-gray-100">
+            <NavLink
+              to="/ingredients/ingrbtch"
+              className="block px-4 py-2 hover:bg-gray-100"
+              onClick={() => setActiveMenu(null)} // Close the dropdown menu
+            >
               Ingredient Batches
             </NavLink>
           </div>
@@ -42,21 +62,40 @@ const AppNav = () => {
 
       {/* Products Dropdown */}
       <div className="relative">
-        <button onClick={() => toggleMenu('products')} className="p-2 border rounded">
+        <button
+          onClick={() => toggleMenu('products')}
+          className="px-3 py-1 border rounded"
+        >
           Products
         </button>
         {activeMenu === 'products' && (
-          <div className="absolute mt-2 bg-white border rounded shadow-lg">
-            <NavLink to="/products/prodtype" className="block px-4 py-2 hover:bg-gray-100">
+          <div className="absolute mt-1 bg-white border rounded shadow-lg">
+            <NavLink
+              to="/products/prodtype"
+              className="block px-4 py-2 hover:bg-gray-100"
+              onClick={() => setActiveMenu(null)} // Close the dropdown menu
+            >
               Product Types
             </NavLink>
-            <NavLink to="/products/prod" className="block px-4 py-2 hover:bg-gray-100">
+            <NavLink
+              to="/products/prod"
+              className="block px-4 py-2 hover:bg-gray-100"
+              onClick={() => setActiveMenu(null)} // Close the dropdown menu
+            >
               Products
             </NavLink>
-            <NavLink to="/products/rcpe" className="block px-4 py-2 hover:bg-gray-100">
+            <NavLink
+              to="/products/rcpe"
+              className="block px-4 py-2 hover:bg-gray-100"
+              onClick={() => setActiveMenu(null)} // Close the dropdown menu
+            >
               Recipes
             </NavLink>
-            <NavLink to="/products/prodbtch" className="block px-4 py-2 hover:bg-gray-100">
+            <NavLink
+              to="/products/prodbtch"
+              className="block px-4 py-2 hover:bg-gray-100"
+              onClick={() => setActiveMenu(null)} // Close the dropdown menu
+            >
               Product Batches
             </NavLink>
           </div>
