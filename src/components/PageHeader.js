@@ -2,16 +2,17 @@ import React, { useEffect, useState, useCallback } from 'react';
 import Select from '../components/Select';
 import { useUserContext } from '../context/UserContext';
 import { useEventTypeContext } from '../context/EventTypeContext';
+import { useVariableContext } from '../context/VariableContext'; // Import VariableContext
 import logo from '../assets/wf-icon.png';
 import { useNavigate } from 'react-router-dom';
-import { execEventType } from '../api/api';
+import AppNav from '../components/AppNav';
 
 const PageHeader = () => {
   const fileName = 'PageHeader: ';
   const { setUserEmail, userEmail } = useUserContext();
-  const { getEventTypeData, buildRequestBody } = useEventTypeContext();
+  const { getEventTypeData, buildRequestBody, execEventType } = useEventTypeContext();
+  const { variables, setVariable } = useVariableContext(); 
   const [accountOptions, setAccountOptions] = useState([]);
-  const [selectedAcctID, setSelectedAcctID] = useState(null); // State for selected account ID
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -53,7 +54,7 @@ const PageHeader = () => {
     } catch (error) {
       console.error(fileName, 'Error fetching accounts:', error);
     }
-  }, [userEmail, buildRequestBody, getEventTypeData]);
+  }, [userEmail, buildRequestBody, getEventTypeData, execEventType]);
 
   const handleFocus = () => {
     console.log(fileName, 'Select widget focused');
@@ -62,11 +63,7 @@ const PageHeader = () => {
 
   const handleChange = (value) => {
     console.log(fileName, 'Selected Account:', value);
-    setSelectedAcctID(value); // Update the selected account ID
-  };
-
-  const handleNavigation = (page) => {
-    navigate(page);
+    setVariable('acctID', value); // Update the selected account ID in the VariableContext
   };
 
   useEffect(() => {
@@ -74,26 +71,25 @@ const PageHeader = () => {
   }, [accountOptions]);
 
   useEffect(() => {
-    if (selectedAcctID) {
-      console.log(fileName, 'Selected Account ID:', selectedAcctID);
-      // Use the selectedAcctID in subsequent event types
+    if (variables.acctID) {
+      console.log(fileName, 'Selected Account ID:', variables.acctID);
     }
-  }, [selectedAcctID]);
+  }, [variables.acctID]);
 
   return (
-    <div className="min-h-screen">
+    <div>
       <header className="flex items-center justify-between p-4 bg-gray-100 border-b">
         <div className="flex items-center">
           <img src={logo} alt="Whatsfresh Logo" className="w-12 h-12 mr-2" />
           <h1 className="text-2xl font-bold">Page Name</h1>
         </div>
         <div className="flex items-center space-x-4">
-          <Select 
-            options={accountOptions} 
-            label="Select Account" 
-            valueKey="id" 
+          <Select
+            options={accountOptions}
+            label="Select Account"
+            valueKey="id"
             labelKey="label"
-            onChange={handleChange} // Attach the handleChange function
+            onChange={handleChange}
             onFocus={handleFocus}
             name="selUserAccts"
           />
@@ -102,12 +98,7 @@ const PageHeader = () => {
           </button>
         </div>
       </header>
-      <nav className="flex p-4 space-x-4 bg-gray-200">
-        <select onChange={(e) => handleNavigation(e.target.value)} className="p-2 border rounded">
-          <option value="/ingrTypes">Ingredients</option>
-          <option value="/products">Products</option>
-        </select>
-      </nav>
+      <AppNav />
     </div>
   );
 };

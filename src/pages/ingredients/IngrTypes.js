@@ -1,75 +1,103 @@
-import React, { useEffect, useState } from 'react';
-import { useUserContext } from '../../context/UserContext';
-import { execEventType } from '../../api/api'; 
-import useBuildRequestBody from '../../hooks/useBuildRequestBody';
+import React, { useState, useEffect } from 'react';
+import Container from '../../components/Container';
 import Table from '../../components/Table';
-import Form from '../../components/Form';
+import DynamicForm from '../../components/DynamicForm';
+import { usePageContext } from '../../context/PageContext';
+import { useVariableContext } from '../../context/VariableContext';
 
-const IngrTypesPage = () => {
-  const { userEmail, setUserAccts } = useUserContext();
-  const buildRequestBody = useBuildRequestBody();
-  const [ingredientTypes, setIngredientTypes] = useState([]);
-  const [selectedRow, setSelectedRow] = useState(null);
+const IngrType = () => {
+  const [ingrTypeList, setIngrTypeList] = useState([]);
+  const [eventParams, setEventParams] = useState([]);
+  const [formData, setFormData] = useState({});
+  const { fetchTableList, fetchFormColumns } = usePageContext();
+  const { variables, setVariable } = useVariableContext();
+  const fileName = 'IngrType: ';
 
+  // Define a mapping between table columns and form fields along with labels
+  const columnToFormFieldMapping = {
+    name: { field: 'ingrTypeName', label: 'Ingredient Type Name' },
+    description: { field: 'ingrTypeDesc', label: 'Description' },
+    // Add other mappings as needed
+  };
+
+  // Extract field names and labels for DynamicForm
+  const fieldLabelMapping = Object.fromEntries(
+    Object.values(columnToFormFieldMapping).map(({ field, label }) => [field, label])
+  );
+
+  // Fetch table data
   useEffect(() => {
-    const fetchIngredientTypes = async () => {
-      try {
-        const requestBody = buildRequestBody('ingrTypeList', { acctID: '1', userEmail }, console.log); // Used userEmail
-        const response = await execEventType(requestBody);
-        setIngredientTypes(response.data);
-      } catch (error) {
-        console.error('Error fetching ingredient types:', error);
+    const fetchTableData = async () => {
+      if (variables.acctID) {
+        try {
+          console.log(fileName, 'Fetching ingredient types for acctID:', variables.acctID);
+          const data = await fetchTableList('ingrTypeList', { acctID: variables.acctID });
+          console.log(fileName, 'Fetched ingredient types:', data);
+          setIngrTypeList(data);
+        } catch (error) {
+          console.error(fileName, 'Error fetching ingredient types:', error);
+        }
       }
     };
 
-    fetchIngredientTypes();
-  }, [buildRequestBody, userEmail]); // Added userEmail as a dependency
+    fetchTableData();
+  }, [variables.acctID, fetchTableList]);
 
-  const fetchUserAccts = async () => {
+  // Fetch form columns
+  useEffect(() => {
     try {
-      const requestBody = buildRequestBody('userAccts', { userEmail }, console.log);
-      const response = await execEventType(requestBody);
-      setUserAccts(response.data);
+      const params = fetchFormColumns('ingrTypeEdit');
+      console.log(fileName, 'Fetched form columns:', params);
+      setEventParams(params);
     } catch (error) {
-      console.error('Error fetching user accounts:', error);
+      console.error(fileName, 'Error fetching form columns:', error);
     }
-  };
+  }, [fetchFormColumns]);
 
   const handleRowClick = (row) => {
-    setSelectedRow(row);
+    console.log(fileName, 'Row clicked:', row);
+    setVariable('ingrTypeID', row.id);
+
+    // Populate formData based on the mapping
+    const updatedFormData = {};
+    for (const [column, { field }] of Object.entries(columnToFormFieldMapping)) {
+      updatedFormData[field] = row[column];
+    }
+    setFormData(updatedFormData);
   };
 
-  const handleFormSubmit = async (formData) => {
+  const handleFormSubmit = async (submittedData) => {
+    console.log(fileName, 'Form submitted:', submittedData);
+    submittedData['ingrTypeID'] = variables.ingrTypeID;
+
     try {
-      const requestBody = buildRequestBody('ingrTypeEdit', { ...formData, ingrTypeID: selectedRow.id, userEmail }, console.log);
-      await execEventType(requestBody);
-      alert('Ingredient Type updated successfully');
+      await fetchTableList('ingrTypeEdit', submittedData);
+      console.log(fileName, 'Update successful');
+      // Optionally refetch the table list to reflect changes
+      const data = await fetchTableList('ingrTypeList', { acctID: variables.acctID });
+      setIngrTypeList(data);
     } catch (error) {
-      console.error('Error updating ingredient type:', error);
+      console.error(fileName, 'Error updating ingredient type:', error);
     }
   };
 
   return (
-    <div className="flex">
-      <div className="w-1/2 p-4">
-        <h2 className="mb-4 text-xl font-bold">Ingredient Types</h2>
-        <Table data={ingredientTypes} onRowClick={handleRowClick} />
-        <button onClick={fetchUserAccts} className="p-2 mt-4 text-white bg-blue-500 rounded">Fetch User Accounts</button>
-      </div>
-      <div className="w-1/2 p-4">
-        {selectedRow && (
-          <Form
-            fields={['ingrTypeName', 'ingrTypeDesc']}
-            initialValues={{
-              ingrTypeName: selectedRow.name,
-              ingrTypeDesc: selectedRow.description
-            }}
+    <Container>
+      <div className="flex flex-row w-full">
+        <div className="w-1/2">
+          <Table data={ingrTypeList} onRowClick={handleRowClick} />
+        </div>
+        <div className="w-1/2 p-4">
+          <DynamicForm
+            eventTypeParams={eventParams}
             onSubmit={handleFormSubmit}
+            initialData={formData}
+            fieldLabelMapping={fieldLabelMapping}
           />
-        )}
+        </div>
       </div>
-    </div>
+    </Container>
   );
 };
 
-export default IngrTypesPage;
+export default IngrType;

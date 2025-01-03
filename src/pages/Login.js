@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import ProductForm from '../components/ProductForm';
 import { useUserContext } from '../context/UserContext';
 import { useEventTypeContext } from '../context/EventTypeContext';
+import { useVariableContext } from '../context/VariableContext'; // Import VariableContext
 import logo from '../assets/wf-icon.png';
 import useLogger from '../hooks/useLogger';
-import { login, fetchEventTypes } from '../api/api';
+import { login, fetchEventTypes, fetchApiColumns } from '../api/api';
 
 const Login = () => {
   const fileName = '[Login] ';
@@ -14,6 +15,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const { setUserEmail } = useUserContext();
   const { setEventTypes } = useEventTypeContext();
+  const { setVariable } = useVariableContext(); // Use VariableContext
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -44,6 +46,18 @@ const Login = () => {
       setEventTypes(eventTypesData);
       localStorage.setItem('eventTypes', JSON.stringify(eventTypesData));
       logAndTime('Event types set successfully');
+
+      // Fetch API columns and set variables
+      logAndTime('Fetching API columns');
+      const apiColumnsData = await fetchApiColumns();
+      logAndTime('API columns fetched:', apiColumnsData);
+
+      if (apiColumnsData.apiColumns) {
+        apiColumnsData.apiColumns.forEach((row) => {
+          setVariable(row.variableName.slice(1), ''); // Initialize with empty value
+        });
+        logAndTime('Variables set successfully');
+      }
 
       logAndTime('Navigating to /dashboard');
       navigate('/dashboard');

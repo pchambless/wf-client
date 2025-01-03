@@ -1,15 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchEventTypes } from '../api/api';
+import axios from 'axios';
 
 const EventTypeContext = createContext();
 
 export const useEventTypeContext = () => useContext(EventTypeContext);
 
-const useEventTypeLookup = (eventTypes) => {
+const eventTypeLookup = (eventTypes) => {
   return (eventType) => {
     const eventTypeData = eventTypes.find(et => et.eventType === eventType);
-    console.log(`Looking up event type: ${eventType}`);
-    console.log('Event type data:', eventTypeData);
     if (!eventTypeData) {
       throw new Error(`Event type ${eventType} not found`);
     }
@@ -18,7 +16,7 @@ const useEventTypeLookup = (eventTypes) => {
 };
 
 const getValueForVariable = (param, params) => {
-  const paramName = param.slice(1); // Remove the leading colon
+  const paramName = param.slice(1);
   return params[paramName];
 };
 
@@ -29,29 +27,19 @@ const buildRequestBody = (eventTypeData, params) => {
 
   const resolvedParams = {};
 
-  // Resolve params from eventTypeData.params
   if (eventTypeData.params) {
-    const routeParams = JSON.parse(eventTypeData.params); // Parse the params JSON string
+    const routeParams = JSON.parse(eventTypeData.params);
     routeParams.forEach(param => {
       const value = getValueForVariable(param, params);
-      if (value !== undefined && value !== null) {
-        resolvedParams[param.slice(1)] = value; // Match the param without slicing the end
-      } else {
-        resolvedParams[param.slice(1)] = param;
-      }
+      resolvedParams[param.slice(1)] = value !== undefined && value !== null ? value : param;
     });
   }
 
-  // Search the qrySQL for parameters
   const paramMatches = eventTypeData.qrySQL.match(/:\w+:/g);
   if (paramMatches) {
     paramMatches.forEach(param => {
       const value = getValueForVariable(param, params);
-      if (value !== undefined && value !== null) {
-        resolvedParams[param.slice(1)] = value; // Match the param without slicing the end
-      } else {
-        resolvedParams[param.slice(1)] = param;
-      }
+      resolvedParams[param.slice(1)] = value !== undefined && value !== null ? value : param;
     });
   }
 
@@ -61,27 +49,44 @@ const buildRequestBody = (eventTypeData, params) => {
   };
 };
 
+const execEventType = async (eventTypeKey, params, getEventTypeData) => {
+  const eventTypeData = getEventTypeData(eventTypeKey);
+  if (!eventTypeData) {
+    throw new Error(`Event type data not found for ${eventTypeKey}`);
+  }
+  const requestBody = buildRequestBody(eventTypeData, params);
+  try {
+    const response = await axios.post('http://localhost:3001/api/execEventType', {
+      eventType: requestBody.eventType,
+      params: requestBody.params
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error executing event type ${eventTypeKey}:`, error);
+    throw error;
+  }
+};
+
 export const EventTypeProvider = ({ children }) => {
   const [eventTypes, setEventTypes] = useState([]);
 
   useEffect(() => {
-    const fetchAndSetEventTypes = async () => {
+    const fetchEventTypes = async () => {
       try {
-        const eventTypesData = await fetchEventTypes();
-        console.log('Fetched event types:', eventTypesData);
-        setEventTypes(eventTypesData);
+        const response = await axios.get('http://localhost:3001/api/util/fetchEventTypes');
+        setEventTypes(response.data.eventTypes);
       } catch (error) {
         console.error('Error fetching event types:', error);
       }
     };
 
-    fetchAndSetEventTypes();
+    fetchEventTypes();
   }, []);
 
-  const getEventTypeData = useEventTypeLookup(eventTypes);
+  const getEventTypeData = eventTypeLookup(eventTypes);
 
   return (
-    <EventTypeContext.Provider value={{ eventTypes, setEventTypes, getEventTypeData, buildRequestBody }}>
+    <EventTypeContext.Provider value={{ eventTypes, setEventTypes, getEventTypeData, buildRequestBody, execEventType: (eventTypeKey, params) => execEventType(eventTypeKey, params, getEventTypeData) }}>
       {children}
     </EventTypeContext.Provider>
   );
