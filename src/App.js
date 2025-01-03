@@ -1,19 +1,31 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { UserProvider } from './context/UserContext';
+import { EventTypeProvider } from './context/EventTypeContext';
+import IngrTypes from './pages/ingredients/IngrTypes'; 
+import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
-import Main from './pages/Main'; // Import Main component
 
-function App() {
+console.log('App component loaded'); // Simple console log test
+
+const App = () => {
+  console.log('App component rendered'); // Simple console log test inside component
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/main" element={<Main />} />
-        <Route path="/" element={<Navigate to="/login" />} /> {/* Redirect root to Login */}
-        <Route path="*" element={<Navigate to="/login" />} /> {/* Redirect any other path to Login */}
-      </Routes>
-    </Router>
+    <UserProvider>
+      <EventTypeProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Login />} /> {/* Set Login as default */}
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/ingredients" element={<IngrTypes />} />
+            <Route path="/login" element={<Login />} /> {/* Route for Login */}
+            {/* Add other routes as needed */}
+          </Routes>
+        </Router>
+      </EventTypeProvider>
+    </UserProvider>
   );
-}
+};
 
 export default App;

@@ -1,12 +1,11 @@
-// src/hooks/useLogger.js
-import { useCallback } from 'react';
-
 const useLogger = (fileName) => {
-  const logAndTime = useCallback((message) => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${fileName}] ${timestamp} - ${message}`);
-  }, [fileName]);
-
+  const logAndTime = (message, data = null) => {
+    const time = new Date().toISOString();
+    console.log(`[${fileName}] ${time} - ${message}`);
+    if (data) {
+      console.log(data);
+    }
+  };
   return logAndTime;
 };
 

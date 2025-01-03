@@ -13,8 +13,7 @@ export const fetchEventTypes = async () => {
   }
 };
 
-// Function to login the user
-// api.js
+// src/api/api.js
 export const login = async (email, password) => {
   try {
     const response = await fetch(`http://localhost:3001/api/auth/login`, {
@@ -25,16 +24,16 @@ export const login = async (email, password) => {
       body: JSON.stringify({ userEmail: email, password })
     });
 
-    if (!response.ok) {
+    if (!response.ok) { // Updated this line
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
     console.log('Login response data:', data);
-    return data;
+    return data; // Return the server response directly
   } catch (error) {
     console.error('Login error:', error);
-    throw error;
+    return { success: false, message: error.message };
   }
 };
 
@@ -53,3 +52,4 @@ export const execEventType = async (eventType, params) => {
     throw error;
   }
 };
+

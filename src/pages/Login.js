@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductForm from '../components/ProductForm';
 import { useUserContext } from '../context/UserContext';
+import { useEventTypeContext } from '../context/EventTypeContext';
 import logo from '../assets/wf-icon.png';
 import useLogger from '../hooks/useLogger';
-import { login, fetchEventTypes, execEventType } from '../api/api';
-import buildRequestBody from '../api/requestBuilder';
+import { login, fetchEventTypes } from '../api/api';
 
 const Login = () => {
   const fileName = '[Login] ';
-  const logAndTime = useLogger(fileName); // Pass fileName to useLogger
+  const logAndTime = useLogger(fileName);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setUserEmail, setEventTypes, setAccounts } = useUserContext();
+  const { setUserEmail } = useUserContext();
+  const { setEventTypes } = useEventTypeContext();
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -31,8 +32,8 @@ const Login = () => {
       const response = await login(email, password);
       logAndTime('Login response:', response);
 
-      if (!response) {
-        throw new Error('Login failed');
+      if (!response.success) {
+        throw new Error(response.message || 'Login failed');
       }
 
       setUserEmail(email);
@@ -44,18 +45,11 @@ const Login = () => {
       localStorage.setItem('eventTypes', JSON.stringify(eventTypesData));
       logAndTime('Event types set successfully');
 
-      logAndTime(`Fetching user accounts for email: ${email}`);
-      const clientParams = { userEmail: email };
-      const requestBody = await buildRequestBody('userAccts', clientParams, logAndTime);
-      const accountsData = await execEventType(requestBody.eventType, requestBody.params);
-      setAccounts(accountsData);
-      logAndTime('User accounts set successfully');
-
-      logAndTime('Navigating to /main');
-      navigate('/main');
+      logAndTime('Navigating to /dashboard');
+      navigate('/dashboard');
     } catch (error) {
       logAndTime(`Login failed: ${error.message}`);
-      alert(fileName , ' Login failed. Please try again.');
+      alert(`${fileName} Login failed. Please try again.`);
     }
   };
 

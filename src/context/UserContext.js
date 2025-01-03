@@ -1,25 +1,18 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const UserContext = createContext();
 
+export const useUserContext = () => useContext(UserContext);
+
 export const UserProvider = ({ children }) => {
   const [userEmail, setUserEmail] = useState('');
-  const [eventTypes, setEventTypes] = useState([]);
   const [accounts, setAccounts] = useState([]);
-  const [selectedAccount, setSelectedAccount] = useState(null);
 
-  const value = {
-    userEmail,
-    setUserEmail,
-    eventTypes,
-    setEventTypes,
-    accounts,
-    setAccounts,
-    selectedAccount,
-    setSelectedAccount,
-  };
-
-  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
+  return (
+    <UserContext.Provider
+      value={{ userEmail, setUserEmail, accounts, setAccounts }}
+    >
+      {children}
+    </UserContext.Provider>
+  );
 };
-
-export const useUserContext = () => useContext(UserContext);
