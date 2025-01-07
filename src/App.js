@@ -2,34 +2,36 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { UserProvider } from './context/UserContext';
 import { EventTypeProvider } from './context/EventTypeContext';
-import { VariableProvider } from './context/VariableContext'; // Import VariableProvider
-import { PageProvider } from './context/PageContext'; // Import PageProvider
+import { VariableProvider } from './context/VariableContext';
+import { PageProvider } from './context/PageContext';
+import { SelectProvider } from './context/SelectContext'; 
 import IngrTypes from './pages/ingredients/IngrTypes'; 
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 
-console.log('App component loaded'); // Simple console log test
+console.log('App component loaded');
 
 const App = () => {
-  console.log('App component rendered'); // Simple console log test inside component
+  console.log('App component rendered');
 
   return (
     <UserProvider>
-      <EventTypeProvider>
-        <VariableProvider>
+      <VariableProvider>
+        <EventTypeProvider>
           <PageProvider>
-            <Router>
-              <Routes>
-                <Route path="/" element={<Login />} /> {/* Set Login as default */}
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/ingredients" element={<IngrTypes />} />
-                <Route path="/login" element={<Login />} /> {/* Route for Login */}
-                {/* Add other routes as needed */}
-              </Routes>
-            </Router>
+            <SelectProvider>
+              <Router>
+                <Routes>
+                  <Route path="/" element={<Login />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/ingredients" element={<IngrTypes />} />
+                  <Route path="/login" element={<Login />} />
+                </Routes>
+              </Router>
+            </SelectProvider>
           </PageProvider>
-        </VariableProvider>
-      </EventTypeProvider>
+        </EventTypeProvider>
+      </VariableProvider>
     </UserProvider>
   );
 };

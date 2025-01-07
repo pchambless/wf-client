@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductForm from '../components/ProductForm';
 import { useUserContext } from '../context/UserContext';
-import { useEventTypeContext } from '../context/EventTypeContext';
 import { useVariableContext } from '../context/VariableContext'; // Import VariableContext
+import { useEventTypeContext } from '../context/EventTypeContext'; // Import EventTypeContext
 import logo from '../assets/wf-icon.png';
 import useLogger from '../hooks/useLogger';
-import { login, fetchEventTypes, fetchApiColumns } from '../api/api';
+import { login, fetchApiColumns, fetchEventTypes } from '../api/api'; // Import fetchApiColumns and fetchEventTypes
 
 const Login = () => {
   const fileName = '[Login] ';
@@ -14,58 +14,69 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { setUserEmail } = useUserContext();
-  const { setEventTypes } = useEventTypeContext();
-  const { setVariable } = useVariableContext(); // Use VariableContext
+  const { setVariables, logSetVariables } = useVariableContext(); // Use VariableContext
+  const { setEventTypes } = useEventTypeContext(); // Use EventTypeContext
   const navigate = useNavigate();
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     logAndTime('Login attempt started');
     logAndTime(`Email: ${email}`);
-    logAndTime(`Password: ${password}`);
-
+    // Note: Not logging the password for security reasons
+  
     if (!email || !password) {
       alert('Please fill in all fields.');
       return;
     }
-
+  
     try {
       logAndTime('Sending login request...');
       const response = await login(email, password);
       logAndTime('Login response:', response);
-
+  
       if (!response.success) {
         throw new Error(response.message || 'Login failed');
       }
-
-      setUserEmail(email);
-      logAndTime('User logged in successfully');
-
+  
+      const { userId, userEmail } = response.data;
+  
+      // Fetch event types and log eventTypes
       logAndTime('Fetching event types');
-      const eventTypesData = await fetchEventTypes();
-      setEventTypes(eventTypesData);
-      localStorage.setItem('eventTypes', JSON.stringify(eventTypesData));
-      logAndTime('Event types set successfully');
-
+      const eventTypes = await fetchEventTypes(); 
+      logAndTime('Event types fetched:', eventTypes);
+  
+      // Set event types in context
+      setEventTypes(eventTypes);
+      
       // Fetch API columns and set variables
       logAndTime('Fetching API columns');
-      const apiColumnsData = await fetchApiColumns();
-      logAndTime('API columns fetched:', apiColumnsData);
-
-      if (apiColumnsData.apiColumns) {
-        apiColumnsData.apiColumns.forEach((row) => {
-          setVariable(row.variableName.slice(1), ''); // Initialize with empty value
-        });
-        logAndTime('Variables set successfully');
-      }
-
-      logAndTime('Navigating to /dashboard');
-      navigate('/dashboard');
+      const apiVariables = await fetchApiColumns();
+      setVariables(apiVariables);
+      logAndTime('Variables set successfully');
+      logSetVariables(); // Log all set variables
+  
+      // Set userEmail in localStorage
+      localStorage.setItem('userEmail', userEmail); // Add this line
+  
+      setUserEmail(userEmail);
+      setVariables({ userEmail, userID: userId }); // Set userEmail and userID in VariableContext
+      logAndTime('User logged in successfully');
+  
+      setLoginSuccess(true); // Set login success flag
     } catch (error) {
       logAndTime(`Login failed: ${error.message}`);
       alert(`${fileName} Login failed. Please try again.`);
     }
   };
+  
+
+  useEffect(() => {
+    if (loginSuccess) {
+      logAndTime('Navigating to /dashboard');
+      navigate('/dashboard');
+    }
+  }, [loginSuccess, navigate, logAndTime]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-product-bg">

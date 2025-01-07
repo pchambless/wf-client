@@ -1,42 +1,54 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchApiColumns } from '../api/api'; // Import the fetchApiColumns function
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import useLogger from '../hooks/useLogger';
 
 const VariableContext = createContext();
+const fileName = 'VariableContext: ';
 
 export const useVariableContext = () => useContext(VariableContext);
 
-export const VariableProvider = ({ children }) => {
-  const [variables, setVariables] = useState({});
+const VariableProvider = ({ children }) => {
+  const logAndTime = useLogger(fileName);
+  const [variables, setVariablesState] = useState({});
 
-  const setVariable = (name, value) => {
-    setVariables((prevVariables) => ({
-      ...prevVariables,
-      [name]: value,
-    }));
-  };
+  // Update one or more variables
+  const setVariables = useCallback((variablesToSet) => {
+    setVariablesState((prev) => {
+      const newVariables = { ...prev, ...variablesToSet };
+      const updatedKeys = Object.keys(variablesToSet).join(', ');
+      logAndTime(`Setting multiple variables: ${updatedKeys}`);
 
-  useEffect(() => {
-    const fetchVariables = async () => {
-      try {
-        const response = await fetchApiColumns();
-        if (response.apiColumns) {
-          const vars = response.apiColumns.reduce((acc, row) => {
-            acc[row.variableName.slice(1)] = ''; // Initialize with an empty value
-            return acc;
-          }, {});
-          setVariables(vars);
-        }
-      } catch (error) {
-        console.error('Error fetching variables:', error);
-      }
-    };
+      // Log all variables with set values in array format
+      const setVariablesLog = Object.entries(newVariables)
+        .filter(([k, v]) => v !== '')
+        .map(([k, v]) => `${k}: '${v}'`)
+        .join(',\n');
 
-    fetchVariables();
-  }, []);
+      logAndTime('Logging all variables with set values:\n[\n' + setVariablesLog + '\n]');
+      return newVariables;
+    });
+  }, [logAndTime]);
+
+  const logSetVariables = useCallback(() => {
+    const setVariablesLog = Object.entries(variables)
+      .filter(([key, value]) => value !== '')
+      .map(([key, value]) => `${key}: '${value}'`)
+      .join(',\n');
+    logAndTime('Current Variables with set values:\n[\n' + setVariablesLog + '\n]');
+  }, [variables, logAndTime]);
+
+  // Function to fetch a single variable value by variableName
+  const fetchVariable = useCallback((variableName) => {
+    logAndTime(`Fetching variable: ${variableName}`);
+    return variables[variableName] || null;
+  }, [variables, logAndTime]);
 
   return (
-    <VariableContext.Provider value={{ variables, setVariable }}>
+    <VariableContext.Provider value={{ variables, setVariables, logSetVariables, fetchVariable }}>
       {children}
     </VariableContext.Provider>
   );
 };
+
+export { VariableProvider };
+
+export default VariableContext;

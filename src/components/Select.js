@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 const fileName = 'Select: ';
-const Select = ({ options, label, valueKey, labelKey, onChange, onFocus, name }) => {
+const Select = ({ options = [], label, valueKey, labelKey, onChange, onFocus, name }) => {
   const [selectedValue, setSelectedValue] = useState('');
 
   const handleChange = (e) => {
@@ -10,7 +10,7 @@ const Select = ({ options, label, valueKey, labelKey, onChange, onFocus, name })
   };
 
   useEffect(() => {
-    console.log(fileName,'Options updated:', options);
+    console.log(fileName, 'Options updated:', options);
   }, [options]);
 
   return (
@@ -22,7 +22,7 @@ const Select = ({ options, label, valueKey, labelKey, onChange, onFocus, name })
       className="p-2 border rounded"
     >
       <option value="" disabled>{label}</option>
-      {options.length > 0 && options.map((option) => (
+      {options.map((option) => (
         <option key={option[valueKey]} value={option[valueKey]}>
           {option[labelKey]}
         </option>

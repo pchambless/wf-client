@@ -1,93 +1,74 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
-
-const EventTypeContext = createContext();
+import React, { createContext, useContext, useState } from 'react';
+import { execEventType } from '../api/api';
+import useLogger from '../hooks/useLogger';
+import { useVariableContext } from './VariableContext';
 
 export const useEventTypeContext = () => useContext(EventTypeContext);
 
-const eventTypeLookup = (eventTypes) => {
-  return (eventType) => {
-    const eventTypeData = eventTypes.find(et => et.eventType === eventType);
-    if (!eventTypeData) {
-      throw new Error(`Event type ${eventType} not found`);
+const EventTypeContext = createContext();
+
+const EventTypeProvider = ({ children }) => {
+  const fileName = 'EventTypeContext';
+  const logAndTime = useLogger(fileName);
+  const [eventTypes, setEventTypes] = useState([]); 
+
+  const { fetchVariable } = useVariableContext(); 
+
+  const fetchEventTypeParams = (eventType) => {
+    const event = eventTypes.find(e => e.eventType === eventType);
+    if (event) {
+      logAndTime(`Parameters for event type ${eventType}:`, event.params);
+      return event.params;
+    } else {
+      throw new Error(`No parameters found for event type ${eventType}`);
     }
-    return eventTypeData;
   };
-};
 
-const getValueForVariable = (param, params) => {
-  const paramName = param.slice(1);
-  return params[paramName];
-};
+  const eventTypeLookup = async (eventType) => {
+    logAndTime('Looking up event type:', eventType);
+    const params = fetchEventTypeParams(eventType);
 
-const buildRequestBody = (eventTypeData, params) => {
-  if (!eventTypeData) {
-    throw new Error('Event type data not found');
-  }
+    if (!Array.isArray(params)) {
+      throw new Error(logAndTime(`Expected array but received ${typeof params}`));
+    }
 
-  const resolvedParams = {};
-
-  if (eventTypeData.params) {
-    const routeParams = JSON.parse(eventTypeData.params);
-    routeParams.forEach(param => {
-      const value = getValueForVariable(param, params);
-      resolvedParams[param.slice(1)] = value !== undefined && value !== null ? value : param;
-    });
-  }
-
-  const paramMatches = eventTypeData.qrySQL.match(/:\w+:/g);
-  if (paramMatches) {
-    paramMatches.forEach(param => {
-      const value = getValueForVariable(param, params);
-      resolvedParams[param.slice(1)] = value !== undefined && value !== null ? value : param;
-    });
-  }
-
-  return {
-    eventType: eventTypeData.eventType,
-    params: resolvedParams,
+    logAndTime('Event type params found:', params);
+    return params;
   };
-};
 
-const execEventType = async (eventTypeKey, params, getEventTypeData) => {
-  const eventTypeData = getEventTypeData(eventTypeKey);
-  if (!eventTypeData) {
-    throw new Error(`Event type data not found for ${eventTypeKey}`);
-  }
-  const requestBody = buildRequestBody(eventTypeData, params);
-  try {
-    const response = await axios.post('http://localhost:3001/api/execEventType', {
-      eventType: requestBody.eventType,
-      params: requestBody.params
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error executing event type ${eventTypeKey}:`, error);
-    throw error;
-  }
-};
+  const executeQuery = async (eventType) => {
+    logAndTime('Executing query for event type:', eventType);
 
-export const EventTypeProvider = ({ children }) => {
-  const [eventTypes, setEventTypes] = useState([]);
+    const params = await eventTypeLookup(eventType);
 
-  useEffect(() => {
-    const fetchEventTypes = async () => {
-      try {
-        const response = await axios.get('http://localhost:3001/api/util/fetchEventTypes');
-        setEventTypes(response.data.eventTypes);
-      } catch (error) {
-        console.error('Error fetching event types:', error);
-      }
+    const resolvedParams = params.reduce((acc, param) => {
+      acc[param] = fetchVariable(param) || param;
+      return acc;
+    }, {});
+
+    const requestBody = {
+      eventType,
+      params: resolvedParams
     };
 
-    fetchEventTypes();
-  }, []);
+    logAndTime('Request Body:', JSON.stringify(requestBody));
 
-  const getEventTypeData = eventTypeLookup(eventTypes);
+    try {
+      const response = await execEventType(eventType, resolvedParams);
+      logAndTime('Event type executed successfully:', response);
+      return response;
+    } catch (error) {
+      console.error(logAndTime(`Error executing event type ${eventType}:`, error));
+      throw error;
+    }
+  };
 
   return (
-    <EventTypeContext.Provider value={{ eventTypes, setEventTypes, getEventTypeData, buildRequestBody, execEventType: (eventTypeKey, params) => execEventType(eventTypeKey, params, getEventTypeData) }}>
+    <EventTypeContext.Provider value={{ eventTypes, setEventTypes, executeQuery, eventTypeLookup }}>
       {children}
     </EventTypeContext.Provider>
   );
 };
+
+export { EventTypeProvider };
+export default EventTypeContext;

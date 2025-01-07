@@ -1,21 +1,22 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Select from '../components/Select';
 import { useUserContext } from '../context/UserContext';
-import { useEventTypeContext } from '../context/EventTypeContext';
-import { useVariableContext } from '../context/VariableContext'; // Import VariableContext
+import { useVariableContext } from '../context/VariableContext';
+import { useSelectContext } from '../context/SelectContext';
 import logo from '../assets/wf-icon.png';
 import { useNavigate } from 'react-router-dom';
 import AppNav from '../components/AppNav';
-import { usePageContext } from '../context/PageContext'; // Import usePageContext
+import { usePageContext } from '../context/PageContext';
 import '../styles/tailwind.css';
 
 const PageHeader = () => {
   const fileName = 'PageHeader: ';
-  const { setUserEmail, userEmail } = useUserContext();
-  const { getEventTypeData, buildRequestBody, execEventType } = useEventTypeContext();
-  const { variables, setVariable } = useVariableContext();
-  const { pageTitle } = usePageContext(); // Destructure pageTitle from context
-  const [accountOptions, setAccountOptions] = useState([]);
+  console.log(fileName, 'Entered.');
+  const { setUserEmail } = useUserContext(); // No need to destructure userEmail
+  const { selectOptions, fetchSelectOptions } = useSelectContext();
+  const { pageTitle } = usePageContext();
+  const { setVariable } = useVariableContext();
+  const [acctName, setAcctName] = useState('');
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -24,40 +25,9 @@ const PageHeader = () => {
     navigate('/');
   };
 
-  const fetchAccounts = useCallback(async () => {
-    try {
-      console.log(fileName, 'Fetching accounts for userEmail:', userEmail);
-      const eventTypeData = getEventTypeData('userAccts');
-      if (!eventTypeData) {
-        throw new Error(fileName + 'Event type data not found for userAccts');
-      }
-      console.log(fileName, 'Fetched event type data:', eventTypeData);
-      const requestBody = buildRequestBody(eventTypeData, { userEmail });
-      console.log(fileName, 'Request body:', JSON.stringify(requestBody, null, 2));
-      const response = await execEventType(requestBody.eventType, requestBody.params);
-      console.log(fileName, 'Full response:', JSON.stringify(response, null, 2));
-
-      if (response && Array.isArray(response)) {
-        const mappedOptions = response.map(account => ({
-          id: account.acct_id,
-          label: account.account_name,
-        }));
-        console.log(fileName, 'Mapped options:', JSON.stringify(mappedOptions, null, 2));
-        setAccountOptions(mappedOptions);
-      } else if (response && response.data) {
-        const mappedOptions = response.data.map(account => ({
-          id: account.acct_id,
-          label: account.account_name,
-        }));
-        console.log(fileName, 'Mapped options:', JSON.stringify(mappedOptions, null, 2));
-        setAccountOptions(mappedOptions);
-      } else {
-        throw new Error(fileName + 'Invalid response structure: data property not found');
-      }
-    } catch (error) {
-      console.error(fileName, 'Error fetching accounts:', error);
-    }
-  }, [userEmail, buildRequestBody, getEventTypeData, execEventType]);
+  const fetchAccounts = useCallback(() => {
+    fetchSelectOptions('selUserAccts');
+  }, [fetchSelectOptions]);
 
   const handleFocus = () => {
     console.log(fileName, 'Select widget focused');
@@ -66,18 +36,16 @@ const PageHeader = () => {
 
   const handleChange = (value) => {
     console.log(fileName, 'Selected Account:', value);
-    setVariable('acctID', value); // Update the selected account ID in the VariableContext
+    const selectedAccount = selectOptions['selUserAccts']?.find(account => account.value === value);
+    const accountName = selectedAccount?.label || '';
+    setAcctName(accountName);
+    setVariable('acctID', value);
+    setVariable('acctName', accountName);
   };
 
   useEffect(() => {
-    console.log(fileName, 'Account options state updated:', accountOptions);
-  }, [accountOptions]);
-
-  useEffect(() => {
-    if (variables.acctID) {
-      console.log(fileName, 'Selected Account ID:', variables.acctID);
-    }
-  }, [variables.acctID]);
+    console.log(fileName, 'Account options state updated:', selectOptions['selUserAccts']);
+  }, [selectOptions]);
 
   return (
     <div>
@@ -86,11 +54,14 @@ const PageHeader = () => {
           <img src={logo} alt="Whatsfresh Logo" className="w-12 h-12 mr-2" />
           <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
         </div>
+        <div className="flex items-center justify-center flex-1">
+          <h2 className="text-3xl font-semibold text-ingredient-brdr">{acctName}</h2>
+        </div>
         <div className="flex items-center space-x-4">
           <Select
-            options={accountOptions}
+            options={selectOptions['selUserAccts']}
             label="Select Account"
-            valueKey="id"
+            valueKey="value"
             labelKey="label"
             onChange={handleChange}
             onFocus={handleFocus}

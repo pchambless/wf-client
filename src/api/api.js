@@ -3,29 +3,46 @@ import axios from 'axios';
 const API_BASE_URL = 'http://localhost:3001/api';
 const fileName = 'api: ';
 
-// Function to fetch event types
+// Function to fetch event types with specified attributes
 export const fetchEventTypes = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/util/fetchEventTypes`);
-    return response.data.eventTypes;
+    
+    if (!Array.isArray(response.data.eventTypes)) {
+      throw new Error('Expected an array but received a different type.');
+    }
+
+    const eventTypes = response.data.eventTypes.map(event => ({
+      eventType: event.eventType,
+      params: event.params,
+      purpose: event.purpose
+    }));
+    return eventTypes;
   } catch (error) {
     console.error(fileName, 'Error fetching event types:', error);
     throw error;
   }
 };
 
-// Function to fetch API columns
+// Other functions remain unchanged
 export const fetchApiColumns = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/util/fetchApiColumns`);
-    return response.data;
+    const apiColumns = response.data.apiColumns;
+
+    // Map the apiColumns to return only variableName and value as ''
+    const variables = apiColumns.reduce((acc, column) => {
+      acc[column.variableName.slice(1)] = '';
+      return acc;
+    }, {});
+    
+    return variables;
   } catch (error) {
-    console.error(fileName,'Error fetching API columns:', error);
+    console.error(fileName, 'Error fetching API columns:', error);
     throw error;
   }
 };
 
-// Function to login user
 export const login = async (email, password) => {
   try {
     const response = await fetch(`http://localhost:3001/api/auth/login`, {
@@ -41,7 +58,7 @@ export const login = async (email, password) => {
     }
 
     const data = await response.json();
-    console.log(fileName,'Login response data:', data);
+    console.log(fileName, 'Login response data:', data);
     return data; // Return the server response directly
   } catch (error) {
     console.error(fileName, 'Login error:', error);
@@ -49,7 +66,6 @@ export const login = async (email, password) => {
   }
 };
 
-// Generic function to execute an event type
 export const execEventType = async (eventType, params) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/execEventType`, {
