@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { useEventTypeContext } from './EventTypeContext';
-import { useVariableContext } from './VariableContext';
 import useLogger from '../hooks/useLogger';
 
 const SelectContext = createContext();
@@ -10,13 +9,12 @@ export const useSelectContext = () => useContext(SelectContext);
 
 const SelectProvider = ({ children }) => {
   const logAndTime = useLogger(fileName);
-  const { getEventTypeParams, eventTypeLookup } = useEventTypeContext();
-  const { variables } = useVariableContext();
+  const { execEvent } = useEventTypeContext();
   const [selectOptions, setSelectOptions] = useState({});
 
   const mappings = useMemo(() => ({
-    selUserAccts: { eventType: 'userAccts', id: 'accountId', label: 'accountName' },
-    selIngrTypes: { eventType: 'ingrTypeList', id: 'id', label: 'name' },
+    selUserAccts: { eventType: 'userAccts', id: 'acct_id', varName: ':acctID', label: 'account_name', labelName: ':acctName' },
+    selIngrTypes: { eventType: 'ingrTypeList', id: 'id', varName: ':ingrTypeID', label: 'name', labelName: ':ingrTypeName' },
   }), []);
 
   const fetchSelectOptions = useCallback(async (key) => {
@@ -27,40 +25,31 @@ const SelectProvider = ({ children }) => {
       return;
     }
 
-    const { eventType, id, label } = mapping;
+    const { eventType, id, label, varName, labelName } = mapping;
 
     logAndTime(`Fetching options for ${key} with eventType ${eventType}`);
 
-    const params = getEventTypeParams(eventType);
-    if (!params) {
-      console.warn(logAndTime(`Params not defined for eventType ${eventType}`));
-      setSelectOptions(prev => ({ ...prev, [key]: [] }));
-      return;
-    }
-
-    const resolvedParams = params.reduce((acc, param) => {
-      const variableName = param.replace(':', ''); // Remove ':' prefix
-      acc[param] = variables[variableName];
-      return acc;
-    }, {});
-
     try {
-      const eventTypeData = await eventTypeLookup(eventType, resolvedParams);
-      if (!Array.isArray(eventTypeData)) {
-        throw new Error(`Expected array but received ${typeof eventTypeData}`);
+      const options = await execEvent(eventType, {});
+      
+      console.log('eventTypeData:', options);
+
+      if (!Array.isArray(options)) {
+        throw new Error(`Expected array but received ${typeof options}`);
       }
 
-      const options = eventTypeData.map(item => ({
+      const mappedOptions = options.map(item => ({
         value: item[id],
         label: item[label],
       }));
-      setSelectOptions(prev => ({ ...prev, [key]: options }));
-      logAndTime('Options fetched successfully:', options);
+
+      console.log('options:', mappedOptions);
+      setSelectOptions(prev => ({ ...prev, [key]: { options: mappedOptions, varName, labelName } }));
     } catch (error) {
       logAndTime(`Error fetching options for ${key}:`, error);
       setSelectOptions(prev => ({ ...prev, [key]: [] }));
     }
-  }, [getEventTypeParams, eventTypeLookup, mappings, logAndTime, variables]);
+  }, [execEvent, mappings, logAndTime]);
 
   return (
     <SelectContext.Provider value={{ selectOptions, fetchSelectOptions }}>

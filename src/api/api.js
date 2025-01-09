@@ -7,14 +7,15 @@ const fileName = 'api: ';
 export const fetchEventTypes = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/util/fetchEventTypes`);
-    
+    console.log(fileName, 'Fetched event types:', response.data.eventTypes); // Log the fetched event types
+
     if (!Array.isArray(response.data.eventTypes)) {
       throw new Error('Expected an array but received a different type.');
     }
 
     const eventTypes = response.data.eventTypes.map(event => ({
       eventType: event.eventType,
-      params: event.params,
+      params: JSON.parse(event.params), // Parse the params string into an array
       purpose: event.purpose
     }));
     return eventTypes;
@@ -24,24 +25,30 @@ export const fetchEventTypes = async () => {
   }
 };
 
-// Other functions remain unchanged
+
+// Load the API Columns
 export const fetchApiColumns = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/util/fetchApiColumns`);
     const apiColumns = response.data.apiColumns;
 
-    // Map the apiColumns to return only variableName and value as ''
+    // Initialize variables to empty strings with leading ":"
     const variables = apiColumns.reduce((acc, column) => {
-      acc[column.variableName.slice(1)] = '';
+      acc[column.variableName] = ''; // Initialize with empty string, retain leading ":"
       return acc;
     }, {});
-    
+
+    console.log(fileName, 'apiColumns, variables:', variables); // Log the final variables for debugging
+
     return variables;
   } catch (error) {
     console.error(fileName, 'Error fetching API columns:', error);
     throw error;
   }
 };
+
+
+
 
 export const login = async (email, password) => {
   try {

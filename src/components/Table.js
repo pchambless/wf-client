@@ -1,59 +1,65 @@
-import React from 'react';
-import '../styles/tailwind.css';
+import React, { useEffect, useState } from 'react';
+import { useEventTypeContext } from '../context/EventTypeContext';
+import useLogger from '../hooks/useLogger';
 
-const Table = ({ data, onRowClick, onAddNewClick }) => {
-  if (!data || data.length === 0) {
-    return <p>No data available.</p>;
+const Table = ({ listEvent, onRowClick }) => {
+  const [data, setData] = useState([]);
+  const [columns, setColumns] = useState([]);
+  const { execEvent } = useEventTypeContext(); // Changed from execEventType to execEvent
+  const logAndTime = useLogger('Table: ');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      logAndTime(`Fetching data for listEvent: ${listEvent}`);
+      try {
+        const result = await execEvent(listEvent); // Changed from execEventType to execEvent
+        logAndTime(`Data received:`, result);
+        if (result && result.data && result.data.length > 0) {
+          setData(result.data);
+          setColumns(Object.keys(result.data[0]));
+        } else {
+          logAndTime('No data received or empty data array');
+        }
+      } catch (error) {
+        logAndTime(`Error fetching data: ${error.message}`);
+      }
+    };
+
+    fetchData();
+  }, [listEvent, execEvent, logAndTime]);
+
+  if (data.length === 0) {
+    return <div>No data available.</div>;
   }
 
-  const headers = Object.keys(data[0]);
-
+  // Render table here
   return (
-    <div className="max-w-full p-4 overflow-x-auto border rounded-lg border-product-brdr">
-      <div className="flex justify-between mb-4">
-        <button
-          onClick={onAddNewClick}
-          className="px-4 py-2 text-white rounded bg-primaryGreen hover:bg-secondaryRed"
-        >
-          Add New
-        </button>
-      </div>
-      <div className="overflow-y-auto max-h-96"> {/* Max height for 25 rows */}
-        <table className="min-w-full bg-white border-collapse table-auto">
-          <thead>
-            <tr>
-              {headers.map((header, index) => (
-                // Conditionally hide the "id" column
-                header !== 'id' && (
-                  <th
-                    key={index}
-                    className="px-4 py-2 text-left text-white border-b bg-primaryGreen"
-                  >
-                    {header}
-                  </th>
-                )
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.slice(0, 25).map((row, index) => ( // Display only up to 25 rows
-              <tr
-                key={index}
-                className={`border-b ${index % 2 === 0 ? 'bg-gray-100' : 'bg-white'}`}
-                onClick={() => onRowClick(row)}
-              >
-                {headers.map((header) => (
-                  // Conditionally hide the "id" column
-                  header !== 'id' && (
-                    <td key={header} className="px-3 py-1 border">{row[header]}</td> // Shorter row height
-                  )
-                ))}
-              </tr>
+    <table className="min-w-full divide-y divide-gray-200">
+      <thead className="bg-gray-50">
+        <tr>
+          {columns.map((column) => (
+            <th
+              key={column}
+              scope="col"
+              className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+            >
+              {column}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody className="bg-white divide-y divide-gray-200">
+        {data.map((row, rowIndex) => (
+          <tr key={rowIndex} onClick={() => onRowClick(row)} className="cursor-pointer hover:bg-gray-100">
+            {columns.map((column) => (
+              <td key={`${rowIndex}-${column}`} className="px-6 py-4 whitespace-nowrap">
+                {row[column]}
+              </td>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 };
 

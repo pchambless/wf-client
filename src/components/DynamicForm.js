@@ -1,89 +1,62 @@
-import React, { useState, useEffect } from 'react';
-import '../styles/tailwind.css';
-import useLogger from '../hooks/useLogger';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useEventTypeContext } from '../context/EventTypeContext';
+import { usePageUtils } from '../utils/pageUtils';
 
-const DynamicForm = ({ eventTypeParams, onSubmit, initialData, fieldLabelMapping, mode }) => {
-  const [formData, setFormData] = useState(initialData || {});
-
-  const fileName = 'DynamicForm: ';
-  const logAndTime = useLogger(fileName);
+const DynamicForm = ({
+  columns,
+  data,
+  mode,
+  onSubmit,
+  excludeFields,
+  editEvent,
+  addEvent
+}) => {
+  const [formData, setFormData] = useState(data);
+  const [formMode, setFormMode] = useState(mode);
+  const { execEventType } = useEventTypeContext();
+  const { logAndTime } = usePageUtils();
 
   useEffect(() => {
-    console.log(fileName, 'Setting initial data:', initialData);
-    setFormData(initialData || {});
-  }, [initialData]);
+    setFormData(data);
+    setFormMode(mode);
+  }, [data, mode]);
 
-  useEffect(() => {
-    logAndTime('EventTypeParams:', eventTypeParams);
-  }, [eventTypeParams, logAndTime]); // Add 'logAndTime' to the dependency array
+  const handleSubmit = useCallback(async (event) => {
+    event.preventDefault();
+    try {
+      const eventType = formMode === 'add' ? addEvent : editEvent;
+      await execEventType(eventType, formData);
+      logAndTime('Form submitted:', formData);
+      onSubmit(formData);
+    } catch (error) {
+      logAndTime(`Error submitting form: ${error.message}`);
+    }
+  }, [formMode, addEvent, editEvent, execEventType, formData, logAndTime, onSubmit]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    logAndTime(`form data: ${name} = ${value}`);
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
-
-  const handleReset = () => {
-    logAndTime('Resetting form data');
-    setFormData({});
-  };
-
-  const editFieldName = Object.keys(formData).find(key => formData[key]) || '';
+  const handleInputChange = useCallback((event) => {
+    const { name, value } = event.target;
+    setFormData(prevData => ({ ...prevData, [name]: value }));
+  }, []);
 
   return (
-    <div>
-      <div className="mb-4 text-xl font-semibold text-gray-700">
-        {mode === 'add' ? 'Add New' : `Edit: ${formData[editFieldName] || ''}`}
-      </div>
-      <form className="p-4 bg-green-100 rounded-md shadow-md" onSubmit={handleSubmit}>
-        {Array.isArray(eventTypeParams) ? (
-          eventTypeParams.map((param, index) => {
-            const fieldName = typeof param === 'string' ? param.replace(':', '') : `field-${index}`;
-            const label = fieldLabelMapping[fieldName]?.label || fieldName; // Use label from fieldLabelMapping
-            return (
-              <div key={fieldName} className="mb-4">
-                <label className="block mb-2 text-sm font-bold text-gray-700" htmlFor={fieldName}>
-                  {label}
-                </label>
-                <input
-                  type="text"
-                  name={fieldName}
-                  id={fieldName}
-                  value={formData[fieldName] || ''}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            );
-          })
-        ) : (
-          <div className="text-red-500">Error: Invalid eventTypeParams</div>
-        )}
-        <div className="flex justify-between">
-          <button
-            type="submit"
-            className="px-4 py-2 text-white rounded bg-primaryGreen hover:bg-secondaryRed"
-          >
-            {mode === 'add' ? 'Add' : 'Edit'}
-          </button>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
-          >
-            Reset
-          </button>
-        </div>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit}>
+      {columns.map(column => {
+        if (excludeFields.includes(column.field)) return null;
+        return (
+          <div key={column.field}>
+            <label htmlFor={column.field}>{column.label || column.field}</label>
+            <input
+              type="text"
+              id={column.field}
+              name={column.field}
+              value={formData[column.field] || ''}
+              onChange={handleInputChange}
+            />
+          </div>
+        );
+      })}
+      <button type="submit">{formMode === 'add' ? 'Add' : 'Update'}</button>
+    </form>
   );
 };
 

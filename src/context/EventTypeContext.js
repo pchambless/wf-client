@@ -10,11 +10,12 @@ const EventTypeContext = createContext();
 const EventTypeProvider = ({ children }) => {
   const fileName = 'EventTypeContext';
   const logAndTime = useLogger(fileName);
-  const [eventTypes, setEventTypes] = useState([]); 
+  const [eventTypes, setEventTypes] = useState([]);
 
-  const { fetchVariable } = useVariableContext(); 
+  const { fetchVariable } = useVariableContext();
 
-  const fetchEventTypeParams = (eventType) => {
+  const fetchEventParams = (eventType) => {
+    console.log(fileName, 'Checking event types for:', eventType);
     const event = eventTypes.find(e => e.eventType === eventType);
     if (event) {
       logAndTime(`Parameters for event type ${eventType}:`, event.params);
@@ -26,7 +27,7 @@ const EventTypeProvider = ({ children }) => {
 
   const eventTypeLookup = async (eventType) => {
     logAndTime('Looking up event type:', eventType);
-    const params = fetchEventTypeParams(eventType);
+    const params = fetchEventParams(eventType);
 
     if (!Array.isArray(params)) {
       throw new Error(logAndTime(`Expected array but received ${typeof params}`));
@@ -36,7 +37,7 @@ const EventTypeProvider = ({ children }) => {
     return params;
   };
 
-  const executeQuery = async (eventType) => {
+  const execEvent = async (eventType) => {
     logAndTime('Executing query for event type:', eventType);
 
     const params = await eventTypeLookup(eventType);
@@ -63,8 +64,37 @@ const EventTypeProvider = ({ children }) => {
     }
   };
 
+  const fetchFormColumns = (eventType) => {
+    logAndTime(`Fetching form columns for event type: ${eventType}`);
+    const event = eventTypes.find(e => e.eventType === eventType);
+    if (!event) {
+      throw new Error(`No event type found for ${eventType}`);
+    }
+
+    const columns = event.params.map(param => {
+      // Remove the leading ':' from the param name if it exists
+      const name = param.startsWith(':') ? param.slice(1) : param;
+      return {
+        name: name,
+        label: name.charAt(0).toUpperCase() + name.slice(1).replace(/([A-Z])/g, ' $1').trim(),
+        type: 'text',
+        required: true,
+      };
+    });
+
+    logAndTime(`Form columns for event type ${eventType}:`, columns);
+    return columns;
+  };
+
   return (
-    <EventTypeContext.Provider value={{ eventTypes, setEventTypes, executeQuery, eventTypeLookup }}>
+    <EventTypeContext.Provider value={{ 
+      eventTypes, 
+      setEventTypes, 
+      execEvent,
+      fetchEventParams, 
+      eventTypeLookup,
+      fetchFormColumns
+    }}>
       {children}
     </EventTypeContext.Provider>
   );

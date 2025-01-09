@@ -8,68 +8,89 @@ import logo from '../assets/wf-icon.png';
 import useLogger from '../hooks/useLogger';
 import { login, fetchApiColumns, fetchEventTypes } from '../api/api'; // Import fetchApiColumns and fetchEventTypes
 
+/**
+ * Login component for user authentication.
+ * 
+ * This component renders a login form and handles the login process.
+ * It manages the login state, fetches necessary data upon successful login,
+ * and updates various contexts with user and application data.
+ * 
+ * @component
+ * @returns {JSX.Element} The rendered Login component
+ */
 const Login = () => {
   const fileName = '[Login] ';
   const logAndTime = useLogger(fileName);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { setUserEmail } = useUserContext();
-  const { setVariables, logSetVariables } = useVariableContext(); // Use VariableContext
-  const { setEventTypes } = useEventTypeContext(); // Use EventTypeContext
+  const { setVariables, logSetVariables } = useVariableContext();
+  const { setEventTypes } = useEventTypeContext();
   const navigate = useNavigate();
   const [loginSuccess, setLoginSuccess] = useState(false);
 
+  /**
+   * Handles the login process when the form is submitted.
+   * 
+   * This function prevents the default form submission, validates inputs,
+   * attempts to log in the user, fetches necessary data upon successful login,
+   * updates various contexts, and sets up for navigation to the dashboard.
+   * 
+   * @async
+   * @param {Event} e - The form submission event
+   * @returns {Promise<void>}
+   */
   const handleLogin = async (e) => {
     e.preventDefault();
     logAndTime('Login attempt started');
     logAndTime(`Email: ${email}`);
-    // Note: Not logging the password for security reasons
-  
+
     if (!email || !password) {
       alert('Please fill in all fields.');
       return;
     }
-  
+
     try {
       logAndTime('Sending login request...');
       const response = await login(email, password);
       logAndTime('Login response:', response);
-  
+
       if (!response.success) {
         throw new Error(response.message || 'Login failed');
       }
-  
+
       const { userId, userEmail } = response.data;
-  
-      // Fetch event types and log eventTypes
+
       logAndTime('Fetching event types');
       const eventTypes = await fetchEventTypes(); 
       logAndTime('Event types fetched:', eventTypes);
-  
-      // Set event types in context
+
       setEventTypes(eventTypes);
-      
-      // Fetch API columns and set variables
+
       logAndTime('Fetching API columns');
       const apiVariables = await fetchApiColumns();
+
       setVariables(apiVariables);
+
+      const userVariables = { ':userEmail': userEmail, ':userID': userId };
+
+      setVariables(userVariables);
+
       logAndTime('Variables set successfully');
-      logSetVariables(); // Log all set variables
-  
-      // Set userEmail in localStorage
-      localStorage.setItem('userEmail', userEmail); // Add this line
-  
+      logSetVariables();
+
+      localStorage.setItem('userEmail', userEmail);
+
       setUserEmail(userEmail);
-      setVariables({ userEmail, userID: userId }); // Set userEmail and userID in VariableContext
       logAndTime('User logged in successfully');
-  
-      setLoginSuccess(true); // Set login success flag
+
+      setLoginSuccess(true);
     } catch (error) {
       logAndTime(`Login failed: ${error.message}`);
       alert(`${fileName} Login failed. Please try again.`);
     }
   };
-  
+
 
   useEffect(() => {
     if (loginSuccess) {

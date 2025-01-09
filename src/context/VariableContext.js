@@ -6,18 +6,55 @@ const fileName = 'VariableContext: ';
 
 export const useVariableContext = () => useContext(VariableContext);
 
-const VariableProvider = ({ children }) => {
+/**
+ * Creates a VariableProvider component that manages a context for storing and retrieving variables.
+ * 
+ * @param {Object} props - The properties passed to the component.
+ * @param {React.ReactNode} props.children - The child components to be wrapped by the provider.
+ * @returns {React.Component} A React component that provides the VariableContext to its children.
+ */
+export const VariableProvider = ({ children }) => {
   const logAndTime = useLogger(fileName);
   const [variables, setVariablesState] = useState({});
 
-  // Update one or more variables
+  /**
+   * Validates if a given key is valid for use as a variable name.
+   * 
+   * @param {string} key - The key to validate.
+   * @returns {boolean} True if the key is valid, false otherwise.
+   */
+  const isValidKey = (key) => {
+    const validKeyPattern = /^[:a-zA-Z][a-zA-Z0-9_]*$/;
+    return validKeyPattern.test(key);
+  };
+
+  /**
+   * Updates one or more variables in the context state with validation and debugging.
+   * 
+   * @param {Object} variablesToSet - An object containing key-value pairs of variables to set.
+   */
   const setVariables = useCallback((variablesToSet) => {
+    console.trace('setVariables called with:', variablesToSet);
+
+    if (typeof variablesToSet !== 'object') {
+      console.error('setVariables expected an object but received:', variablesToSet);
+      return;
+    }
+
     setVariablesState((prev) => {
-      const newVariables = { ...prev, ...variablesToSet };
-      const updatedKeys = Object.keys(variablesToSet).join(', ');
+      const filteredVariablesToSet = Object.entries(variablesToSet)
+        .filter(([key]) => isValidKey(key))
+        .reduce((obj, [key, value]) => {
+          obj[key] = value;
+          return obj;
+        }, {});
+
+      const newVariables = { ...prev, ...filteredVariablesToSet };
+      const updatedKeys = Object.keys(filteredVariablesToSet).join(', ');
       logAndTime(`Setting multiple variables: ${updatedKeys}`);
 
-      // Log all variables with set values in array format
+      console.log('Filtered Variables to set:', filteredVariablesToSet);
+
       const setVariablesLog = Object.entries(newVariables)
         .filter(([k, v]) => v !== '')
         .map(([k, v]) => `${k}: '${v}'`)
@@ -28,6 +65,9 @@ const VariableProvider = ({ children }) => {
     });
   }, [logAndTime]);
 
+  /**
+   * Logs all currently set variables with non-empty values.
+   */
   const logSetVariables = useCallback(() => {
     const setVariablesLog = Object.entries(variables)
       .filter(([key, value]) => value !== '')
@@ -36,7 +76,12 @@ const VariableProvider = ({ children }) => {
     logAndTime('Current Variables with set values:\n[\n' + setVariablesLog + '\n]');
   }, [variables, logAndTime]);
 
-  // Function to fetch a single variable value by variableName
+  /**
+   * Fetches the value of a single variable by its name.
+   * 
+   * @param {string} variableName - The name of the variable to fetch.
+   * @returns {*} The value of the variable if it exists, null otherwise.
+   */
   const fetchVariable = useCallback((variableName) => {
     logAndTime(`Fetching variable: ${variableName}`);
     return variables[variableName] || null;
@@ -48,7 +93,5 @@ const VariableProvider = ({ children }) => {
     </VariableContext.Provider>
   );
 };
-
-export { VariableProvider };
 
 export default VariableContext;
