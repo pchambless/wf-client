@@ -1,39 +1,39 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usePageContext } from '../context/PageContext';
-import { useUserContext } from '../context/UserContext';
-import { useSelectContext } from '../context/SelectContext';
 import { useVariableContext } from '../context/VariableContext';
+import { usePageContext } from '../context/PageContext';
 import logo from '../assets/wf-icon.png';
-import ModalComponent from '../components/Modal';
-import Table from '../components/Table'; // CHANGE: Import Table instead of SelTable
-import AppNav from '../components/AppNav';
+import AppNav from './AppNav';
+import useLogger from '../hooks/useLogger';
+import useModalManager from '../utils/modalManager';
 
 const PageHeader = () => {
-  const { setUserEmail } = useUserContext();
-  const { selectOptions, fetchSelectOptions } = useSelectContext();
+  const logAndTime = useLogger('PageHeader');
   const { pageTitle } = usePageContext();
-  const { setVariables } = useVariableContext();
+  const { fetchVariable } = useVariableContext();
   const [acctName, setAcctName] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
-
-  const handleLogout = () => {
-    setUserEmail('');
-    localStorage.clear();
-    navigate('/');
-  };
-
-  const fetchAccounts = useCallback(() => {
-    fetchSelectOptions('selUserAccts');
-  }, [fetchSelectOptions]);
-
+  const { openModal } = useModalManager();
 
   useEffect(() => {
-    if (!selectOptions['selUserAccts']) {
-      fetchAccounts();
+    const fetchedAcctName = fetchVariable(':acctName');
+    if (fetchedAcctName) {
+      setAcctName(fetchedAcctName);
     }
-  }, [fetchAccounts, selectOptions]);
+  }, [fetchVariable]);
+
+  const handleOpenModal = useCallback(() => {
+    logAndTime('Opening userAccts modal');
+    openModal('userAccts');
+  }, [logAndTime, openModal]);
+
+  const handleLogout = useCallback(() => {
+    logAndTime('Logging out');
+    localStorage.clear();
+    navigate('/');
+  }, [navigate, logAndTime]);
+
+  logAndTime('PageHeader rendering');
 
   return (
     <div>
@@ -47,7 +47,7 @@ const PageHeader = () => {
         </div>
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenModal}
             className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
           >
             Select Accounts
@@ -58,23 +58,8 @@ const PageHeader = () => {
         </div>
       </header>
       <AppNav />
-      {/* CHANGE: Updated ModalComponent to use Table instead of SelTable */}
-      <ModalComponent 
-        isOpen={isModalOpen} 
-        onRequestClose={() => setIsModalOpen(false)}
-        title="Select Account"
-      >
-        <Table
-          data={selectOptions['selUserAccts']?.options || []}
-          onRowClick={handleSelect}
-          columnStyles={{
-            label: 'w-2/3',
-            value: 'w-1/3'
-          }}
-        />
-      </ModalComponent>
     </div>
   );
 };
 
-export default PageHeader;
+export default React.memo(PageHeader);

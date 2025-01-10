@@ -7772,7 +7772,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"immer@npm:^9.0.7":
+"immer@npm:>=8.0.1 <10.0.0, immer@npm:^9.0.7":
   version: 9.0.21
   resolution: "immer@npm:9.0.21"
   checksum: 10c0/03ea3ed5d4d72e8bd428df4a38ad7e483ea8308e9a113d3b42e0ea2cc0cc38340eb0a6aca69592abbbf047c685dbda04e3d34bf2ff438ab57339ed0a34cc0a05
@@ -11685,6 +11685,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-model@npm:^4.3.1":
+  version: 4.3.1
+  resolution: "react-model@npm:4.3.1"
+  dependencies:
+    immer: "npm:>=8.0.1 <10.0.0"
+  peerDependencies:
+    react: ">=16.3.0"
+    react-dom: ">=16.3.0"
+    typescript: ">=3.9.0"
+  checksum: 10c0/72198041130edb943c8136b9e0d1fbc075fcfde32a837af12a73a4a77b85ab55507dc5a4215e31be53684e6de542a33c31caae93db3e06b6327cdd52c5fce4c7
+  languageName: node
+  linkType: hard
+
 "react-refresh@npm:^0.11.0":
   version: 0.11.0
   resolution: "react-refresh@npm:0.11.0"
@@ -14121,11 +14134,13 @@ __metadata:
     concurrently: "npm:^9.1.0"
     eslint: "npm:^8.0.0"
     eslint-config-react-app: "npm:^7.0.1"
+    lodash: "npm:^4.17.21"
     postcss: "npm:^8.4.49"
     prop-types: "npm:^15.8.1"
     react: "npm:^18.3.1"
     react-dom: "npm:^18.3.1"
     react-modal: "npm:^3.16.3"
+    react-model: "npm:^4.3.1"
     react-router-dom: "npm:^7.0.1"
     react-scripts: "npm:^5.0.1"
     resolve-url-loader: "npm:^5.0.0"

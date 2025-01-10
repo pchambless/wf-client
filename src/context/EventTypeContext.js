@@ -14,31 +14,29 @@ const EventTypeProvider = ({ children }) => {
 
   const { fetchVariable } = useVariableContext();
 
-  const fetchEventParams = (eventType) => {
-    console.log(fileName, 'Checking event types for:', eventType);
-    const event = eventTypes.find(e => e.eventType === eventType);
-    if (event) {
-      logAndTime(`Parameters for event type ${eventType}:`, event.params);
-      return event.params;
-    } else {
-      throw new Error(`No parameters found for event type ${eventType}`);
-    }
-  };
-
-  const eventTypeLookup = async (eventType) => {
-    logAndTime('Looking up event type:', eventType);
+    const eventTypeLookup = async (eventType) => {
+    logAndTime('eventTypeLookup');
     const params = fetchEventParams(eventType);
 
     if (!Array.isArray(params)) {
       throw new Error(logAndTime(`Expected array but received ${typeof params}`));
     }
 
-    logAndTime('Event type params found:', params);
     return params;
   };
 
+  const fetchEventParams = (eventType) => {
+    const event = eventTypes.find(e => e.eventType === eventType);
+    if (event) {
+      logAndTime(`fetchEventParams`);
+      return event.params;
+    } else {
+      throw new Error(`No parameters found: ${eventType}`);
+    }
+  };
+
   const execEvent = async (eventType) => {
-    logAndTime('Executing query for event type:', eventType);
+//    logAndTime('Executing query for event type:', eventType);
 
     const params = await eventTypeLookup(eventType);
 

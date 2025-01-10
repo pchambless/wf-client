@@ -1,6 +1,8 @@
 import React from 'react';
 import PageTemplate from '../components/PageTemplate';
-import VariableTable from '../components/debug/VariableTable';
+import DebugPanel from '../components/debug/DebugPanel';
+import ModalComponent from '../components/Modal';
+import useModalManager from '../utils/modalManager';
 
 const Dashboard = () => {
   const pageTitle = 'Dashboard';
@@ -8,6 +10,7 @@ const Dashboard = () => {
   const editEvent = ''; // Placeholder event for the form data
   const addEvent = ''; // Placeholder event for adding form data
 
+  const { isModalOpen, modalTitle, modalConfig, openModal, closeModal } = useModalManager();
   const columnToFormFieldMapping = {
     // Add your column to form field mappings here if needed
   };
@@ -19,23 +22,44 @@ const Dashboard = () => {
   };
 
   return (
-    <PageTemplate
-      pageTitle={pageTitle}
-      listEvent={listEvent}
-      editEvent={editEvent}
-      addEvent={addEvent}
-      columnToFormFieldMapping={columnToFormFieldMapping}
-      excludeFormFields={excludeFormFields}
-      columnStyles={columnStyles}
-    >
-      <div className="p-4">
-        <h2 className="mb-4 text-xl font-bold">Dashboard</h2>
-        <p>Welcome to the Dashboard! This is a placeholder for future account-related data and summaries.</p>
+    <>
+      <PageTemplate
+        pageTitle={pageTitle}
+        listEvent={listEvent}
+        editEvent={editEvent}
+        addEvent={addEvent}
+        columnToFormFieldMapping={columnToFormFieldMapping}
+        excludeFormFields={excludeFormFields}
+        columnStyles={columnStyles}
+      >
+        <div className="flex flex-col h-full">
+          {/* Your main dashboard content goes here */}
+          <div className="flex-grow">
+            {/* Add your dashboard widgets or content here */}
+            <button
+              onClick={() => openModal('deleteConfirm', { message: 'This is a test modal' })}
+              className="px-4 py-2 mb-4 text-white bg-blue-600 rounded hover:bg-blue-700"
+            >
+              Open Test Modal
+            </button>
+          </div>
 
-        {/* Add the VariableTable component here */}
-        <VariableTable />
-      </div>
-    </PageTemplate>
+          {/* Debug Panel */}
+          <div className="w-full p-4 mt-4 bg-white border border-gray-300 rounded-lg shadow-lg">
+            <h2 className="mb-2 text-lg font-bold">Debug Panel</h2>
+            <DebugPanel />
+          </div>
+        </div>
+      </PageTemplate>
+
+      <ModalComponent
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={modalTitle}
+        content={modalConfig?.message || modalConfig?.content}
+        contentType={modalConfig?.type || 'message'}
+      />
+    </>
   );
 };
 

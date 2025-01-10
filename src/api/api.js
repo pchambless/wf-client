@@ -3,7 +3,12 @@ import axios from 'axios';
 const API_BASE_URL = 'http://localhost:3001/api';
 const fileName = 'api: ';
 
-// Function to fetch event types with specified attributes
+/**
+ * Fetches the list of event types from the API.
+ *
+ * @returns {Promise<Array<{ eventType: string, params: Array, purpose: string }>>} An array of event types with their parameters and purpose.
+ * @throws {Error} Throws an error if the response from the API is not an array.
+ */
 export const fetchEventTypes = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/util/fetchEventTypes`);
@@ -25,8 +30,12 @@ export const fetchEventTypes = async () => {
   }
 };
 
-
-// Load the API Columns
+/**
+ * Fetches the list of API columns from the API.
+ *
+ * @returns {Promise<Object>} An object containing the API columns as key-value pairs, where the key is the column's variable name and the value is an empty string with a leading colon.
+ * @throws {Error} Throws an error if the response from the API is not an array.
+ */
 export const fetchApiColumns = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/util/fetchApiColumns`);
@@ -47,9 +56,14 @@ export const fetchApiColumns = async () => {
   }
 };
 
-
-
-
+/**
+ * Logs the user into the system using the provided email and password.
+ *
+ * @param {string} email - The user's email address.
+ * @param {string} password - The user's password.
+ * @returns {Promise<Object>} A promise that resolves to the server response data upon successful login, or a promise that rejects with an error object containing a `success` property set to `false` and a `message` property set to the error message upon login failure.
+ * @throws {Error} Throws an error if the HTTP request to the server fails.
+ */
 export const login = async (email, password) => {
   try {
     const response = await fetch(`http://localhost:3001/api/auth/login`, {
@@ -73,6 +87,14 @@ export const login = async (email, password) => {
   }
 };
 
+/**
+ * Executes the specified event type with the provided parameters.
+ *
+ * @param {string} eventType - The name of the event type to be executed.
+ * @param {Object} params - An object containing the parameters required for the specified event type.
+ * @returns {Promise<Object>} A promise that resolves to the server response data upon successful execution, or a promise that rejects with an error object containing a `success` property set to `false` and a `message` property set to the error message upon execution failure.
+ * @throws {Error} Throws an error if the HTTP request to the server fails.
+ */
 export const execEventType = async (eventType, params) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/execEventType`, {

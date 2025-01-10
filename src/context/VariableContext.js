@@ -70,7 +70,7 @@ export const VariableProvider = ({ children }) => {
    */
   const logSetVariables = useCallback(() => {
     const setVariablesLog = Object.entries(variables)
-      .filter(([key, value]) => value !== '')
+      .filter(([key, value]) => value )
       .map(([key, value]) => `${key}: '${value}'`)
       .join(',\n');
     logAndTime('Current Variables with set values:\n[\n' + setVariablesLog + '\n]');

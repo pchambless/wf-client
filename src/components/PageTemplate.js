@@ -56,16 +56,18 @@ const PageTemplate = ({
       <div className="flex flex-col h-full">
         <h1 className="mb-4 text-2xl font-bold">{pageTitle}</h1>
         <div className="flex flex-row w-full">
-          <div className="w-1/2">
-            <Table
-              listEvent={listEvent}
-              onRowClick={handleRowClick}
-              onAddNewClick={addEvent ? handleAddNewClick : undefined}
-              columnStyles={columnStyles}
-            />
-          </div>
+          {listEvent && (
+            <div className="w-1/2">
+              <Table
+                listEvent={listEvent}
+                onRowClick={handleRowClick}
+                onAddNewClick={addEvent ? handleAddNewClick : undefined}
+                columnStyles={columnStyles}
+              />
+            </div>
+          )}
           {(editEvent || addEvent) && (
-            <div className="w-1/2 p-4">
+            <div className={`${listEvent ? 'w-1/2' : 'w-full'} p-4`}>
               <DynamicForm
                 columns={formColumns}
                 data={formData}

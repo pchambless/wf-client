@@ -5,31 +5,33 @@ import { EventTypeProvider } from './context/EventTypeContext';
 import { VariableProvider } from './context/VariableContext';
 import { PageProvider } from './context/PageContext';
 import { SelectProvider } from './context/SelectContext';
-import { ModalProvider } from './context/ModalContext'; // Import ModalProvider
-import IngrTypes from './pages/ingredients/IngrTypes'; 
+import { DebugProvider } from './context/DebugContext';
+import IngrTypes from './pages/ingredients/IngrTypes';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import './styles/modal.css';
+import useModalManager from './utils/modalManager';
+import Modal from './components/Modal';
 
 console.log('App component loaded');
 
 /**
- * Main application component that sets up the routing and context providers.
- * 
- * This component wraps the entire application with various context providers
- * and sets up the routing structure using React Router.
- * 
- * @returns {React.ReactElement} The rendered application structure with routes and context providers.
+ * The main component of the application. It sets up the context providers and routes for the application.
+ * It also renders the Modal component based on the state provided by the useModalManager hook.
+ *
+ * @returns {JSX.Element} The JSX element representing the App component.
  */
 const App = () => {
   console.log('App component rendered');
+  const { modalState, closeModal } = useModalManager();
 
   return (
-    <UserProvider>
-      <VariableProvider>
-        <EventTypeProvider>
-          <PageProvider>
-            <SelectProvider>
-              <ModalProvider>
+    <DebugProvider>
+      <UserProvider>
+        <VariableProvider>
+          <EventTypeProvider>
+            <PageProvider>
+              <SelectProvider>
                 <Router>
                   <Routes>
                     <Route path="/" element={<Login />} />
@@ -38,12 +40,19 @@ const App = () => {
                     <Route path="/login" element={<Login />} />
                   </Routes>
                 </Router>
-              </ModalProvider>
-            </SelectProvider>
-          </PageProvider>
-        </EventTypeProvider>
-      </VariableProvider>
-    </UserProvider>
+                <Modal
+                  isOpen={modalState.isOpen}
+                  onClose={closeModal}
+                  title={modalState.config?.title}
+                  content={modalState.config?.content}
+                  contentType={modalState.config?.type}
+                />
+              </SelectProvider>
+            </PageProvider>
+          </EventTypeProvider>
+        </VariableProvider>
+      </UserProvider>
+    </DebugProvider> 
   );
 };
 

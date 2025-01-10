@@ -2,21 +2,23 @@ import React from 'react';
 import { useVariableContext } from '../../context/VariableContext';
 
 const VariableList = () => {
-  const { variables } = useVariableContext();
+  const { logSetVariables } = useVariableContext();
 
+  // Filter out variables with empty values
+  const populatedVariables = Object.entries(logSetVariables);
   return (
     <div>
-      <h3>Current Variables:</h3>
-      {Object.keys(variables).length > 0 ? (
+      <h3>Populated Variables:</h3>
+      {populatedVariables.length > 0 ? (
         <ul>
-          {Object.entries(variables).map(([key, value]) => (
+          {populatedVariables.map(([key, value]) => (
             <li key={key}>
               <strong>{key}:</strong> {value}
             </li>
           ))}
         </ul>
       ) : (
-        <p>No variables set.</p>
+        <p>No populated variables.</p>
       )}
     </div>
   );
