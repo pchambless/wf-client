@@ -1,8 +1,8 @@
 import React from 'react';
-import { useVariableContext } from '../../context/VariableContext';
+import { listVars } from '../../utils/useExternalStore';
 
 const VariableTable = () => {
-  const { variables } = useVariableContext();
+  const variables = listVars();
 
   return (
     <div className="p-4">

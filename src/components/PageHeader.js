@@ -1,39 +1,34 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
+import Modal from './Modal';
+import useLogger from '../hooks/useLogger';
 import { useNavigate } from 'react-router-dom';
-import { useVariableContext } from '../context/VariableContext';
 import { usePageContext } from '../context/PageContext';
 import logo from '../assets/wf-icon.png';
 import AppNav from './AppNav';
-import useLogger from '../hooks/useLogger';
 import useModalManager from '../utils/modalManager';
+import useExternalStore from '../utils/useExternalStore';
 
 const PageHeader = () => {
   const logAndTime = useLogger('PageHeader');
   const { pageTitle } = usePageContext();
-  const { fetchVariable } = useVariableContext();
-  const [acctName, setAcctName] = useState('');
+  const variables = useExternalStore();
   const navigate = useNavigate();
-  const { openModal } = useModalManager();
+  const { openModal, closeModal, modalState } = useModalManager();
 
-  useEffect(() => {
-    const fetchedAcctName = fetchVariable(':acctName');
-    if (fetchedAcctName) {
-      setAcctName(fetchedAcctName);
-    }
-  }, [fetchVariable]);
+  const acctName = variables[':acctName'];
 
-  const handleOpenModal = useCallback(() => {
+  const handleOpenModal = () => {
     logAndTime('Opening userAccts modal');
     openModal('userAccts');
-  }, [logAndTime, openModal]);
+  };
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = () => {
     logAndTime('Logging out');
     localStorage.clear();
     navigate('/');
-  }, [navigate, logAndTime]);
+  };
 
-  logAndTime('PageHeader rendering');
+  logAndTime('PageHeader rendering', { acctName, pageTitle });
 
   return (
     <div>
@@ -50,7 +45,7 @@ const PageHeader = () => {
             onClick={handleOpenModal}
             className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
           >
-            Select Accounts
+            Select Account
           </button>
           <button onClick={handleLogout} className="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700">
             Logout
@@ -58,6 +53,14 @@ const PageHeader = () => {
         </div>
       </header>
       <AppNav />
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        title={modalState.config?.title}
+        content={modalState.config?.content}
+        contentType={modalState.config?.type}
+        listEvent={modalState.config?.listEvent}
+      />
     </div>
   );
 };

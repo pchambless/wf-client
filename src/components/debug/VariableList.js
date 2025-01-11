@@ -1,11 +1,10 @@
 import React from 'react';
-import { useVariableContext } from '../../context/VariableContext';
+import useExternalStore from '../../utils/useExternalStore';
 
 const VariableList = () => {
-  const { logSetVariables } = useVariableContext();
+  const variables = useExternalStore();
+  const populatedVariables = Object.entries(variables);
 
-  // Filter out variables with empty values
-  const populatedVariables = Object.entries(logSetVariables);
   return (
     <div>
       <h3>Populated Variables:</h3>

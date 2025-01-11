@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import Container from './Container';
 import Table from './Table';
 import DynamicForm from './DynamicForm';
-import { usePageUtils } from '../utils/pageUtils';
+import { usePageContext } from '../context/PageContext';
 
 const PageTemplate = ({
   pageTitle,
@@ -14,7 +14,7 @@ const PageTemplate = ({
   columnStyles,
   children
 }) => {
-  const { fetchFormColumns, logAndTime } = usePageUtils();
+  const { fetchFormColumns, logAndTime } = usePageContext();
 
   const [formData, setFormData] = useState({});
   const [formMode, setFormMode] = useState('view');

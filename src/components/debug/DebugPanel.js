@@ -2,7 +2,6 @@ import React from 'react';
 import VariableTable from './VariableTable';
 import DebugLog from './DebugLog';
 import { usePageContext } from '../../context/PageContext';
-import { useUserContext } from '../../context/UserContext';
 import { useDebug } from '../../context/DebugContext';
 import useModalManager from '../../utils/modalManager';
 
@@ -26,7 +25,6 @@ const DebugTable = ({ title, data }) => {
 
 const DebugPanel = () => {
   const { currentPage } = usePageContext();
-  const { userEmail, accounts } = useUserContext();
   const { logs } = useDebug();
   const { isModalOpen, modalTitle, modalConfig } = useModalManager();
 
@@ -34,12 +32,7 @@ const DebugPanel = () => {
     'Current Page': currentPage,
   };
 
-  const userInfo = {
-    'User Email': userEmail,
-    'Number of Accounts': accounts.length,
-  };
-
-  const envInfo = {
+    const envInfo = {
     'Node Env': process.env.NODE_ENV,
     'React Version': React.version,
   };
@@ -58,7 +51,6 @@ const DebugPanel = () => {
         </div>
         <div className="flex-1 min-w-[300px]">
           <DebugTable title="Page Info" data={pageInfo} />
-          <DebugTable title="User Info" data={userInfo} />
         </div>
         <div className="flex-1 min-w-[300px]">
           <DebugTable title="Environment" data={envInfo} />

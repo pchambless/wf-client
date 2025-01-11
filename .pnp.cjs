@@ -48,6 +48,7 @@ const RAW_RUNTIME_STATE =
           ["react-model", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:4.3.1"],\
           ["react-router-dom", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:7.0.1"],\
           ["react-scripts", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:5.0.1"],\
+          ["redux", "npm:5.0.1"],\
           ["resolve-url-loader", "npm:5.0.0"],\
           ["supertest", "npm:7.0.0"],\
           ["svgo", "npm:3.3.2"],\
@@ -16600,6 +16601,15 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["redux", [\
+      ["npm:5.0.1", {\
+        "packageLocation": "../../AppData/Local/Yarn/Berry/cache/redux-npm-5.0.1-f8e6b1cb23-10c0.zip/node_modules/redux/",\
+        "packageDependencies": [\
+          ["redux", "npm:5.0.1"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["reflect.getprototypeof", [\
       ["npm:1.0.7", {\
         "packageLocation": "../../AppData/Local/Yarn/Berry/cache/reflect.getprototypeof-npm-1.0.7-67d16bc93c-10c0.zip/node_modules/reflect.getprototypeof/",\
@@ -19195,6 +19205,7 @@ const RAW_RUNTIME_STATE =
           ["react-model", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:4.3.1"],\
           ["react-router-dom", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:7.0.1"],\
           ["react-scripts", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:5.0.1"],\
+          ["redux", "npm:5.0.1"],\
           ["resolve-url-loader", "npm:5.0.0"],\
           ["supertest", "npm:7.0.0"],\
           ["svgo", "npm:3.3.2"],\

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useVariableContext } from '../context/VariableContext';
+import useExternalStore, { setVars, getVar } from '../utils/useExternalStore';
 
 const fileName = 'Select: ';
 
 const Select = ({ options = [], label, valueKey, labelKey, onChange, onFocus, varName, labelName }) => {
   const [selectedValue, setSelectedValue] = useState('');
-  const { setVariables } = useVariableContext(); // Get setVariables from VariableContext
+  const variables = useExternalStore(); // Use externalStore to get the variables
 
   useEffect(() => {
     console.log(fileName, 'Options updated:', options);
@@ -29,8 +29,8 @@ const Select = ({ options = [], label, valueKey, labelKey, onChange, onFocus, va
     if (onChange) onChange(value);
 
     console.log(fileName, 'Setting variables:', { [varName]: value, [labelName]: labelValue });
-    setVariables({ [varName]: value });
-    setVariables({ [labelName]: labelValue });
+    setVars({ [varName]: value });
+    setVars({ [labelName]: labelValue });
   };
 
   return (

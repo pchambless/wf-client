@@ -1,8 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { UserProvider } from './context/UserContext';
 import { EventTypeProvider } from './context/EventTypeContext';
-import { VariableProvider } from './context/VariableContext';
 import { PageProvider } from './context/PageContext';
 import { SelectProvider } from './context/SelectContext';
 import { DebugProvider } from './context/DebugContext';
@@ -27,8 +25,6 @@ const App = () => {
 
   return (
     <DebugProvider>
-      <UserProvider>
-        <VariableProvider>
           <EventTypeProvider>
             <PageProvider>
               <SelectProvider>
@@ -50,8 +46,6 @@ const App = () => {
               </SelectProvider>
             </PageProvider>
           </EventTypeProvider>
-        </VariableProvider>
-      </UserProvider>
     </DebugProvider> 
   );
 };

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import { execEventType } from '../api/api';
 import useLogger from '../hooks/useLogger';
-import { useVariableContext } from './VariableContext';
+import { getVar } from '../utils/useExternalStore';
 
 export const useEventTypeContext = () => useContext(EventTypeContext);
 
@@ -12,9 +12,7 @@ const EventTypeProvider = ({ children }) => {
   const logAndTime = useLogger(fileName);
   const [eventTypes, setEventTypes] = useState([]);
 
-  const { fetchVariable } = useVariableContext();
-
-    const eventTypeLookup = async (eventType) => {
+  const eventTypeLookup = async (eventType) => {
     logAndTime('eventTypeLookup');
     const params = fetchEventParams(eventType);
 
@@ -36,18 +34,18 @@ const EventTypeProvider = ({ children }) => {
   };
 
   const execEvent = async (eventType) => {
-//    logAndTime('Executing query for event type:', eventType);
+    // logAndTime('Executing query for event type:', eventType);
 
     const params = await eventTypeLookup(eventType);
 
     const resolvedParams = params.reduce((acc, param) => {
-      acc[param] = fetchVariable(param) || param;
+      acc[param] = getVar(param) || param;
       return acc;
     }, {});
 
     const requestBody = {
       eventType,
-      params: resolvedParams
+      params: resolvedParams,
     };
 
     logAndTime('Request Body:', JSON.stringify(requestBody));
@@ -69,7 +67,7 @@ const EventTypeProvider = ({ children }) => {
       throw new Error(`No event type found for ${eventType}`);
     }
 
-    const columns = event.params.map(param => {
+    const columns = event.params.map((param) => {
       // Remove the leading ':' from the param name if it exists
       const name = param.startsWith(':') ? param.slice(1) : param;
       return {
@@ -85,14 +83,16 @@ const EventTypeProvider = ({ children }) => {
   };
 
   return (
-    <EventTypeContext.Provider value={{ 
-      eventTypes, 
-      setEventTypes, 
-      execEvent,
-      fetchEventParams, 
-      eventTypeLookup,
-      fetchFormColumns
-    }}>
+    <EventTypeContext.Provider
+      value={{
+        eventTypes,
+        setEventTypes,
+        execEvent,
+        fetchEventParams,
+        eventTypeLookup,
+        fetchFormColumns,
+      }}
+    >
       {children}
     </EventTypeContext.Provider>
   );

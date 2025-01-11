@@ -1,15 +1,18 @@
 import React from 'react';
-import { useModal } from '../../context/ModalContext';
-import { useSelectContext } from '../../context/SelectContext';
-// Import other context hooks as needed
+import { useSelectContext } from '../../context/SelectContext'; // Import other context hooks as needed
+import useModalManager from '../../utils/modalManager'; // Import modalManager
 
 const DebugStateTable = () => {
-  const { isModalOpen, modalTitle, modalConfig } = useModal();
+  const { modalState } = useModalManager();
   const { selectedItems } = useSelectContext();
   // Get other state values from different contexts as needed
 
   const stateMapping = {
-    'Modal State': { isModalOpen, modalTitle, modalConfig: JSON.stringify(modalConfig) },
+    'Modal State': {
+      isOpen: modalState.isOpen,
+      modalTitle: modalState.config?.title,
+      modalConfig: JSON.stringify(modalState.config),
+    },
     'Select State': { selectedItems: JSON.stringify(selectedItems) },
     // Add other state mappings as needed
   };

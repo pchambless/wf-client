@@ -1,16 +1,17 @@
 import React from 'react';
 import PageTemplate from '../components/PageTemplate';
 import DebugPanel from '../components/debug/DebugPanel';
-import ModalComponent from '../components/Modal';
+import Modal from '../components/Modal';
 import useModalManager from '../utils/modalManager';
 
 const Dashboard = () => {
   const pageTitle = 'Dashboard';
-  const listEvent = ''; // Placeholder event for the table data
+  const listEvent = 'userAccts'; // Testing with userAccts event
   const editEvent = ''; // Placeholder event for the form data
   const addEvent = ''; // Placeholder event for adding form data
 
-  const { isModalOpen, modalTitle, modalConfig, openModal, closeModal } = useModalManager();
+  const { modalState, openModal, closeModal } = useModalManager();
+
   const columnToFormFieldMapping = {
     // Add your column to form field mappings here if needed
   };
@@ -37,7 +38,7 @@ const Dashboard = () => {
           <div className="flex-grow">
             {/* Add your dashboard widgets or content here */}
             <button
-              onClick={() => openModal('deleteConfirm', { message: 'This is a test modal' })}
+              onClick={() => openModal('userAccts')}
               className="px-4 py-2 mb-4 text-white bg-blue-600 rounded hover:bg-blue-700"
             >
               Open Test Modal
@@ -52,12 +53,13 @@ const Dashboard = () => {
         </div>
       </PageTemplate>
 
-      <ModalComponent
-        isOpen={isModalOpen}
+      <Modal
+        isOpen={modalState.isOpen}
         onClose={closeModal}
-        title={modalTitle}
-        content={modalConfig?.message || modalConfig?.content}
-        contentType={modalConfig?.type || 'message'}
+        title={modalState.config?.title}
+        content={modalState.config?.message || modalState.config?.listEvent}
+        contentType={modalState.config?.type}
+        listEvent={modalState.config?.listEvent}
       />
     </>
   );

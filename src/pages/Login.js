@@ -1,45 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductForm from '../components/ProductForm';
-import { useUserContext } from '../context/UserContext';
-import { useVariableContext } from '../context/VariableContext'; // Import VariableContext
-import { useEventTypeContext } from '../context/EventTypeContext'; // Import EventTypeContext
+import { useEventTypeContext } from '../context/EventTypeContext';
 import logo from '../assets/wf-icon.png';
 import useLogger from '../hooks/useLogger';
-import { login, fetchApiColumns, fetchEventTypes } from '../api/api'; // Import fetchApiColumns and fetchEventTypes
+import { login, fetchEventTypes } from '../api/api';
+import { setVars, listVars } from '../utils/externalStore';
 
-/**
- * Login component for user authentication.
- * 
- * This component renders a login form and handles the login process.
- * It manages the login state, fetches necessary data upon successful login,
- * and updates various contexts with user and application data.
- * 
- * @component
- * @returns {JSX.Element} The rendered Login component
- */
 const Login = () => {
   const fileName = '[Login] ';
   const logAndTime = useLogger(fileName);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setUserEmail } = useUserContext();
-  const { setVariables, logSetVariables } = useVariableContext();
   const { setEventTypes } = useEventTypeContext();
-  const navigate = useNavigate();
-  const [loginSuccess, setLoginSuccess] = useState(false);
+  const navigate = useNavigate(); // Add the useNavigate hook
 
-  /**
-   * Handles the login process when the form is submitted.
-   * 
-   * This function prevents the default form submission, validates inputs,
-   * attempts to log in the user, fetches necessary data upon successful login,
-   * updates various contexts, and sets up for navigation to the dashboard.
-   * 
-   * @async
-   * @param {Event} e - The form submission event
-   * @returns {Promise<void>}
-   */
   const handleLogin = async (e) => {
     e.preventDefault();
     logAndTime('Login attempt started');
@@ -62,42 +37,29 @@ const Login = () => {
       const { userId, userEmail } = response.data;
 
       logAndTime('Fetching event types');
-      const eventTypes = await fetchEventTypes(); 
+      const eventTypes = await fetchEventTypes();
       logAndTime('Event types fetched:', eventTypes);
 
       setEventTypes(eventTypes);
 
-      logAndTime('Fetching API columns');
-      const apiVariables = await fetchApiColumns();
+      logAndTime('Setting API variables');
+      setVars({ ':userEmail': userEmail, ':userID': userId });
 
-      setVariables(apiVariables);
+      // Delay logging to ensure state is updated
+      setTimeout(() => {
+        const currentVars = listVars();
+        logAndTime('Current Variables:', JSON.stringify(currentVars, null, 2));
+      }, 100); // Slight delay to ensure state update
 
-      const userVariables = { ':userEmail': userEmail, ':userID': userId };
-
-      setVariables(userVariables);
-
-      logAndTime('Variables set successfully');
-      logSetVariables();
-
-      localStorage.setItem('userEmail', userEmail);
-
-      setUserEmail(userEmail);
       logAndTime('User logged in successfully');
 
-      setLoginSuccess(true);
+      // Navigate to the dashboard
+      navigate('/dashboard');
     } catch (error) {
       logAndTime(`Login failed: ${error.message}`);
       alert(`${fileName} Login failed. Please try again.`);
     }
   };
-
-
-  useEffect(() => {
-    if (loginSuccess) {
-      logAndTime('Navigating to /dashboard');
-      navigate('/dashboard');
-    }
-  }, [loginSuccess, navigate, logAndTime]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-product-bg">

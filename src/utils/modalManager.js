@@ -10,11 +10,24 @@ const useModalManager = () => {
       title: 'User Accounts',
       type: 'table',
       listEvent: 'userAccts',
+      id: 'acct_id',
+      varName: ':acctID',
+      label: 'account_name',
+      labelName: ':acctName'
     },
     deleteConfirm: {
       title: 'Confirm Deletion',
       type: 'message',
       message: 'Are you sure you want to delete this item?',
+    },
+    selIngrTypes: {
+      title: 'Ingredient Types',
+      type: 'table',
+      listEvent: 'ingrTypeList',
+      id: 'id',
+      varName: ':ingrTypeID',
+      label: 'name',
+      labelName: ':ingrTypeName'
     },
     // Add other modal configurations here
   }), []);
@@ -32,7 +45,7 @@ const useModalManager = () => {
       isOpen: true, 
       config: { ...config, ...additionalProps } 
     });
-    logAndTime(`Modal opened: ${config.title}`);
+    logAndTime(`Modal opened: ${config.title || configKey}`);
   }, [mapping, logAndTime]);
 
   const closeModal = useCallback(() => {
