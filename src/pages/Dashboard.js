@@ -6,7 +6,7 @@ import useModalManager from '../utils/modalManager';
 
 const Dashboard = () => {
   const pageTitle = 'Dashboard';
-  const listEvent = 'userAccts'; // Testing with userAccts event
+  const listEvent = ''; // Testing with userAccts event
   const editEvent = ''; // Placeholder event for the form data
   const addEvent = ''; // Placeholder event for adding form data
 
@@ -59,7 +59,7 @@ const Dashboard = () => {
         title={modalState.config?.title}
         content={modalState.config?.message || modalState.config?.listEvent}
         contentType={modalState.config?.type}
-        listEvent={modalState.config?.listEvent}
+        listEvent='userAccts' // Placeholder event for the form data
       />
     </>
   );

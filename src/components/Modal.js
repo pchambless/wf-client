@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, memo, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import ReactModal from 'react-modal';
 import useLogger from '../hooks/useLogger';
@@ -6,7 +6,7 @@ import Table from '../components/Table';
 import useModalManager from '../utils/modalManager';
 import { setVars } from '../utils/useExternalStore';
 
-const Modal = ({ isOpen, onClose, title, content, contentType, listEvent }) => {
+const Modal = memo(({ isOpen, onClose, title, content, contentType, listEvent }) => {
   const logAndTime = useLogger('Modal');
   const { modalState } = useModalManager();
 
@@ -14,7 +14,7 @@ const Modal = ({ isOpen, onClose, title, content, contentType, listEvent }) => {
     ReactModal.setAppElement('#root');
   }, []);
 
-  const handleRowClick = (selectedItem) => {
+  const handleRowClick = useCallback((selectedItem) => {
     const config = modalState.config;
     if (config) {
       const selectedVars = {
@@ -25,9 +25,25 @@ const Modal = ({ isOpen, onClose, title, content, contentType, listEvent }) => {
       logAndTime(`Variables set: ${JSON.stringify(selectedVars)}`);
       onClose();
     }
-  };
+  }, [modalState, logAndTime, onClose]);
 
   logAndTime('Rendering Modal', { isOpen, modalState });
+
+  const renderContent = () => {
+    switch (contentType) {
+      case 'message':
+        return <p>{content}</p>;
+      case 'table':
+        return (
+          <Table
+            listEvent={listEvent}
+            onRowClick={handleRowClick}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return ReactDOM.createPortal(
     <ReactModal
@@ -40,13 +56,7 @@ const Modal = ({ isOpen, onClose, title, content, contentType, listEvent }) => {
       <div className="w-11/12 max-w-2xl p-6 bg-white border-4 rounded-lg shadow-xl border-modal-brdr">
         <h2 className="mb-4 text-2xl font-bold text-modal-brdr">{title || 'Modal'}</h2>
         <div className="mb-6">
-          {contentType === 'message' && <p>{content}</p>}
-          {contentType === 'table' && (
-            <Table
-              listEvent={listEvent}
-              onRowClick={handleRowClick}
-            />
-          )}
+          {renderContent()}
         </div>
         <div className="flex justify-end">
           <button 
@@ -60,6 +70,6 @@ const Modal = ({ isOpen, onClose, title, content, contentType, listEvent }) => {
     </ReactModal>,
     document.body
   );
-};
+});
 
 export default Modal;
