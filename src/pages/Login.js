@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import ProductForm from '../components/ProductForm';
 import { useEventTypeContext } from '../context/EventTypeContext';
 import logo from '../assets/wf-icon.png';
@@ -13,7 +13,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { setEventTypes } = useEventTypeContext();
-  const navigate = useNavigate(); // Add the useNavigate hook
+//  const navigate = useNavigate(); // Add the useNavigate hook
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -34,7 +34,7 @@ const Login = () => {
         throw new Error(response.message || 'Login failed');
       }
 
-      const { userId, userEmail } = response.data;
+      const { userId, roleID, acctID, acctName, userEmail } = response.data;
 
       logAndTime('Fetching event types');
       const eventTypes = await fetchEventTypes();
@@ -44,17 +44,16 @@ const Login = () => {
 
       logAndTime('Setting API variables');
       setVars({ ':userEmail': userEmail, ':userID': userId });
+      setVars({ ':acctID': acctID, ':acctName': acctName, 'roleID': roleID });
 
-      // Delay logging to ensure state is updated
-      setTimeout(() => {
-        const currentVars = listVars();
-        logAndTime('Current Variables:', JSON.stringify(currentVars, null, 2));
-      }, 100); // Slight delay to ensure state update
+      const currentVars = listVars();
+      logAndTime('Current Variables:', JSON.stringify(currentVars, null, 2));
+  
 
       logAndTime('User logged in successfully');
 
       // Navigate to the dashboard
-      navigate('/dashboard');
+    //  navigate('/dashboard');
     } catch (error) {
       logAndTime(`Login failed: ${error.message}`);
       alert(`${fileName} Login failed. Please try again.`);

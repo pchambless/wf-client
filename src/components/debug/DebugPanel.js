@@ -3,7 +3,7 @@ import VariableTable from './VariableTable';
 import DebugLog from './DebugLog';
 import { usePageContext } from '../../context/PageContext';
 import { useDebug } from '../../context/DebugContext';
-import useModalManager from '../../utils/modalManager';
+import useModalManager from '../../modal/modalManager';
 
 const DebugTable = ({ title, data }) => {
   return (

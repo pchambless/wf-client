@@ -1,11 +1,11 @@
 import React from 'react';
-import Modal from './Modal';
+import Modal from './CustomModal';
 import useLogger from '../hooks/useLogger';
 import { useNavigate } from 'react-router-dom';
 import { usePageContext } from '../context/PageContext';
 import logo from '../assets/wf-icon.png';
 import AppNav from './AppNav';
-import useModalManager from '../utils/modalManager';
+import useModalManager from '../modal/modalManager';
 import useExternalStore from '../utils/useExternalStore';
 
 const PageHeader = () => {

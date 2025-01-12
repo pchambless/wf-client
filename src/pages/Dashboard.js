@@ -1,8 +1,8 @@
 import React from 'react';
 import PageTemplate from '../components/PageTemplate';
 import DebugPanel from '../components/debug/DebugPanel';
-import Modal from '../components/Modal';
-import useModalManager from '../utils/modalManager';
+import Modal from '../components/CustomModal';
+import useModalManager from '../modal/modalManager';
 
 const Dashboard = () => {
   const pageTitle = 'Dashboard';

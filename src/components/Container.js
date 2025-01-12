@@ -2,10 +2,10 @@ import React from 'react';
 import '../styles/tailwind.css';
 import PageHeader from './PageHeader';
 
-const Container = ({ children }) => {
+const Container = ({ children, openModal, acctName }) => {
   return (
     <div className="flex flex-col min-h-screen bg-lightGray">
-      <PageHeader />
+      <PageHeader openModal={openModal} acctName={acctName} />
       <main className="flex flex-row flex-grow p-4">
         {children}
       </main>
