@@ -1,96 +1,88 @@
-import React, { createContext, useContext, useState } from 'react';
-import { execEventType } from '../api/api';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { execEventType as apiExecEventType, fetchEventTypes as apiFetchEventTypes } from '../api/api';
 import useLogger from '../hooks/useLogger';
 import { getVar } from '../utils/useExternalStore';
 
-export const useEventTypeContext = () => useContext(EventTypeContext);
-
 const EventTypeContext = createContext();
 
-const EventTypeProvider = ({ children }) => {
+export const useEventTypeContext = () => useContext(EventTypeContext);
+
+export const EventTypeProvider = ({ children }) => {
   const fileName = 'EventTypeContext';
   const logAndTime = useLogger(fileName);
   const [eventTypes, setEventTypes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const hasLoadedEventTypes = useRef(false);
 
-  const eventTypeLookup = async (eventType) => {
+  const loadEventTypes = useCallback(async () => {
+    if (hasLoadedEventTypes.current) return;
+
+    logAndTime('Fetching and loading event types');
+    setIsLoading(true);
+    setError(null);
+    try {
+      const fetchedEventTypes = await apiFetchEventTypes();
+      logAndTime('Fetched event types:', fetchedEventTypes);
+      setEventTypes(fetchedEventTypes);
+      setIsLoading(false);
+      logAndTime('Event types loaded successfully');
+      hasLoadedEventTypes.current = true;
+    } catch (error) {
+      console.error(logAndTime('Error fetching and loading event types:', error));
+      setError(error.message);
+      setIsLoading(false);
+    }
+  }, [logAndTime]);
+
+  useEffect(() => {
+    loadEventTypes();
+  }, [loadEventTypes]);
+
+  const getEventTypes = useCallback(() => eventTypes, [eventTypes]);
+
+  const eventTypeLookup = useCallback((eventType) => {
     logAndTime('eventTypeLookup');
-    const params = fetchEventParams(eventType);
+    const event = eventTypes.find(e => e.eventType === eventType);
+    if (!event) {
+      throw new Error(`No event type found for ${eventType}`);
+    }
+    return event.params;
+  }, [eventTypes, logAndTime]);
+
+  const execEvent = useCallback(async (eventType) => {
+    const params = eventTypeLookup(eventType);
 
     if (!Array.isArray(params)) {
       throw new Error(logAndTime(`Expected array but received ${typeof params}`));
     }
-
-    return params;
-  };
-
-  const fetchEventParams = (eventType) => {
-    const event = eventTypes.find(e => e.eventType === eventType);
-    if (event) {
-      logAndTime(`fetchEventParams`);
-      return event.params;
-    } else {
-      throw new Error(`No parameters found: ${eventType}`);
-    }
-  };
-
-  const execEvent = async (eventType) => {
-    // logAndTime('Executing query for event type:', eventType);
-
-    const params = await eventTypeLookup(eventType);
 
     const resolvedParams = params.reduce((acc, param) => {
       acc[param] = getVar(param) || param;
       return acc;
     }, {});
 
-    const requestBody = {
-      eventType,
-      params: resolvedParams,
-    };
-
-    logAndTime('Request Body:', JSON.stringify(requestBody));
+    logAndTime('Request Body:', JSON.stringify({ eventType, params: resolvedParams }));
 
     try {
-      const response = await execEventType(eventType, resolvedParams);
+      const response = await apiExecEventType(eventType, resolvedParams);
       logAndTime('Event type executed successfully:', response);
       return response;
     } catch (error) {
       console.error(logAndTime(`Error executing event type ${eventType}:`, error));
       throw error;
     }
-  };
-
-  const fetchFormColumns = (eventType) => {
-    logAndTime(`Fetching form columns for event type: ${eventType}`);
-    const event = eventTypes.find(e => e.eventType === eventType);
-    if (!event) {
-      throw new Error(`No event type found for ${eventType}`);
-    }
-
-    const columns = event.params.map((param) => {
-      // Remove the leading ':' from the param name if it exists
-      const name = param.startsWith(':') ? param.slice(1) : param;
-      return {
-        name: name,
-        label: name.charAt(0).toUpperCase() + name.slice(1).replace(/([A-Z])/g, ' $1').trim(),
-        type: 'text',
-        required: true,
-      };
-    });
-
-    logAndTime(`Form columns for event type ${eventType}:`, columns);
-    return columns;
-  };
+  }, [eventTypeLookup, logAndTime]);
 
   return (
     <EventTypeContext.Provider
       value={{
-        eventTypes,
-        setEventTypes,
+        loadEventTypes,
+        getEventTypes,
         execEvent,
-        fetchEventParams,
-        eventTypeLookup,
-        fetchFormColumns,
+        isLoading,
+        error,
+        eventTypes,
       }}
     >
       {children}
@@ -98,5 +90,4 @@ const EventTypeProvider = ({ children }) => {
   );
 };
 
-export { EventTypeProvider };
 export default EventTypeContext;

@@ -1,43 +1,45 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useEventTypeContext } from '../context/EventTypeContext';
-import useLogger from '../hooks/useLogger';
 
-const Table = ({ listEvent, onRowClick, columnMapping = {}, idField, labelField }) => {
+
+const Table = ({ listEvent, columnMapping = {}, idField, labelField, onRowClick }) => {
   const [data, setData] = useState([]);
   const [columns, setColumns] = useState([]);
   const [loading, setLoading] = useState(true);
-  const hasFetchedData = useRef(false); // Flag to control data fetching
+  const [error, setError] = useState(null); // Add error state
+  const hasFetchedData = useRef(false);
   const { execEvent } = useEventTypeContext();
-  const logAndTime = useLogger('Table');
+  const fileName = 'Table ';
 
   const fetchData = useCallback(async () => {
-    if (hasFetchedData.current) {
-      return; // Prevent repeated fetching
+    if (hasFetchedData.current || error) { // Check if already fetched or if there was an error
+      return;
     }
 
     setLoading(true);
-    logAndTime(`Fetching data for listEvent: ${listEvent}`);
+    console.log(`[${fileName}] Fetching data for listEvent: ${listEvent}`);
     try {
       const result = await execEvent(listEvent);
-      logAndTime(`Data received:`, result, `length: ${result.length}`);
+      console.log(`[${fileName}] Data received:`, result, `length: ${result.length}`);
       if (result && result.length > 0) {
         setData(result);
         setColumns(Object.keys(result[0]));
-        logAndTime(`Columns set: ${Object.keys(result[0])}`);
-        hasFetchedData.current = true; // Set the flag to true after successful fetch
+        console.log(`[${fileName}] Columns set: ${Object.keys(result[0])}`);
+        hasFetchedData.current = true; // Prevents infinite loop by setting flag
       } else {
-        logAndTime('No data received or empty data array');
+        console.log(`[${fileName}]No data received or empty data array`);
         setData([]);
         setColumns([]);
       }
     } catch (error) {
-      logAndTime(`Error fetching data: ${error.message}`);
+      console.log(`[${fileName}] Error fetching data: ${error.message}`);
+      setError(error); // Set error state
       setData([]);
       setColumns([]);
     } finally {
       setLoading(false);
     }
-  }, [listEvent, execEvent, logAndTime]);
+  }, [listEvent, execEvent, error]);
 
   useEffect(() => {
     if (listEvent) {
@@ -46,15 +48,20 @@ const Table = ({ listEvent, onRowClick, columnMapping = {}, idField, labelField 
   }, [listEvent, fetchData]);
 
   const handleRowClick = useCallback((row) => {
+    const acctID = row[idField];
+    const acctName = row[labelField];
+    console.log(`[${fileName}] Row clicked`, { acctID, acctName });
     if (onRowClick) {
-      const acctID = row[idField];
-      const acctName = row[labelField];
-      onRowClick({ acctID, acctName });
+      onRowClick(acctID, acctName); // Use onRowClick to handle data and closing
     }
-  }, [onRowClick, idField, labelField]);
+  }, [idField, labelField, onRowClick]);
 
   if (loading) {
     return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error fetching data: {error.message}</div>; // Display error message
   }
 
   if (data.length === 0) {
@@ -66,23 +73,27 @@ const Table = ({ listEvent, onRowClick, columnMapping = {}, idField, labelField 
       <thead className="bg-gray-50">
         <tr>
           {columns.map((column, index) => (
-            <th
-              key={column}
-              scope="col"
-              className={`px-6 py-1 text-xs font-medium tracking-wider text-left text-gray-500 uppercase ${index === 0 ? 'hidden' : ''}`} // Hide the first column header
-            >
-              {columnMapping[column] || column}
-            </th>
+            columnMapping[column]?.visible !== false && (
+              <th
+                key={column}
+                scope="col"
+                className={`px-6 py-1 text-xs font-medium tracking-wider text-left text-gray-500 uppercase ${index === 0 ? 'hidden' : ''}`}
+              >
+                {columnMapping[column]?.label || column}
+              </th>
+            )
           ))}
         </tr>
       </thead>
       <tbody className="bg-white divide-y divide-gray-200">
         {data.map((row, rowIndex) => (
-          <tr key={rowIndex} onClick={() => handleRowClick(row)} className="text-sm cursor-pointer hover:bg-gray-100"> {/* Shrink the row text size */}
+          <tr key={rowIndex} onClick={() => handleRowClick(row)} className="text-sm cursor-pointer hover:bg-gray-100">
             {columns.map((column, colIndex) => (
-              <td key={`${rowIndex}-${column}`} className={`px-6 py-1 whitespace-nowrap ${colIndex === 0 ? 'hidden' : ''}`}> {/* Hide the first column data */}
-                {row[column]}
-              </td>
+              columnMapping[column]?.visible !== false && (
+                <td key={`${rowIndex}-${column}`} className={`px-6 py-1 whitespace-nowrap ${colIndex === 0 ? 'hidden' : ''}`}>
+                  {row[column]}
+                </td>
+              )
             ))}
           </tr>
         ))}

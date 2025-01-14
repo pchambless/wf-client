@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PageTemplate from '../components/PageTemplate';
 import DebugPanel from '../components/debug/DebugPanel';
-import Modal from '../components/CustomModal';
-import useModalManager from '../modal/modalManager';
+import { useModalContext } from '../context/ModalContext';
+import useLogger from '../hooks/useLogger';
 
 const Dashboard = () => {
   const pageTitle = 'Dashboard';
@@ -10,8 +10,12 @@ const Dashboard = () => {
   const editEvent = ''; // Placeholder event for the form data
   const addEvent = ''; // Placeholder event for adding form data
 
-  const { modalState, openModal, closeModal } = useModalManager();
+  const { openModal } = useModalContext();
+  const logAndTime = useLogger('Dashboard');
 
+  useEffect(() => {
+    logAndTime('Dashboard component mounted');
+  }, [logAndTime]);
   const columnToFormFieldMapping = {
     // Add your column to form field mappings here if needed
   };
@@ -20,6 +24,11 @@ const Dashboard = () => {
 
   const columnStyles = {
     // Add your column styles here if needed
+  };
+
+  const handleOpenTestModal = () => {
+    logAndTime('Opening test modal');
+    openModal('deleteConfirm');
   };
 
   return (
@@ -38,7 +47,7 @@ const Dashboard = () => {
           <div className="flex-grow">
             {/* Add your dashboard widgets or content here */}
             <button
-              onClick={() => openModal('userAccts')}
+              onClick={handleOpenTestModal}
               className="px-4 py-2 mb-4 text-white bg-blue-600 rounded hover:bg-blue-700"
             >
               Open Test Modal
@@ -52,15 +61,6 @@ const Dashboard = () => {
           </div>
         </div>
       </PageTemplate>
-
-      <Modal
-        isOpen={modalState.isOpen}
-        onClose={closeModal}
-        title={modalState.config?.title}
-        content={modalState.config?.message || modalState.config?.listEvent}
-        contentType={modalState.config?.type}
-        listEvent='userAccts' // Placeholder event for the form data
-      />
     </>
   );
 };

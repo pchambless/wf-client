@@ -1,25 +1,45 @@
-import React from 'react';
-import Modal from './CustomModal';
-import useLogger from '../hooks/useLogger';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useLogger from '../hooks/useLogger';
 import { usePageContext } from '../context/PageContext';
+import { useModalContext } from '../context/ModalContext';
 import logo from '../assets/wf-icon.png';
 import AppNav from './AppNav';
-import useModalManager from '../modal/modalManager';
-import useExternalStore from '../utils/useExternalStore';
+
+import { getVar, useExternalStore } from '../utils/externalStore';
 
 const PageHeader = () => {
   const logAndTime = useLogger('PageHeader');
   const { pageTitle } = usePageContext();
-  const variables = useExternalStore();
   const navigate = useNavigate();
-  const { openModal, closeModal, modalState } = useModalManager();
+  const { openModal } = useModalContext();
 
-  const acctName = variables[':acctName'];
+  const [hdrAcctName, setHdrAcctName] = useState('');
+  const storeState = useExternalStore();
 
+  const fetchAcctName = useCallback(() => {
+    try {
+      logAndTime('Fetching account name...');
+      const acctName = getVar(':acctName');
+      logAndTime(`Account name fetched: ${acctName}`);
+      setHdrAcctName(acctName || 'Unknown Account');
+    } catch (error) {
+      logAndTime('Error fetching account name:', error);
+    }
+  }, [logAndTime]);
+
+  useEffect(() => {
+    fetchAcctName();
+  }, [storeState, fetchAcctName]);
+  
   const handleOpenModal = () => {
     logAndTime('Opening userAccts modal');
     openModal('userAccts');
+  };
+
+  const handleOpenTestMessageModal = () => {
+    logAndTime('Opening test message modal');
+    openModal('deleteConfirm');
   };
 
   const handleLogout = () => {
@@ -28,7 +48,11 @@ const PageHeader = () => {
     navigate('/');
   };
 
-  logAndTime('PageHeader rendering', { acctName, pageTitle });
+  logAndTime('PageHeader rendering', { hdrAcctName, pageTitle });
+
+  if (!hdrAcctName) {
+    return <h2>Loading...</h2>;
+  }
 
   return (
     <div>
@@ -38,7 +62,7 @@ const PageHeader = () => {
           <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
         </div>
         <div className="flex items-center justify-center flex-1">
-          <h2 className="text-3xl font-semibold text-ingredient-brdr">{acctName}</h2>
+          <h2 className="text-3xl font-semibold text-ingredient-brdr">{hdrAcctName}</h2>
         </div>
         <div className="flex items-center space-x-4">
           <button
@@ -47,20 +71,18 @@ const PageHeader = () => {
           >
             Select Account
           </button>
+          <button
+            onClick={handleOpenTestMessageModal}
+            className="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700"
+          >
+            Test Message Modal
+          </button>
           <button onClick={handleLogout} className="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700">
             Logout
           </button>
         </div>
       </header>
       <AppNav />
-      <Modal
-        isOpen={modalState.isOpen}
-        onClose={closeModal}
-        title={modalState.config?.title}
-        content={modalState.config?.content}
-        contentType={modalState.config?.type}
-        listEvent={modalState.config?.listEvent}
-      />
     </div>
   );
 };

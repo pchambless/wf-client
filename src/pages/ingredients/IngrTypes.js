@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PageTemplate from '../../components/PageTemplate';
+import { useIngredientsContext } from '../../context/IngredientsContext';
 
 const IngrTypes = () => {
-  const pageTitle = 'Ingredient Types';
+  const { ingredientTypes, setIngrTypeID, pageTitle, setPageTitle } = useIngredientsContext();
 
-  // Page Events
-  const listEvent = 'ingrTypeList';  // Populates table
-  const editEvent = 'ingrTypeEdit';  // Populates form and invokes edit event
-  const addEvent = 'ingrTypeAdd';    // Invokes Adding New Entity
+  const { listEvent, editEvent, addEvent } = ingredientTypes;
+
+  useEffect(() => {
+    setPageTitle('Ingredient Types');
+  }, [setPageTitle]);
 
   const columnToFormFieldMapping = {
     ingrTypeID: { field: 'ingrTypeID', label: 'Ingredient Type ID' },
@@ -31,8 +33,9 @@ const IngrTypes = () => {
       columnToFormFieldMapping={columnToFormFieldMapping}
       excludeFormFields={excludeFormFields}
       columnStyles={columnStyles}
+      onRowClick={setIngrTypeID} // Pass the setIngrTypeID function
     />
   );
 };
 
-export default IngrTypes
+export default IngrTypes;

@@ -1,4 +1,5 @@
 import { createStore } from 'redux';
+import { useSyncExternalStore } from 'react';
 
 // Initial state
 const initialState = {};
@@ -16,19 +17,28 @@ const reducer = (state = initialState, action) => {
 // Create store
 const store = createStore(reducer);
 
-export const setVars = (vars) => {
+const setVars = (vars) => {
   store.dispatch({ type: 'SET_VARS', payload: vars });
 };
 
-export const getVars = () => store.getState();
+const getVars = () => store.getState();
 
-export const getVar = (variableName) => {
+const getVar = (variableName) => {
   const state = store.getState();
   return state[variableName] || null;
 };
 
-export const subscribe = (listener) => store.subscribe(listener);
+const subscribe = (listener) => store.subscribe(listener);
 
-export const listVars = () => store.getState();
+const listVars = () => store.getState();
 
+const useExternalStore = () => {
+  return useSyncExternalStore(
+    subscribe, 
+    getVars, 
+    () => getVars()  // This function provides the server snapshot, can be adjusted as needed
+  );
+};
+
+export { setVars, listVars, getVar, useExternalStore, subscribe, getVars };
 export default store;

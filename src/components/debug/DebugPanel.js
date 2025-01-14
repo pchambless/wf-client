@@ -1,9 +1,8 @@
 import React from 'react';
 import VariableTable from './VariableTable';
-import DebugLog from './DebugLog';
-import { usePageContext } from '../../context/PageContext';
-import { useDebug } from '../../context/DebugContext';
-import useModalManager from '../../modal/modalManager';
+import { useModalContext } from '../../context/ModalContext';
+
+import { useEventTypeContext } from '../../context/EventTypeContext';
 
 const DebugTable = ({ title, data }) => {
   return (
@@ -23,24 +22,43 @@ const DebugTable = ({ title, data }) => {
   );
 };
 
+const EventTypesPanel = () => {
+  const { getEventTypes } = useEventTypeContext();
+  const eventTypes = getEventTypes();
+  
+  return (
+    <div className="mb-4">
+      <h3 className="mb-2 text-lg font-semibold">Event Types</h3>
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="border-b">
+            <th className="py-1 pr-2 font-medium text-left">Event Type</th>
+            <th className="py-1 pr-2 font-medium text-left">Params</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.keys(eventTypes).map((eventType) => {
+            const eventTypeData = getEventTypes(eventType);
+            return (
+              <tr key={eventType} className="border-b">
+                <td className="py-1 pr-2 font-medium">{eventType}</td>
+                <td className="py-1">{JSON.stringify(eventTypeData.params)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 const DebugPanel = () => {
-  const { currentPage } = usePageContext();
-  const { logs } = useDebug();
-  const { isModalOpen, modalTitle, modalConfig } = useModalManager();
-
-  const pageInfo = {
-    'Current Page': currentPage,
-  };
-
-    const envInfo = {
-    'Node Env': process.env.NODE_ENV,
-    'React Version': React.version,
-  };
+  const { modalIsOpen, modalConfig } = useModalContext();
 
   const modalInfo = {
-    'Is Modal Open': isModalOpen,
-    'Modal Title': modalTitle,
-    'Modal Config': modalConfig,
+    'Is Modal Open': modalIsOpen,
+    'Modal Title': modalConfig.title,
+    'Modal Config': JSON.stringify(modalConfig),
   };
 
   return (
@@ -50,16 +68,11 @@ const DebugPanel = () => {
           <VariableTable />
         </div>
         <div className="flex-1 min-w-[300px]">
-          <DebugTable title="Page Info" data={pageInfo} />
-        </div>
-        <div className="flex-1 min-w-[300px]">
-          <DebugTable title="Environment" data={envInfo} />
           <DebugTable title="Modal Info" data={modalInfo} />
         </div>
-      </div>
-      <div className="flex-1 overflow-auto">
-        <h3 className="mb-2 text-lg font-semibold">Debug Log</h3>
-        <DebugLog logs={logs} />
+        <div className="flex-1 min-w-[300px]">
+          <EventTypesPanel />
+        </div>
       </div>
     </div>
   );

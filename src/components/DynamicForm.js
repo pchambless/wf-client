@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useEventTypeContext } from '../context/EventTypeContext';
-import { usePageUtils } from '../utils/pageUtils';
 
 const DynamicForm = ({
   columns,
@@ -14,7 +13,7 @@ const DynamicForm = ({
   const [formData, setFormData] = useState(data);
   const [formMode, setFormMode] = useState(mode);
   const { execEventType } = useEventTypeContext();
-  const { logAndTime } = usePageUtils();
+  const fileName = 'DynamicForm';
 
   useEffect(() => {
     setFormData(data);
@@ -26,12 +25,12 @@ const DynamicForm = ({
     try {
       const eventType = formMode === 'add' ? addEvent : editEvent;
       await execEventType(eventType, formData);
-      logAndTime('Form submitted:', formData);
+      console.log(`[${fileName}] Form submitted:`, formData);
       onSubmit(formData);
     } catch (error) {
-      logAndTime(`Error submitting form: ${error.message}`);
+      console.log(`[${fileName}] Error submitting form:`, error.message);
     }
-  }, [formMode, addEvent, editEvent, execEventType, formData, logAndTime, onSubmit]);
+  }, [formMode, addEvent, editEvent, execEventType, formData, onSubmit]);
 
   const handleInputChange = useCallback((event) => {
     const { name, value } = event.target;

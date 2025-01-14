@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import Container from './Container';
 import Table from './Table';
 import DynamicForm from './DynamicForm';
 import { usePageContext } from '../context/PageContext';
@@ -52,9 +51,7 @@ const PageTemplate = ({
   }, [logAndTime]);
 
   return (
-    <Container>
       <div className="flex flex-col h-full">
-        <h1 className="mb-4 text-2xl font-bold">{pageTitle}</h1>
         <div className="flex flex-row w-full">
           {listEvent && (
             <div className="w-1/2">
@@ -86,7 +83,7 @@ const PageTemplate = ({
           </div>
         )}
       </div>
-    </Container>
+
   );
 };
 

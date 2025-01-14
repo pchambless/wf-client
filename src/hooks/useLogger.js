@@ -1,12 +1,12 @@
+import { useCallback } from 'react';
 const useLogger = (fileName) => {
-  const logAndTime = (message, data = null) => {
+  return useCallback((message, data = null) => {
     const time = new Date().toISOString();
     console.log(`[${fileName}] ${time} - ${message}`);
     if (data) {
       console.log(data);
     }
-  };
-  return logAndTime;
+  }, [fileName]);
 };
 
 export default useLogger;

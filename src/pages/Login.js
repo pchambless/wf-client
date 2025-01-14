@@ -1,24 +1,25 @@
 import React, { useState } from 'react';
-// import { useNavigate } from 'react-router-dom';
-import ProductForm from '../components/ProductForm';
+import { useNavigate } from 'react-router-dom'; // Import the useNavigate hook
+// import { useUserContext } from '../context/UserContext'; // Import UserContext
 import { useEventTypeContext } from '../context/EventTypeContext';
 import logo from '../assets/wf-icon.png';
 import useLogger from '../hooks/useLogger';
-import { login, fetchEventTypes } from '../api/api';
-import { setVars, listVars } from '../utils/externalStore';
+import { login } from '../api/api';
+import { setVars, listVars, getVar } from '../utils/externalStore';
 
 const Login = () => {
   const fileName = '[Login] ';
   const logAndTime = useLogger(fileName);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setEventTypes } = useEventTypeContext();
-//  const navigate = useNavigate(); // Add the useNavigate hook
+  const { loadEventTypes } = useEventTypeContext();
+
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const handleLogin = async (e) => {
     e.preventDefault();
     logAndTime('Login attempt started');
-    logAndTime(`Email: ${email}`);
+    console.log(`Email: ${email}`);
 
     if (!email || !password) {
       alert('Please fill in all fields.');
@@ -34,26 +35,31 @@ const Login = () => {
         throw new Error(response.message || 'Login failed');
       }
 
-      const { userId, roleID, acctID, acctName, userEmail } = response.data;
+      const { userID, roleID, acctID, acctName, userEmail } = response.data.user;
 
-      logAndTime('Fetching event types');
-      const eventTypes = await fetchEventTypes();
-      logAndTime('Event types fetched:', eventTypes);
+      logAndTime('Loading eventTypes');
+      loadEventTypes();
+    
 
-      setEventTypes(eventTypes);
-
-      logAndTime('Setting API variables');
-      setVars({ ':userEmail': userEmail, ':userID': userId });
+      setVars({ ':userEmail': userEmail, ':userID': userID });
       setVars({ ':acctID': acctID, ':acctName': acctName, 'roleID': roleID });
+      setVars({ 'isAuth': "1" });
+
+      // Debug log to ensure variables are set
+      console.log('Variables set:', {
+        ':userEmail': getVar(':userEmail'),
+        ':userID': getVar(':userID'),
+        ':acctID': getVar(':acctID'),
+        ':acctName': getVar(':acctName'),
+        ':roleID': getVar(':roleID')
+      });
 
       const currentVars = listVars();
       logAndTime('Current Variables:', JSON.stringify(currentVars, null, 2));
-  
 
       logAndTime('User logged in successfully');
 
-      // Navigate to the dashboard
-    //  navigate('/dashboard');
+      navigate('/dashboard');
     } catch (error) {
       logAndTime(`Login failed: ${error.message}`);
       alert(`${fileName} Login failed. Please try again.`);
@@ -66,7 +72,7 @@ const Login = () => {
         <img src={logo} alt="Whatsfresh Logo" className="w-8 h-8 mr-2" />
         <h2 className="text-3xl font-bold text-gray-800">Whatsfresh Today?</h2>
       </div>
-      <ProductForm onSubmit={handleLogin}>
+      <form onSubmit={handleLogin}>
         <div className="mb-4">
           <label htmlFor="email" className="block mb-1 text-sm font-medium text-gray-700">Email:</label>
           <input
@@ -92,7 +98,7 @@ const Login = () => {
         <button type="submit" className="w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
           Login
         </button>
-      </ProductForm>
+      </form>
     </div>
   );
 };
