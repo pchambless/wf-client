@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { execEventType as apiExecEventType, fetchEventTypes as apiFetchEventTypes } from '../api/api';
 import useLogger from '../hooks/useLogger';
-import { getVar } from '../utils/useExternalStore';
+import { getVar } from '../utils/externalStore'
 
 const EventTypeContext = createContext();
 

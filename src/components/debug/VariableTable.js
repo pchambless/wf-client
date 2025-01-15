@@ -1,5 +1,5 @@
 import React from 'react';
-import { listVars } from '../../utils/useExternalStore';
+import { listVars } from '../../utils/externalStore';
 
 const VariableTable = () => {
   const variables = listVars();

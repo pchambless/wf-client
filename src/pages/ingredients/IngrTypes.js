@@ -1,41 +1,35 @@
-import React, { useEffect } from 'react';
-import PageTemplate from '../../components/PageTemplate';
+import React, { useEffect, useMemo } from 'react';
+import PageTemplate from '../../components/page/PageTemplate';
 import { useIngredientsContext } from '../../context/IngredientsContext';
 
 const IngrTypes = () => {
-  const { ingredientTypes, setIngrTypeID, pageTitle, setPageTitle } = useIngredientsContext();
+  const { setIngrTypeID, setPageTitle } = useIngredientsContext();
 
-  const { listEvent, editEvent, addEvent } = ingredientTypes;
+  const pageConfig = useMemo(() => ({
+    pageTitle: 'Ingredient Types',
+    pageEvents: {
+      listEvent: 'ingrTypeList',
+      editEvent: 'ingrTypeEdit',
+      addEvent: 'ingrTypeAdd',
+    },
+    columnToFormFieldMapping: {
+      ingrTypeName: { field: 'ingrTypeName', label: 'Ingredient Type Name' },
+      ingrTypeDesc: { field: 'ingrTypeDesc', label: 'Ingredient Type Description' },
+    },
+    // hiddenColumns in the Table component:
+    hiddenColumns: ['ingrTypeID'],
+    columnStyles: {
+      ingrTypeName: { width: '300px' },
+      ingrTypeDesc: { width: '400px' }
+    },
+    onRowClick: setIngrTypeID
+  }), [setIngrTypeID]);
 
   useEffect(() => {
-    setPageTitle('Ingredient Types');
-  }, [setPageTitle]);
+    setPageTitle(pageConfig.pageTitle);
+  }, [setPageTitle, pageConfig.pageTitle]);
 
-  const columnToFormFieldMapping = {
-    ingrTypeID: { field: 'ingrTypeID', label: 'Ingredient Type ID' },
-    ingrTypeName: { field: 'ingrTypeName', label: 'Ingredient Type Name' },
-    ingrTypeDesc: { field: 'ingrTypeDesc', label: 'Ingredient Type Description' },
-  };
-
-  const excludeFormFields = [];
-  const columnStyles = {
-    ingrTypeID: { width: '200px' },
-    ingrTypeName: { width: '300px' },
-    ingrTypeDesc: { width: '400px' }
-  };
-
-  return (
-    <PageTemplate
-      pageTitle={pageTitle}
-      listEvent={listEvent}
-      editEvent={editEvent}
-      addEvent={addEvent}
-      columnToFormFieldMapping={columnToFormFieldMapping}
-      excludeFormFields={excludeFormFields}
-      columnStyles={columnStyles}
-      onRowClick={setIngrTypeID} // Pass the setIngrTypeID function
-    />
-  );
+  return <PageTemplate {...pageConfig} />;
 };
 
 export default IngrTypes;

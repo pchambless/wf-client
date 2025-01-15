@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useEventTypeContext } from '../context/EventTypeContext';
+import { useEventTypeContext } from '../../context/EventTypeContext';
 
-const DynamicForm = ({
+const Form = ({
   columns,
   data,
   mode,
@@ -13,7 +13,7 @@ const DynamicForm = ({
   const [formData, setFormData] = useState(data);
   const [formMode, setFormMode] = useState(mode);
   const { execEventType } = useEventTypeContext();
-  const fileName = 'DynamicForm';
+  const fileName = 'Form';
 
   useEffect(() => {
     setFormData(data);
@@ -59,4 +59,4 @@ const DynamicForm = ({
   );
 };
 
-export default DynamicForm;
+export default Form;

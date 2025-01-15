@@ -1,87 +1,137 @@
-import React, { createContext, useState, useContext, useMemo, useCallback } from 'react';
-import { setVars, getVar } from '../utils/externalStore';
-import CustomModal from '../components/modal/CustomModal';
+import React, { createContext, useState, useContext, useMemo, useCallback, useEffect, useRef } from 'react';
+import { getVar } from '../utils/externalStore';
+import TableModal from '../components/modal/TableModal';
+import MessageModal from '../components/modal/MessageModal';
 
 const ModalContext = createContext();
-
 
 export const ModalProvider = ({ children }) => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalConfig, setModalConfig] = useState({});
+  const [pendingModalType, setPendingModalType] = useState(null);
+  const [pendingAdditionalProps, setPendingAdditionalProps] = useState({});
+  const previousFocusRef = useRef(null);
 
   const mapping = useMemo(() => ({
     userAccts: {
-      title: 'User Accounts',
+      title: 'Select Account',
       type: 'table',
       listEvent: 'userAccts',
-      id: 'acctID',
-      label: 'acctName',
-      columnMapping: {
-        acctID: { label: 'Account ID', visible: false },
-        account_name: { label: 'Account Name', visible: true }
+      columns: ['acctID', 'acctName'],
+      columnLabels: {
+        acctID: 'Account ID',
+        acctName: 'Account Name'
       },
-      setVars: (acctID, acctName) => {
-        setVars({ ':acctID': acctID, ':acctName': acctName });
+      hiddenColumns: ['acctID'],
+      setPrfxVars: {
+        ':acctId': 'acctID',
+        ':acctName': 'acctName'
       }
     },
     deleteConfirm: {
       title: 'Confirm Deletion',
       type: 'message',
-      message: 'Are you sure you want to delete this item?',
+      message: 'Are you sure you want to delete this item?'
     },
-    selIngrTypes: {
-      title: 'Ingredient Types',
-      type: 'table',
-      listEvent: 'ingrTypeList',
-      id: 'id',
-      label: 'name',
-      columnMapping: {
-        id: { label: 'ID', visible: false },
-        name: { label: 'Name', visible: true },
-        description: { label: 'Description', visible: true }
-      },
-      setVars: (id, name) => {
-        setVars({ ':ingrTypeID': id, ':ingrTypeName': name });
-      }
+    textMessage: {
+      title: 'Text Message',
+      type: 'message',
+      message: 'This is a text message modal.'
     }
   }), []);
 
   const closeModal = useCallback(() => {
+    console.log('ModalContext: Closing modal');
     setModalIsOpen(false);
     setModalConfig({});
+    setPendingModalType(null);
+    setPendingAdditionalProps({});
+    if (previousFocusRef.current) {
+      previousFocusRef.current.focus();
+    }
   }, []);
 
   const openModal = useCallback((modalType, additionalProps = {}) => {
-    if (modalIsOpen) {
-      closeModal(); // Close any existing modal before opening a new one
-    }
+    const userAuthenticated = getVar(':isAuth') === '1';
+    console.log('ModalContext: Opening modal', { modalType, userAuthenticated, additionalProps });
 
-    const config = mapping[modalType];
-    if (config) {
-      const userAuthenticated = getVar('isAuth') === '1';
-      console.log('ModalContext: User authentication status:', userAuthenticated ? '1' : '0');
-
-      if (userAuthenticated) {
-        setModalConfig({ ...config, ...additionalProps });
-        setModalIsOpen(true);
-        console.log('ModalContext: Modal state set:', { ...config, ...additionalProps });
-      } else {
-        console.log('ModalContext: User not authenticated, modal not opened');
-      }
+    if (userAuthenticated) {
+      previousFocusRef.current = document.activeElement;
+      setPendingModalType(modalType);
+      setPendingAdditionalProps(additionalProps);
     } else {
-      console.error(`ModalContext: Unknown modal type: ${modalType}`);
+      console.log('ModalContext: User not authenticated, modal not opened');
     }
-  }, [mapping, modalIsOpen, closeModal]);
+  }, []);
+
+  useEffect(() => {
+    if (pendingModalType) {
+      console.log('ModalContext: Processing pending modal', { pendingModalType, pendingAdditionalProps });
+      const config = mapping[pendingModalType];
+      if (config) {
+        const newConfig = { ...config, ...pendingAdditionalProps };
+        setModalConfig(newConfig);
+        console.log('ModalContext: Modal config set:', newConfig);
+        setModalIsOpen(true);
+      } else {
+        console.error(`ModalContext: Unknown modal type: ${pendingModalType}`);
+      }
+      setPendingModalType(null);
+      setPendingAdditionalProps({});
+    }
+  }, [pendingModalType, pendingAdditionalProps, mapping]);
 
   console.log('ModalProvider rendering', { modalIsOpen, modalConfig });
+
+  const renderModal = () => {
+    if (!modalIsOpen || !modalConfig.type) {
+      console.log('ModalContext: No modal to render');
+      return null;
+    }
+
+    console.log('ModalContext: Rendering modal of type:', modalConfig.type);
+
+    const commonProps = {
+      isOpen: modalIsOpen,
+      onRequestClose: closeModal,
+      onAfterOpen: () => {
+        // Set focus to the first focusable element in the modal
+        const focusableElements = document.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusableElements.length) {
+          focusableElements[0].focus();
+        }
+      },
+      shouldFocusAfterRender: true,
+      shouldReturnFocusAfterClose: true,
+    };
+
+    switch (modalConfig.type) {
+      case 'table':
+        return (
+          <TableModal
+            {...commonProps}
+            title={modalConfig.title}
+            content={modalConfig}
+          />
+        );
+      case 'message':
+        return (
+          <MessageModal
+            {...commonProps}
+            title={modalConfig.title}
+            message={modalConfig.message}
+          />
+        );
+      default:
+        console.log('ModalContext: Unknown modal type:', modalConfig.type);
+        return null;
+    }
+  };
+
   return (
     <ModalContext.Provider value={{ modalIsOpen, modalConfig, openModal, closeModal }}>
       {children}
-      <CustomModal
-        isOpen={modalIsOpen}
-        onRequestClose={closeModal}
-        content={modalConfig}
-      />
+      {renderModal()}
     </ModalContext.Provider>
   );
 };

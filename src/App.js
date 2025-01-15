@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import store from './utils/externalStore';
+import { MapRouterProvider } from './context/MapRouterContext';
 import { UserProvider } from './context/UserContext'; 
 import { EventTypeProvider } from './context/EventTypeContext';
 import { PageProvider } from './context/PageContext';
@@ -18,30 +19,32 @@ import Container from './components/Container';
 const App = () => {
   return (
     <Provider store={store}>
-      <EventTypeProvider>
-        <UserProvider>
-          <GlobalProvider>
-            <DebugProvider>
-              <PageProvider>
-                <ModalProvider>
-                  <IngredientsProvider>
-                    <Router>
-                      <ErrorBoundary>
-                        <Routes>
-                          <Route path="/" element={<Login />} />
-                          <Route path="/dashboard" element={<Container><Dashboard /></Container>} />
-                          <Route path="/ingredients" element={<Container><IngrTypes /></Container>} />
-                          <Route path="/login" element={<Login />} />
-                        </Routes>
-                      </ErrorBoundary>
-                    </Router>
-                  </IngredientsProvider>
-                </ModalProvider>
-              </PageProvider>
-            </DebugProvider>
-          </GlobalProvider>
-        </UserProvider>
-      </EventTypeProvider>
+      <MapRouterProvider> {/* Add this line */}
+        <EventTypeProvider>
+          <UserProvider>
+            <GlobalProvider>
+              <DebugProvider>
+                <PageProvider>
+                  <ModalProvider>
+                    <IngredientsProvider>
+                      <Router>
+                        <ErrorBoundary>
+                          <Routes>
+                            <Route path="/" element={<Login />} />
+                            <Route path="/dashboard" element={<Container><Dashboard /></Container>} />
+                            <Route path="/ingredients" element={<Container><IngrTypes /></Container>} />
+                            <Route path="/login" element={<Login />} />
+                          </Routes>
+                        </ErrorBoundary>
+                      </Router>
+                    </IngredientsProvider>
+                  </ModalProvider>
+                </PageProvider>
+              </DebugProvider>
+            </GlobalProvider>
+          </UserProvider>
+        </EventTypeProvider>
+      </MapRouterProvider> {/* Add this line */}
     </Provider>
   );
 };

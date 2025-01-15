@@ -1,15 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { usePageContext } from '../../context/PageContext';
+import useLogger from '../../hooks/useLogger';
+import { getVar, useExternalStore } from '../../utils/externalStore';
+import logo from '../../assets/wf-icon.png';
+import AppNav from '../AppNav';
+import { useModalContext } from '../../context/ModalContext';
 import { useNavigate } from 'react-router-dom';
-import useLogger from '../hooks/useLogger';
-import { usePageContext } from '../context/PageContext';
-import { useModalContext } from '../context/ModalContext';
-import logo from '../assets/wf-icon.png';
-import AppNav from './AppNav';
-
-import { getVar, useExternalStore } from '../utils/externalStore';
 
 const PageHeader = () => {
-  const logAndTime = useLogger('PageHeader');
+  const log = useLogger('PageHeader');
   const { pageTitle } = usePageContext();
   const navigate = useNavigate();
   const { openModal } = useModalContext();
@@ -19,36 +18,37 @@ const PageHeader = () => {
 
   const fetchAcctName = useCallback(() => {
     try {
-      logAndTime('Fetching account name...');
       const acctName = getVar(':acctName');
-      logAndTime(`Account name fetched: ${acctName}`);
-      setHdrAcctName(acctName || 'Unknown Account');
+      if (acctName !== hdrAcctName) {
+        log(`Account name fetched: ${acctName}`);
+        setHdrAcctName(acctName || 'Unknown Account');
+      }
     } catch (error) {
-      logAndTime('Error fetching account name:', error);
+      log('Error fetching account name');
     }
-  }, [logAndTime]);
+  }, [hdrAcctName, log]);
 
   useEffect(() => {
     fetchAcctName();
   }, [storeState, fetchAcctName]);
   
   const handleOpenModal = () => {
-    logAndTime('Opening userAccts modal');
+    log('Opening userAccts modal');
     openModal('userAccts');
   };
 
   const handleOpenTestMessageModal = () => {
-    logAndTime('Opening test message modal');
+    log('Opening test message modal');
     openModal('deleteConfirm');
   };
 
   const handleLogout = () => {
-    logAndTime('Logging out');
+    log('Logging out');
     localStorage.clear();
     navigate('/');
   };
 
-  logAndTime('PageHeader rendering', { hdrAcctName, pageTitle });
+  log('Rendering');
 
   if (!hdrAcctName) {
     return <h2>Loading...</h2>;

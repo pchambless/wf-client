@@ -27,6 +27,7 @@ const RAW_RUNTIME_STATE =
       [null, {\
         "packageLocation": "./",\
         "packageDependencies": [\
+          ["@reduxjs/toolkit", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:2.5.0"],\
           ["@svgr/core", "npm:8.1.0"],\
           ["@svgr/plugin-svgo", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:8.1.0"],\
           ["@testing-library/dom", "npm:10.4.0"],\
@@ -4363,6 +4364,36 @@ const RAW_RUNTIME_STATE =
           "webpack-hot-middleware",\
           "webpack-plugin-serve",\
           "webpack"\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@reduxjs/toolkit", [\
+      ["npm:2.5.0", {\
+        "packageLocation": "../../AppData/Local/Yarn/Berry/cache/@reduxjs-toolkit-npm-2.5.0-9bdc99574d-10c0.zip/node_modules/@reduxjs/toolkit/",\
+        "packageDependencies": [\
+          ["@reduxjs/toolkit", "npm:2.5.0"]\
+        ],\
+        "linkType": "SOFT"\
+      }],\
+      ["virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:2.5.0", {\
+        "packageLocation": "./.yarn/__virtual__/@reduxjs-toolkit-virtual-b8b702e80b/3/AppData/Local/Yarn/Berry/cache/@reduxjs-toolkit-npm-2.5.0-9bdc99574d-10c0.zip/node_modules/@reduxjs/toolkit/",\
+        "packageDependencies": [\
+          ["@reduxjs/toolkit", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:2.5.0"],\
+          ["@types/react", null],\
+          ["@types/react-redux", null],\
+          ["immer", "npm:10.1.1"],\
+          ["react", "npm:18.3.1"],\
+          ["react-redux", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:9.2.0"],\
+          ["redux", "npm:5.0.1"],\
+          ["redux-thunk", "virtual:b8b702e80bd6f93c1f076f4eedc964e6df93554c719c1c4d564185a87b8252b033f15e1ac80e48f5253a9df1a5c17a76e218610f576e30afeee1c94eda3adfd5#npm:3.1.0"],\
+          ["reselect", "npm:5.1.1"]\
+        ],\
+        "packagePeers": [\
+          "@types/react-redux",\
+          "@types/react",\
+          "react-redux",\
+          "react"\
         ],\
         "linkType": "HARD"\
       }]\
@@ -11206,6 +11237,13 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["immer", [\
+      ["npm:10.1.1", {\
+        "packageLocation": "../../AppData/Local/Yarn/Berry/cache/immer-npm-10.1.1-973ae10d09-10c0.zip/node_modules/immer/",\
+        "packageDependencies": [\
+          ["immer", "npm:10.1.1"]\
+        ],\
+        "linkType": "HARD"\
+      }],\
       ["npm:9.0.21", {\
         "packageLocation": "../../AppData/Local/Yarn/Berry/cache/immer-npm-9.0.21-03c48c58ea-10c0.zip/node_modules/immer/",\
         "packageDependencies": [\
@@ -16648,6 +16686,28 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["redux-thunk", [\
+      ["npm:3.1.0", {\
+        "packageLocation": "../../AppData/Local/Yarn/Berry/cache/redux-thunk-npm-3.1.0-6a8fdd3211-10c0.zip/node_modules/redux-thunk/",\
+        "packageDependencies": [\
+          ["redux-thunk", "npm:3.1.0"]\
+        ],\
+        "linkType": "SOFT"\
+      }],\
+      ["virtual:b8b702e80bd6f93c1f076f4eedc964e6df93554c719c1c4d564185a87b8252b033f15e1ac80e48f5253a9df1a5c17a76e218610f576e30afeee1c94eda3adfd5#npm:3.1.0", {\
+        "packageLocation": "./.yarn/__virtual__/redux-thunk-virtual-cd92c561b7/3/AppData/Local/Yarn/Berry/cache/redux-thunk-npm-3.1.0-6a8fdd3211-10c0.zip/node_modules/redux-thunk/",\
+        "packageDependencies": [\
+          ["redux-thunk", "virtual:b8b702e80bd6f93c1f076f4eedc964e6df93554c719c1c4d564185a87b8252b033f15e1ac80e48f5253a9df1a5c17a76e218610f576e30afeee1c94eda3adfd5#npm:3.1.0"],\
+          ["@types/redux", null],\
+          ["redux", "npm:5.0.1"]\
+        ],\
+        "packagePeers": [\
+          "@types/redux",\
+          "redux"\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["reflect.getprototypeof", [\
       ["npm:1.0.7", {\
         "packageLocation": "../../AppData/Local/Yarn/Berry/cache/reflect.getprototypeof-npm-1.0.7-67d16bc93c-10c0.zip/node_modules/reflect.getprototypeof/",\
@@ -16811,6 +16871,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "../../AppData/Local/Yarn/Berry/cache/requires-port-npm-1.0.0-fd036b488a-10c0.zip/node_modules/requires-port/",\
         "packageDependencies": [\
           ["requires-port", "npm:1.0.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["reselect", [\
+      ["npm:5.1.1", {\
+        "packageLocation": "../../AppData/Local/Yarn/Berry/cache/reselect-npm-5.1.1-667568f51c-10c0.zip/node_modules/reselect/",\
+        "packageDependencies": [\
+          ["reselect", "npm:5.1.1"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -19244,6 +19313,7 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./",\
         "packageDependencies": [\
           ["wf-client", "workspace:."],\
+          ["@reduxjs/toolkit", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:2.5.0"],\
           ["@svgr/core", "npm:8.1.0"],\
           ["@svgr/plugin-svgo", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:8.1.0"],\
           ["@testing-library/dom", "npm:10.4.0"],\

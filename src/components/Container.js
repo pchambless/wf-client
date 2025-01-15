@@ -1,6 +1,6 @@
 import React from 'react';
 import '../styles/tailwind.css';
-import PageHeader from './PageHeader';
+import PageHeader from '../components/page/PageHeader'
 
 const Container = ({ children, openModal, acctName }) => {
   return (

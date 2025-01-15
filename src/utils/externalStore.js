@@ -1,4 +1,4 @@
-import { createStore } from 'redux';
+import { configureStore } from '@reduxjs/toolkit';
 import { useSyncExternalStore } from 'react';
 
 // Initial state
@@ -14,8 +14,10 @@ const reducer = (state = initialState, action) => {
   }
 };
 
-// Create store
-const store = createStore(reducer);
+// Create store using configureStore
+const store = configureStore({
+  reducer: reducer
+});
 
 const setVars = (vars) => {
   store.dispatch({ type: 'SET_VARS', payload: vars });
@@ -26,6 +28,21 @@ const getVars = () => store.getState();
 const getVar = (variableName) => {
   const state = store.getState();
   return state[variableName] || null;
+};
+
+// Adding back the setPrfxVars function
+const setPrfxVars = (prefix, vars) => {
+  console.log(`setPrfxVars called with prefix: "${prefix}" and vars:`, vars);
+
+  const prefixedVars = Object.entries(vars).reduce((acc, [key, value]) => {
+    const prefixedKey = `${prefix}${key}`;
+    acc[prefixedKey] = value;
+    console.log(`setPrfxVars: ${prefixedKey} set to ${value}`);
+    return acc;
+  }, {});
+
+  console.log('Final prefixedVars:', prefixedVars);
+  setVars(prefixedVars);
 };
 
 const subscribe = (listener) => store.subscribe(listener);
@@ -40,5 +57,5 @@ const useExternalStore = () => {
   );
 };
 
-export { setVars, listVars, getVar, useExternalStore, subscribe, getVars };
+export { setVars, setPrfxVars, listVars, getVar, useExternalStore, subscribe, getVars };
 export default store;
