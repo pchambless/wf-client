@@ -15,8 +15,9 @@ const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
 
   const {
     listEvent,
+    keyField,
     columns = [],
-  } = pageConfig.table || {};
+  } = pageConfig || {};
 
   log('listEvent:', listEvent);
   log('columns:', columns);
@@ -104,14 +105,14 @@ const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
               className={`cursor-pointer ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100`}
             >
               {columns.map((column) => (
-                <td 
-                  key={`${row.id || index}-${column.field}`} 
-                  className={`px-4 py-2 border-b border-gray-200 whitespace-nowrap ${column.hidden ? 'hidden' : ''}`}
-                  style={column.style}
-                >
-                  {row[column.field]}
-                </td>
-              ))}
+              <td 
+                key={`${row[keyField] || index}-${column.field}`} 
+                className={`px-4 py-2 border-b border-gray-200 whitespace-nowrap ${column.hidden ? 'hidden' : ''}`}
+                style={column.style}
+              >
+                {row[column.field]}
+              </td>
+            ))}
             </tr>
           ))}
         </tbody>

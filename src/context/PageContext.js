@@ -7,12 +7,12 @@ const fileName = 'PageContext: ';
 export const usePageContext = () => useContext(PageContext);
 
 export const PageProvider = ({ children }) => {
-  const { execEventType } = useEventTypeContext();
+  const { execEvent } = useEventTypeContext();
   const [pageTitle, setPageTitle] = useState('Home');
 
   const fetchTableList = useCallback(async (eventTypeKey, params) => {
     try {
-      const data = await execEventType(eventTypeKey, params);
+      const data = await execEvent(eventTypeKey, params);
       return data.map(item => ({
         id: item.id,
         ...item,
@@ -21,7 +21,7 @@ export const PageProvider = ({ children }) => {
       console.error(fileName, `Error fetching table list for ${eventTypeKey}:`, error);
       throw new Error(`Failed to fetch table list: ${error.message}`);
     }
-  }, [execEventType]);
+  }, [execEvent]);
 
   const contextValue = {
     fetchTableList,

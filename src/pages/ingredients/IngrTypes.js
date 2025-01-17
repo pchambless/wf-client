@@ -8,34 +8,32 @@ const IngrTypes = () => {
   const pageConfig = useMemo(() => {
     const config = {
       pageTitle: 'Ingredient Types',
-      table: {
-        listEvent: 'ingrTypeList',
-        keyField: 'ingrTypeID',
-        columns: [
-          {
-            field: 'ingrTypeID',
-            label: 'ID',
-            hidden: true,
-            setVar: ':ingrTypeID'
-          },
-          {
-            field: 'ingrTypeName',
-            label: 'Name',
-            style: { width: '300px' },
-            setVar: ':ingrTypeName'
-          },
-          {
-            field: 'ingrTypeDesc',
-            label: 'Description',
-            style: { width: '400px' },
-            setVar: ':ingrTypeDesc'
-          }
-        ]
-      },
-    form: {
-        editEvent: 'ingrTypeEdit',
-        addEvent: 'ingrTypeAdd',
-      }
+      listEvent: 'ingrTypeList',
+      editEvent: 'ingrTypeEdit',
+      addEvent: 'ingrTypeAdd', 
+      sDeleteEvent: 'ingrTypeSDelete',  // soft delete
+      deleteEvent: 'ingrTypeDelete',    // hard delete
+      keyField: 'ingrTypeID',
+      columns: [
+        {
+          field: 'ingrTypeID',
+          label: 'ID',
+          hidden: true,
+          setVar: ':ingrTypeID'
+        },
+        {
+          field: 'ingrTypeName',
+          label: 'Name',
+          style: { width: '300px' },
+          setVar: ':ingrTypeName'
+        },
+        {
+          field: 'ingrTypeDesc',
+          label: 'Description',
+          style: { width: '400px' },
+          setVar: ':ingrTypeDesc'
+        }
+      ]
     };
 
     log('pageConfig:', config);

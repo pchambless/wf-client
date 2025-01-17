@@ -6,7 +6,7 @@ import useLogger from '../../hooks/useLogger';
 const PageTemplate = React.memo(({ pageConfig, children }) => {
   const log = useLogger('PageTemplate');
   const [formData, setFormData] = useState({});
-  const [formMode, setFormMode] = useState('view');
+  const [formMode, setFormMode] = useState('edit');
 
   log('PageConfig:', pageConfig);
 
@@ -15,13 +15,15 @@ const PageTemplate = React.memo(({ pageConfig, children }) => {
     setFormMode('edit');
   }, []);
 
-  const handleAddNewClick = useCallback(() => {
-    setFormData({});
-    setFormMode('add');
+  const handleFormModeChange = useCallback((mode) => {
+    setFormMode(mode);
+    if (mode === 'add') {
+      setFormData({});
+    }
   }, []);
 
-  const shouldRenderTable = !!pageConfig.table?.listEvent;
-  const shouldRenderForm = !!(pageConfig.form?.editEvent || pageConfig.form?.addEvent);
+  const shouldRenderTable = !!pageConfig.listEvent;
+  const shouldRenderForm = !!(pageConfig.editEvent || pageConfig.addEvent);
 
   log('Rendering Table:', shouldRenderTable);
   log('Rendering Form:', shouldRenderForm);
@@ -35,7 +37,6 @@ const PageTemplate = React.memo(({ pageConfig, children }) => {
             <Table
               pageConfig={pageConfig}
               onRowClick={handleRowClick}
-              onAddNewClick={pageConfig.form?.addEvent ? handleAddNewClick : undefined}
             />
           </div>
         )}
@@ -45,6 +46,7 @@ const PageTemplate = React.memo(({ pageConfig, children }) => {
               pageConfig={pageConfig}
               data={formData}
               mode={formMode}
+              onModeChange={handleFormModeChange}
             />
           </div>
         )}
