@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ReactModal from 'react-modal';
 import useLogger from '../../hooks/useLogger';
+import { setVars } from '../../utils/externalStore';
 import { useEventTypeContext } from '../../context/EventTypeContext';
 
 const TableModal = ({ 
@@ -53,10 +54,21 @@ const TableModal = ({
   }, [isOpen, fetchData]);
 
   const handleRowClick = useCallback((row) => {
+    if (content.setVars) {
+      const varsToSet = {};
+      Object.entries(content.setVars).forEach(([key, columnName]) => {
+        varsToSet[key] = row[columnName];
+      });
+      setVars(varsToSet);
+      log('Set variables:', varsToSet);
+    }
     if (externalOnRowClick) {
       externalOnRowClick(row);
+      log('Called external onRowClick handler');
     }
-  }, [externalOnRowClick]);
+    onRequestClose();
+    log('Closed modal after row click');
+  }, [content.setVars, externalOnRowClick, onRequestClose, log]);
 
   log('Rendering TableModal', { 
     isOpen, 

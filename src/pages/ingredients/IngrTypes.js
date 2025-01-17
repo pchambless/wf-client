@@ -1,35 +1,48 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import PageTemplate from '../../components/page/PageTemplate';
-import { useIngredientsContext } from '../../context/IngredientsContext';
+import useLogger from '../../hooks/useLogger';
 
 const IngrTypes = () => {
-  const { setIngrTypeID, setPageTitle } = useIngredientsContext();
+  const log = useLogger('IngrTypes');
 
-  const pageConfig = useMemo(() => ({
-    pageTitle: 'Ingredient Types',
-    pageEvents: {
-      listEvent: 'ingrTypeList',
-      editEvent: 'ingrTypeEdit',
-      addEvent: 'ingrTypeAdd',
-    },
-    columnToFormFieldMapping: {
-      ingrTypeName: { field: 'ingrTypeName', label: 'Ingredient Type Name' },
-      ingrTypeDesc: { field: 'ingrTypeDesc', label: 'Ingredient Type Description' },
-    },
-    // hiddenColumns in the Table component:
-    hiddenColumns: ['ingrTypeID'],
-    columnStyles: {
-      ingrTypeName: { width: '300px' },
-      ingrTypeDesc: { width: '400px' }
-    },
-    onRowClick: setIngrTypeID
-  }), [setIngrTypeID]);
+  const pageConfig = useMemo(() => {
+    const config = {
+      pageTitle: 'Ingredient Types',
+      table: {
+        listEvent: 'ingrTypeList',
+        keyField: 'ingrTypeID',
+        columns: [
+          {
+            field: 'ingrTypeID',
+            label: 'ID',
+            hidden: true,
+            setVar: ':ingrTypeID'
+          },
+          {
+            field: 'ingrTypeName',
+            label: 'Name',
+            style: { width: '300px' },
+            setVar: ':ingrTypeName'
+          },
+          {
+            field: 'ingrTypeDesc',
+            label: 'Description',
+            style: { width: '400px' },
+            setVar: ':ingrTypeDesc'
+          }
+        ]
+      },
+    form: {
+        editEvent: 'ingrTypeEdit',
+        addEvent: 'ingrTypeAdd',
+      }
+    };
 
-  useEffect(() => {
-    setPageTitle(pageConfig.pageTitle);
-  }, [setPageTitle, pageConfig.pageTitle]);
+    log('pageConfig:', config);
+    return config;
+  }, [log]);
 
-  return <PageTemplate {...pageConfig} />;
+  return <PageTemplate pageConfig={pageConfig} />;
 };
 
-export default IngrTypes;
+export default React.memo(IngrTypes);

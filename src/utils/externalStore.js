@@ -20,42 +20,85 @@ const store = configureStore({
 });
 
 const setVars = (vars) => {
+  console.log('setVars called with:', vars);
+  const prevState = store.getState();
+  
   store.dispatch({ type: 'SET_VARS', payload: vars });
+  
+  const updatedState = store.getState();
+//  console.log('New state after setVars:', updatedState);
+  
+  // Log the differences
+  Object.keys(vars).forEach(key => {
+    const newValue = updatedState[key];
+    if (prevState[key] !== newValue) {
+      console.log(`Variable ${key} changed from ${prevState[key]} to ${newValue}`);
+    } else {
+      console.log(`Variable ${key} did not change. Still ${newValue}`);
+    }
+  });
 };
 
-const getVars = () => store.getState();
+const getVars = (vars) => {
+  const state = store.getState();
+  
+  if (!Array.isArray(vars)) {
+    console.error('getVars expects an array of variable names');
+    return {};
+  }
+
+  return vars.reduce((acc, key) => {
+    if (state.hasOwnProperty(key)) {
+      acc[key] = state[key];
+    }
+    return acc;
+  }, {});
+};
 
 const getVar = (variableName) => {
   const state = store.getState();
-  return state[variableName] || null;
+  console.log(`getVar called for ${variableName}. Current state:`, state);
+  const value = state.hasOwnProperty(variableName) ? state[variableName] : null;
+  console.log(`getVar result for ${variableName}:`, value);
+  return value;
 };
 
-// Adding back the setPrfxVars function
-const setPrfxVars = (prefix, vars) => {
-  console.log(`setPrfxVars called with prefix: "${prefix}" and vars:`, vars);
-
-  const prefixedVars = Object.entries(vars).reduce((acc, [key, value]) => {
-    const prefixedKey = `${prefix}${key}`;
-    acc[prefixedKey] = value;
-    console.log(`setPrfxVars: ${prefixedKey} set to ${value}`);
-    return acc;
-  }, {});
-
-  console.log('Final prefixedVars:', prefixedVars);
-  setVars(prefixedVars);
+const setVar = (key, value) => {
+  setVars({ [key]: value });
+  return getVar(key);
 };
 
 const subscribe = (listener) => store.subscribe(listener);
 
-const listVars = () => store.getState();
+const listVars = () => {
+  const state = store.getState();
+  console.log('Current state:', state);
+  return state;
+};
 
 const useExternalStore = () => {
   return useSyncExternalStore(
     subscribe, 
-    getVars, 
-    () => getVars()  // This function provides the server snapshot, can be adjusted as needed
+    () => store.getState(), 
+    () => store.getState()  // This function provides the server snapshot, can be adjusted as needed
   );
 };
 
-export { setVars, setPrfxVars, listVars, getVar, useExternalStore, subscribe, getVars };
+// Debug function to clear all variables
+const clearAllVars = () => {
+  store.dispatch({ type: 'SET_VARS', payload: {} });
+  console.log('All variables cleared. New state:', store.getState());
+};
+
+export { 
+  setVars, 
+  listVars, 
+  getVar, 
+  setVar,
+  useExternalStore, 
+  subscribe, 
+  getVars,
+  clearAllVars 
+};
+
 export default store;

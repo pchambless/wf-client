@@ -1,0 +1,71 @@
+flowchart TD
+    classDef contextProvider fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef layout fill:#fff9c4,stroke:#f57f17,stroke-width:2px;
+    classDef page fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px;
+    classDef router fill:#fce4ec,stroke:#880e4f,stroke-width:2px;
+    classDef store fill:#f3e5f5,stroke:#4a148c,stroke-width:2px;
+
+    A[App]
+    B[Router]:::router
+    C[DataProvider]:::contextProvider
+    D[DataManagementLayout]:::layout
+    E[Outlet]
+    F[IngrTypePage]:::page
+    G[IngrPage]:::page
+    H[IngrBtchPage]:::page
+    I[ProdTypePage]:::page
+    J[ProdPage]:::page
+    K[ProdBtchPage]:::page
+    L[Common UI Elements]
+    M[DataContext]:::contextProvider
+    N[currentEntity]
+    O[setCurrentEntity]
+    P[store]
+    Q[setVar]
+    R[ExternalStore]:::store
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    E --> G
+    E --> H
+    E --> I
+    E --> J
+    E --> K
+    D --> L
+    C --> M
+    M --> N
+    M --> O
+    M --> P
+    M --> Q
+    P --> R
+    Q --> R
+
+    subgraph Pages
+        F
+        G
+        H
+        I
+        J
+        K
+    end
+
+    subgraph Context
+        M
+        N
+        O
+        P
+        Q
+    end
+
+    subgraph Layout
+        D
+        L
+        E
+    end
+
+
+    
+  

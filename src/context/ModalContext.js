@@ -23,8 +23,8 @@ export const ModalProvider = ({ children }) => {
         acctName: 'Account Name'
       },
       hiddenColumns: ['acctID'],
-      setPrfxVars: {
-        ':acctId': 'acctID',
+      setVars: {
+        ':acctID': 'acctID',
         ':acctName': 'acctName'
       }
     },

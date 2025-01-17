@@ -1,87 +1,50 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import Table from './Table';
+import React, { useState, useCallback } from 'react';
 import Form from './Form';
-import { usePageContext } from '../../context/PageContext';
+import Table from './Table';
+import useLogger from '../../hooks/useLogger';
 
-const PageTemplate = ({ pageConfig, children }) => {
-  const { fetchFormColumns, logAndTime, execEventType } = usePageContext();
-
+const PageTemplate = React.memo(({ pageConfig, children }) => {
+  const log = useLogger('PageTemplate');
   const [formData, setFormData] = useState({});
   const [formMode, setFormMode] = useState('view');
-  const [formColumns, setFormColumns] = useState([]);
 
-  const { 
-    pageTitle,
-    listEvent,
-    editEvent,
-    addEvent,
-    columnToFormFieldMapping,
-    hiddenColumns,
-    columnStyles
-  } = pageConfig;
-
-  useEffect(() => {
-    if (listEvent) {
-      fetchFormColumns(listEvent).then(setFormColumns).catch(error => 
-        logAndTime(`Error fetching list columns: ${error.message}`)
-      );
-    }
-  }, [listEvent, fetchFormColumns, logAndTime]);
+  log('PageConfig:', pageConfig);
 
   const handleRowClick = useCallback((rowData) => {
     setFormData(rowData);
     setFormMode('edit');
-    if (editEvent) {
-      fetchFormColumns(editEvent).then(setFormColumns).catch(error => 
-        logAndTime(`Error fetching edit form columns: ${error.message}`)
-      );
-    }
-  }, [editEvent, fetchFormColumns, logAndTime]);
+  }, []);
 
   const handleAddNewClick = useCallback(() => {
     setFormData({});
     setFormMode('add');
-    if (addEvent) {
-      fetchFormColumns(addEvent).then(setFormColumns).catch(error => 
-        logAndTime(`Error fetching add form columns: ${error.message}`)
-      );
-    }
-  }, [addEvent, fetchFormColumns, logAndTime]);
+  }, []);
 
-  const handleFormSubmit = useCallback(async (submittedFormData) => {
-    try {
-      const eventType = formMode === 'add' ? addEvent : editEvent;
-      await execEventType(eventType, submittedFormData);
-      logAndTime('Form submitted successfully:', submittedFormData);
-    } catch (error) {
-      logAndTime(`Error submitting form: ${error.message}`);
-    }
-  }, [formMode, addEvent, editEvent, execEventType, logAndTime]);
+  const shouldRenderTable = !!pageConfig.table?.listEvent;
+  const shouldRenderForm = !!(pageConfig.form?.editEvent || pageConfig.form?.addEvent);
+
+  log('Rendering Table:', shouldRenderTable);
+  log('Rendering Form:', shouldRenderForm);
 
   return (
     <div className="flex flex-col h-full">
-      <h1 className="mb-4 text-2xl font-bold">{pageTitle}</h1>
+      <h1 className="mb-4 text-2xl font-bold">{pageConfig.pageTitle}</h1>
       <div className="flex flex-row w-full">
-        {listEvent && (
+        {shouldRenderTable && (
           <div className="w-1/2">
             <Table
-              listEvent={listEvent}
+              pageConfig={pageConfig}
               onRowClick={handleRowClick}
-              onAddNewClick={addEvent ? handleAddNewClick : undefined}
-              columnStyles={columnStyles}
-              hiddenColumns={hiddenColumns}
+              onAddNewClick={pageConfig.form?.addEvent ? handleAddNewClick : undefined}
             />
           </div>
         )}
-        {(editEvent || addEvent) && (
-          <div className={`${listEvent ? 'w-1/2' : 'w-full'} p-4`}>
+        {shouldRenderForm && (
+          <div className={`${shouldRenderTable ? 'w-1/2' : 'w-full'} p-4`}>
             <Form
-              columns={formColumns}
+              pageConfig={pageConfig}
               data={formData}
               mode={formMode}
-              onSubmit={handleFormSubmit}
-              excludeFields={hiddenColumns}
-              columnToFormFieldMapping={columnToFormFieldMapping}
             />
           </div>
         )}
@@ -93,6 +56,6 @@ const PageTemplate = ({ pageConfig, children }) => {
       )}
     </div>
   );
-};
+});
 
 export default PageTemplate;

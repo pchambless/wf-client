@@ -9,7 +9,7 @@ export const useEventTypeContext = () => useContext(EventTypeContext);
 
 export const EventTypeProvider = ({ children }) => {
   const fileName = 'EventTypeContext';
-  const logAndTime = useLogger(fileName);
+  const log = useLogger(fileName);
   const [eventTypes, setEventTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,22 +18,22 @@ export const EventTypeProvider = ({ children }) => {
   const loadEventTypes = useCallback(async () => {
     if (hasLoadedEventTypes.current) return;
 
-    logAndTime('Fetching and loading event types');
+    log('Fetching and loading event types');
     setIsLoading(true);
     setError(null);
     try {
       const fetchedEventTypes = await apiFetchEventTypes();
-      logAndTime('Fetched event types:', fetchedEventTypes);
+      log('Fetched event types:', fetchedEventTypes);
       setEventTypes(fetchedEventTypes);
       setIsLoading(false);
-      logAndTime('Event types loaded successfully');
+      log('Event types loaded successfully');
       hasLoadedEventTypes.current = true;
     } catch (error) {
-      console.error(logAndTime('Error fetching and loading event types:', error));
+      console.error(log('Error fetching and loading event types:', error));
       setError(error.message);
       setIsLoading(false);
     }
-  }, [logAndTime]);
+  }, [log]);
 
   useEffect(() => {
     loadEventTypes();
@@ -42,19 +42,19 @@ export const EventTypeProvider = ({ children }) => {
   const getEventTypes = useCallback(() => eventTypes, [eventTypes]);
 
   const eventTypeLookup = useCallback((eventType) => {
-    logAndTime('eventTypeLookup');
+    log('eventTypeLookup');
     const event = eventTypes.find(e => e.eventType === eventType);
     if (!event) {
       throw new Error(`No event type found for ${eventType}`);
     }
     return event.params;
-  }, [eventTypes, logAndTime]);
+  }, [eventTypes, log]);
 
   const execEvent = useCallback(async (eventType) => {
     const params = eventTypeLookup(eventType);
 
     if (!Array.isArray(params)) {
-      throw new Error(logAndTime(`Expected array but received ${typeof params}`));
+      throw new Error(log(`Expected array but received ${typeof params}`));
     }
 
     const resolvedParams = params.reduce((acc, param) => {
@@ -62,17 +62,34 @@ export const EventTypeProvider = ({ children }) => {
       return acc;
     }, {});
 
-    logAndTime('Request Body:', JSON.stringify({ eventType, params: resolvedParams }));
+    log('Request Body:', JSON.stringify({ eventType, params: resolvedParams }));
 
     try {
       const response = await apiExecEventType(eventType, resolvedParams);
-      logAndTime('Event type executed successfully:', response);
+      log('Event type executed successfully:', response);
       return response;
     } catch (error) {
-      console.error(logAndTime(`Error executing event type ${eventType}:`, error));
+      console.error(log(`Error executing event type ${eventType}:`, error));
       throw error;
     }
-  }, [eventTypeLookup, logAndTime]);
+  }, [eventTypeLookup, log]);
+
+  const fetchFormColumns = useCallback((eventType) => {
+    log(`Fetching form columns for event type: ${eventType}`);
+    try {
+      const params = eventTypeLookup(eventType);
+      log(`Form columns for ${eventType}:`, params);
+      if (Array.isArray(params)) {
+        return params;
+      } else {
+        log(`Warning: params for ${eventType} is not an array. Returning empty array.`);
+        return [];
+      }
+    } catch (error) {
+      console.error(log(`Error fetching form columns for ${eventType}:`, error));
+      throw error;
+    }
+  }, [eventTypeLookup, log]);
 
   return (
     <EventTypeContext.Provider
@@ -80,6 +97,7 @@ export const EventTypeProvider = ({ children }) => {
         loadEventTypes,
         getEventTypes,
         execEvent,
+        fetchFormColumns,
         isLoading,
         error,
         eventTypes,

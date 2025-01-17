@@ -1,126 +1,126 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import ReactModal from 'react-modal';
 import { useEventTypeContext } from '../../context/EventTypeContext';
 import useLogger from '../../hooks/useLogger';
-import { setPrfxVars } from '../../utils/externalStore';
+import { setVars } from '../../utils/externalStore';
 
-ReactModal.setAppElement('#root');
-
-const Table = ({ 
-  listEvent, 
-  columnMapping, 
-  onRowClick, 
-  prfxVarsMapping, 
-  onAddNewClick, 
-  columnStyles,
-  hiddenColumns = [] // Add hiddenColumns prop with default empty array
-}) => {
+const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const hasFetchedData = useRef(false);
   const { execEvent } = useEventTypeContext();
-  const logAndTime = useLogger('Table');
+  const log = useLogger('Table');
+
+  log('Table component initialized with pageConfig:', pageConfig);
+
+  const {
+    listEvent,
+    columns = [],
+  } = pageConfig.table || {};
+
+  log('listEvent:', listEvent);
+  log('columns:', columns);
 
   const fetchData = useCallback(async () => {
-    if (!listEvent) return;
+    if (!listEvent) {
+      log('No listEvent provided, skipping data fetch');
+      return;
+    }
     try {
+      log('Fetching data...');
       setLoading(true);
       const result = await execEvent(listEvent);
-      setData(result);
+      log('Data fetched:', result);
+      setData(Array.isArray(result) ? result : []);
     } catch (err) {
+      log('Error fetching data:', err);
       setError(err.message);
-      logAndTime('Error fetching data:', err);
     } finally {
       setLoading(false);
     }
-  }, [listEvent, execEvent, logAndTime]);
+  }, [listEvent, execEvent, log]);
 
   useEffect(() => {
+    log('useEffect triggered');
     if (!hasFetchedData.current) {
+      log('Initiating data fetch');
       fetchData();
       hasFetchedData.current = true;
     }
-  }, [listEvent, fetchData]);
+  }, [fetchData, log]);
 
   const handleRowClick = useCallback((row) => {
-    logAndTime('Row clicked:', row);
-    logAndTime('prfxVarsMapping:', prfxVarsMapping);
+    log('Row clicked:', row);
 
-    if (prfxVarsMapping) {
-      const prfxVars = {};
-      Object.entries(prfxVarsMapping).forEach(([key, value]) => {
-        prfxVars[key] = row[value];
-      });
-      setPrfxVars('', prfxVars);
-      logAndTime('setPrfxVars called with:', prfxVars);
-    }
+    columns.forEach(column => {
+      if (column.setVar) {
+        setVars({ [column.setVar]: row[column.field] });
+      }
+    });
 
     if (onRowClick) {
       onRowClick(row);
     }
-  }, [prfxVarsMapping, onRowClick, logAndTime]);
+  }, [columns, onRowClick, log]);
 
   if (loading) {
+    log('Rendering loading state');
     return <div>Loading...</div>;
   }
 
   if (error) {
+    log('Rendering error state:', error);
     return <div>Error fetching data: {error}</div>;
   }
 
-  if (data.length === 0) {
+  if (!data || data.length === 0) {
+    log('Rendering empty data state');
     return <div>No data available.</div>;
   }
 
-  // Filter out hidden columns
-  const visibleColumns = Object.entries(columnMapping).filter(
-    ([key]) => !hiddenColumns.includes(key)
-  );
+  log('Rendering table with data:', data);
+
   return (
     <div className="overflow-x-auto">
-      {onAddNewClick && (
-        <button
-          onClick={onAddNewClick}
-          className="px-4 py-2 mb-4 text-white bg-blue-500 rounded hover:bg-blue-600"
-        >
-          Add New
-        </button>
-      )}
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            {visibleColumns.map(([key, config]) => (
+      <table className="min-w-full bg-white border-2 border-gray-300">
+        <thead>
+          <tr className="bg-gray-200">
+            {columns.map((column) => (
               <th 
-                key={key} 
-                className="px-3 py-2 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
-                style={columnStyles && columnStyles[key]}
+                key={column.field} 
+                className={`px-4 py-2 text-xs font-bold tracking-wider text-left text-gray-700 uppercase border-b-2 border-gray-300 ${column.hidden ? 'hidden' : ''}`}
+                style={column.style}
               >
-                {config.label}
+                {column.label}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {data.map((row, rowIndex) => (
+        <tbody>
+          {data.map((row, index) => (
             <tr 
-              key={rowIndex} 
+              key={row.id || index} 
               onClick={() => handleRowClick(row)} 
-              className="transition-colors duration-150 ease-in-out cursor-pointer hover:bg-gray-100"
+              className={`cursor-pointer ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100`}
             >
-              {visibleColumns.map(([key, config]) => (
+              {columns.map((column) => (
                 <td 
-                  key={key} 
-                  className="px-3 py-2 text-sm text-gray-500 whitespace-nowrap"
-                  style={columnStyles && columnStyles[key]}
+                  key={`${row.id || index}-${column.field}`} 
+                  className={`px-4 py-2 border-b border-gray-200 whitespace-nowrap ${column.hidden ? 'hidden' : ''}`}
+                  style={column.style}
                 >
-                  {row[key]}
+                  {row[column.field]}
                 </td>
               ))}
             </tr>
           ))}
         </tbody>
       </table>
+      {onAddNewClick && (
+        <button onClick={onAddNewClick} className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600">
+          Add New
+        </button>
+      )}
     </div>
   );
 };
