@@ -1,14 +1,22 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { usePageContext } from '../../context/PageContext';
 import Form from './Form';
 import Table from './Table';
 import useLogger from '../../hooks/useLogger';
 
 const PageTemplate = React.memo(({ pageConfig, children }) => {
   const log = useLogger('PageTemplate');
+  const { updatePageTitle } = usePageContext();
   const [formData, setFormData] = useState({});
-  const [formMode, setFormMode] = useState('edit');
+  const [formMode, setFormMode] = useState('add');
 
   log('PageConfig:', pageConfig);
+
+  useEffect(() => {
+    if (pageConfig.pageTitle) {
+      updatePageTitle(pageConfig.pageTitle);
+    }
+  }, [pageConfig.pageTitle, updatePageTitle]);
 
   const handleRowClick = useCallback((rowData) => {
     setFormData(rowData);
@@ -22,18 +30,17 @@ const PageTemplate = React.memo(({ pageConfig, children }) => {
     }
   }, []);
 
-  const shouldRenderTable = !!pageConfig.listEvent;
-  const shouldRenderForm = !!(pageConfig.editEvent || pageConfig.addEvent);
+  const shouldRenderTable = useMemo(() => !!pageConfig.listEvent, [pageConfig.listEvent]);
+  const shouldRenderForm = useMemo(() => !!(pageConfig.editEvent || pageConfig.addEvent), [pageConfig.editEvent, pageConfig.addEvent]);
 
   log('Rendering Table:', shouldRenderTable);
   log('Rendering Form:', shouldRenderForm);
 
   return (
     <div className="flex flex-col h-full">
-      <h1 className="mb-4 text-2xl font-bold">{pageConfig.pageTitle}</h1>
-      <div className="flex flex-row w-full">
+      <div className="flex flex-row w-full space-x-4">
         {shouldRenderTable && (
-          <div className="w-1/2">
+          <div className="flex-1 p-4 rounded-lg bg-product-bg border-3 border-ingredient-brdr">
             <Table
               pageConfig={pageConfig}
               onRowClick={handleRowClick}
@@ -41,10 +48,10 @@ const PageTemplate = React.memo(({ pageConfig, children }) => {
           </div>
         )}
         {shouldRenderForm && (
-          <div className={`${shouldRenderTable ? 'w-1/2' : 'w-full'} p-4`}>
+          <div className="flex-1 p-4 rounded-lg bg-product-bg border-3 border-ingredient-brdr">
             <Form
               pageConfig={pageConfig}
-              data={formData}
+              initialData={formData}
               mode={formMode}
               onModeChange={handleFormModeChange}
             />

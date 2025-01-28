@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import store from './utils/externalStore';
-import { MapRouterProvider } from './context/MapRouterContext';
 import { UserProvider } from './context/UserContext'; 
 import { EventTypeProvider } from './context/EventTypeContext';
 import { PageProvider } from './context/PageContext';
@@ -19,7 +18,6 @@ import Container from './components/Container';
 const App = () => {
   return (
     <Provider store={store}>
-      <MapRouterProvider> {/* Add this line */}
         <EventTypeProvider>
           <UserProvider>
             <GlobalProvider>
@@ -44,7 +42,6 @@ const App = () => {
             </GlobalProvider>
           </UserProvider>
         </EventTypeProvider>
-      </MapRouterProvider> {/* Add this line */}
     </Provider>
   );
 };

@@ -8,12 +8,12 @@ const Dashboard = () => {
   const pageTitle = 'Dashboard';
   const { openModal } = useModalContext();
   const logAndTime = useLogger('Dashboard');
-  const { setPageTitle } = usePageContext();
+  const { updatePageTitle } = usePageContext();
 
   useEffect(() => {
     logAndTime('Dashboard component mounted');
-    setPageTitle(pageTitle);
-  }, [logAndTime, setPageTitle, pageTitle]);
+    updatePageTitle(pageTitle);
+  }, [logAndTime, updatePageTitle, pageTitle]);
 
   const handleOpenTestModal = () => {
     logAndTime('Opening test modal');
@@ -30,7 +30,11 @@ const Dashboard = () => {
         >
           Open Test Modal
         </button>
-        {/* Add more dashboard content here as needed */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <DashboardCard title="Recent Orders" content="5 new orders" />
+          <DashboardCard title="Inventory Status" content="3 items low in stock" />
+          <DashboardCard title="Today's Revenue" content="$1,234.56" />
+        </div>
       </div>
       <div className="w-full p-4 bg-white border border-gray-300 rounded-lg shadow-lg">
         <h2 className="mb-2 text-lg font-bold">Debug Panel</h2>
@@ -39,5 +43,12 @@ const Dashboard = () => {
     </div>
   );
 };
+
+const DashboardCard = ({ title, content }) => (
+  <div className="p-4 bg-white border border-gray-200 rounded-lg shadow">
+    <h3 className="mb-2 text-lg font-semibold">{title}</h3>
+    <p>{content}</p>
+  </div>
+);
 
 export default Dashboard;

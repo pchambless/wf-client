@@ -13,25 +13,36 @@ const IngrTypes = () => {
       addEvent: 'ingrTypeAdd', 
       sDeleteEvent: 'ingrTypeSDelete',  // soft delete
       deleteEvent: 'ingrTypeDelete',    // hard delete
+      dbTable: 'ingredient_types',
       keyField: 'ingrTypeID',
       columns: [
         {
           field: 'ingrTypeID',
-          label: 'ID',
+          label: 'Ingredient Type ID',
           hidden: true,
+          dbCol: 'id',
           setVar: ':ingrTypeID'
         },
         {
           field: 'ingrTypeName',
           label: 'Name',
           style: { width: '300px' },
-          setVar: ':ingrTypeName'
+          dbCol: 'name',
+          setVar: ':ingrTypeName',
+          required: true
         },
         {
           field: 'ingrTypeDesc',
           label: 'Description',
           style: { width: '400px' },
+          dbCol: 'description',
           setVar: ':ingrTypeDesc'
+        },
+        {
+          field: 'acctID',
+          label: 'account ID',
+          hidden: true,
+          dbCol: 'account_id',
         }
       ]
     };

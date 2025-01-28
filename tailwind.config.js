@@ -10,6 +10,8 @@ module.exports = {
         'ingredient-bg': '#fee2e2', // light red background
         'product-brdr': '#00e64d', // green border
         'ingredient-brdr': '#800000', // maroon
+        'border-radius': '0.5rem',
+        'border-width': '3px',
         'modal-brdr': '#800000', // maroon
         'primaryGreen': '#008060', // primary green color
         'secondaryRed': '#ff4d4d', // secondary red color

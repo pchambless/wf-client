@@ -23,10 +23,14 @@ export const PageProvider = ({ children }) => {
     }
   }, [execEvent]);
 
+  const updatePageTitle = useCallback((newTitle) => {
+    setPageTitle(newTitle);
+  }, []);
+
   const contextValue = {
     fetchTableList,
     pageTitle,
-    setPageTitle
+    updatePageTitle
   };
 
   return (
