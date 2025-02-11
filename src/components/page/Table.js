@@ -1,17 +1,16 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { useEventTypeContext } from '../../context/EventTypeContext';
 import useLogger from '../../hooks/useLogger';
 import { setVars } from '../../utils/externalStore';
+import { fetchData } from '../../utils/dataFetcher';
 
 const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const hasFetchedData = useRef(false);
-  const { execEvent } = useEventTypeContext();
   const log = useLogger('Table');
 
-  log('Table component initialized with pageConfig:', pageConfig);
+  log('Table initialized with pageConfig:', pageConfig);
 
   const {
     listEvent,
@@ -22,7 +21,7 @@ const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
   log('listEvent:', listEvent);
   log('columns:', columns);
 
-  const fetchData = useCallback(async () => {
+  const fetchDataCallback = useCallback(async () => {
     if (!listEvent) {
       log('No listEvent provided, skipping data fetch');
       return;
@@ -30,7 +29,7 @@ const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
     try {
       log('Fetching data...');
       setLoading(true);
-      const result = await execEvent(listEvent);
+      const result = await fetchData(listEvent);
       log('Data fetched:', result);
       setData(Array.isArray(result) ? result : []);
     } catch (err) {
@@ -39,16 +38,16 @@ const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
     } finally {
       setLoading(false);
     }
-  }, [listEvent, execEvent, log]);
+  }, [listEvent, log]);
 
   useEffect(() => {
     log('useEffect triggered');
     if (!hasFetchedData.current) {
       log('Initiating data fetch');
-      fetchData();
+      fetchDataCallback();
       hasFetchedData.current = true;
     }
-  }, [fetchData, log]);
+  }, [fetchDataCallback, log]);
 
   const handleRowClick = useCallback((row) => {
     log('Row clicked:', row);
@@ -87,8 +86,8 @@ const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
         <thead>
           <tr className="bg-gray-200">
             {columns.map((column) => (
-              <th 
-                key={column.field} 
+              <th
+                key={column.field}
                 className={`px-4 py-2 text-xs font-bold tracking-wider text-left text-gray-700 uppercase border-b-2 border-gray-300 ${column.hidden ? 'hidden' : ''}`}
                 style={column.style}
               >
@@ -99,20 +98,20 @@ const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
         </thead>
         <tbody>
           {data.map((row, index) => (
-            <tr 
-              key={row.id || index} 
-              onClick={() => handleRowClick(row)} 
+            <tr
+              key={row.id || index}
+              onClick={() => handleRowClick(row)}
               className={`cursor-pointer ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100`}
             >
               {columns.map((column) => (
-              <td 
-                key={`${row[keyField] || index}-${column.field}`} 
-                className={`px-4 py-2 border-b border-gray-200 whitespace-nowrap ${column.hidden ? 'hidden' : ''}`}
-                style={column.style}
-              >
-                {row[column.field]}
-              </td>
-            ))}
+                <td
+                  key={`${row[keyField] || index}-${column.field}`}
+                  className={`px-4 py-2 border-b border-gray-200 whitespace-nowrap ${column.hidden ? 'hidden' : ''}`}
+                  style={column.style}
+                >
+                  {row[column.field]}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>
@@ -127,3 +126,7 @@ const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
 };
 
 export default React.memo(Table);
+
+
+
+

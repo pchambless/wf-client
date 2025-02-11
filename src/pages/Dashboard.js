@@ -1,14 +1,14 @@
-import React, { useEffect } from 'react';
-import DebugPanel from '../components/debug/DebugPanel';
+import React, { useEffect, useState } from 'react';
 import { useModalContext } from '../context/ModalContext';
 import useLogger from '../hooks/useLogger';
-import { usePageContext } from '../context/PageContext';
+import { useGlobalContext } from '../context/GlobalContext';
 
 const Dashboard = () => {
   const pageTitle = 'Dashboard';
   const { openModal } = useModalContext();
   const logAndTime = useLogger('Dashboard');
-  const { updatePageTitle } = usePageContext();
+  const { updatePageTitle, pageConfigs } = useGlobalContext();
+  const [selectedConfig, setSelectedConfig] = useState(null);
 
   useEffect(() => {
     logAndTime('Dashboard component mounted');
@@ -18,6 +18,10 @@ const Dashboard = () => {
   const handleOpenTestModal = () => {
     logAndTime('Opening test modal');
     openModal('deleteConfirm');
+  };
+
+  const handleRowClick = (config) => {
+    setSelectedConfig(config);
   };
 
   return (
@@ -30,25 +34,45 @@ const Dashboard = () => {
         >
           Open Test Modal
         </button>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <DashboardCard title="Recent Orders" content="5 new orders" />
-          <DashboardCard title="Inventory Status" content="3 items low in stock" />
-          <DashboardCard title="Today's Revenue" content="$1,234.56" />
-        </div>
       </div>
-      <div className="w-full p-4 bg-white border border-gray-300 rounded-lg shadow-lg">
-        <h2 className="mb-2 text-lg font-bold">Debug Panel</h2>
-        <DebugPanel />
+      <div className="flex">
+        <div className="w-1/2">
+          <table className="min-w-full bg-white">
+            <thead>
+              <tr>
+                <th className="py-2">Page Title</th>
+                <th className="py-2">App Layout</th>
+                <th className="py-2">List Event</th>
+                <th className="py-2">DB Table</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pageConfigs.map((config) => (
+                <tr key={config.pageName} onClick={() => handleRowClick(config)} className="cursor-pointer">
+                  <td className="py-2">{config.pageTitle}</td>
+                  <td className="py-2">{config.appLayout}</td>
+                  <td className="py-2">{config.listEvent}</td>
+                  <td className="py-2">{config.dbTable}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="w-1/2 p-4">
+          {selectedConfig && (
+            <div>
+              <h2 className="text-xl font-bold">Column Map</h2>
+              <textarea
+                className="w-full h-64 p-2 border rounded"
+                readOnly
+                value={JSON.stringify(selectedConfig.columnMap, null, 2)}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
-
-const DashboardCard = ({ title, content }) => (
-  <div className="p-4 bg-white border border-gray-200 rounded-lg shadow">
-    <h3 className="mb-2 text-lg font-semibold">{title}</h3>
-    <p>{content}</p>
-  </div>
-);
 
 export default Dashboard;

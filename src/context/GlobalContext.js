@@ -1,21 +1,34 @@
-import React, { createContext, useContext } from 'react';
-import Dashboard from '../pages/Dashboard';  // Placeholder for the Dashboard page
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { getVar, setVars } from '../utils/externalStore';
 
 const GlobalContext = createContext();
 
 export const GlobalProvider = ({ children }) => {
+  const [eventTypes, setEventTypes] = useState([]);
+  const [pageConfigs, setPageConfigs] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Group functions and constants related to Dashboard
-  const dashboard = {
-    listEvent: '',
-    editEvent: '',
-    addEvent: '',
-    page: Dashboard,
-    pageTitle: 'Dashboard',
-  };
+  const [userID, setUserID] = useState(getVar(':userID') || '');
+  const [userEmail, setUserEmail] = useState(getVar(':userEmail') || '');
+  const [roleID, setRoleID] = useState(getVar('roleID') || '');
+
+  const [pageTitle, setPageTitle] = useState('Home');
+
+  const updatePageTitle = useCallback((newTitle) => {
+    setPageTitle(newTitle);
+  }, []);
 
   return (
-    <GlobalContext.Provider value={{ dashboard }}>
+    <GlobalContext.Provider value={{
+      eventTypes, setEventTypes,
+      pageConfigs, setPageConfigs,
+      isLoading, error,
+      userID, setUserID,
+      userEmail, setUserEmail,
+      roleID, setRoleID,
+      pageTitle, updatePageTitle
+    }}>
       {children}
     </GlobalContext.Provider>
   );

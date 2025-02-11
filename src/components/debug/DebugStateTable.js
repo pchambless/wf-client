@@ -1,9 +1,9 @@
 import React from 'react';
-import { useSelectContext } from '../../context/SelectContext'; // Import other context hooks as needed
-import useModalManager from '../../utils/modalManager'; // Import modalManager
+import { useSelectContext } from '../../context/SelectContext';
+import { useModalContext } from '../../context/ModalContext';
 
 const DebugStateTable = () => {
-  const { modalState } = useModalManager();
+  const { modalState } = useModalContext();
   const { selectedItems } = useSelectContext();
   // Get other state values from different contexts as needed
 

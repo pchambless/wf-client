@@ -57,7 +57,7 @@ const getVars = (vars) => {
 
 const getVar = (variableName) => {
   const state = store.getState();
-  console.log(`getVar called for ${variableName}. Current state:`, state);
+  console.log(`getVar called for ${variableName}`);
   const value = state.hasOwnProperty(variableName) ? state[variableName] : null;
   console.log(`getVar result for ${variableName}:`, value);
   return value;

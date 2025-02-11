@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import useLogger from '../../hooks/useLogger';
-import { useEventTypeContext } from '../../context/EventTypeContext';
+import { usePageConfigsContext } from '../../context/PageConfigContext';
 import { setVars } from '../../utils/externalStore';
 
 const Form = ({ pageConfig, data, mode, onSubmit }) => {
@@ -9,7 +9,7 @@ const Form = ({ pageConfig, data, mode, onSubmit }) => {
   const [formMode, setFormMode] = useState('view');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { execEventType } = useEventTypeContext();
+//  const { execEventType } = useEventTypeContext();
 
   useEffect(() => {
     log('Form data or mode updated:', { data, mode });
@@ -20,11 +20,11 @@ const Form = ({ pageConfig, data, mode, onSubmit }) => {
   const handleInputChange = useCallback((event) => {
     const { name, value } = event.target;
     setFormData(prevData => ({ ...prevData, [name]: value }));
-    const column = pageConfig.columns.find(col => col.field === name);
+    const column = pageConfig.columnMap.find(col => col.field === name);
     if (column && column.setVar) {
       setVars(column.setVar, value);
     }
-  }, [pageConfig.columns]);
+  }, [pageConfig.columnMap]);
 
   const handleSubmit = useCallback(async (event) => {
     event.preventDefault();

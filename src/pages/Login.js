@@ -1,23 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useEventTypeContext } from '../context/EventTypeContext';
+import { useGlobalContext } from '../context/GlobalContext';
 import logo from '../assets/wf-icon.png';
 import useLogger from '../hooks/useLogger';
-import { login } from '../api/api';
-import { setVars, listVars, getVar } from '../utils/externalStore';
+import { login, fetchApiEventList, fetchPageConfigs } from '../api/api';
+import { setVars } from '../utils/externalStore';
 
 const Login = () => {
-  const fileName = '[Login] ';
-  const logAndTime = useLogger(fileName);
+  const log = useLogger('Login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { loadEventTypes } = useEventTypeContext();
+  const { setEventTypes, setPageConfigs, setUserID, setUserEmail, setRoleID } = useGlobalContext();
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    logAndTime('Login attempt started');
-    console.log(`Email: ${email}`);
+    log('Login attempt started');
+    log(`Email: ${email}`);
 
     if (!email || !password) {
       alert('Please fill in all fields.');
@@ -25,9 +24,8 @@ const Login = () => {
     }
 
     try {
-      logAndTime('Sending login request...');
+      log('Sending login request...');
       const response = await login(email, password);
-      logAndTime('Login response:', response);
 
       if (!response.success) {
         throw new Error(response.message || 'Login failed');
@@ -35,31 +33,25 @@ const Login = () => {
 
       const { userID, roleID, acctID, acctName, userEmail } = response.data.user;
 
-      logAndTime('Loading eventTypes');
-      loadEventTypes();
+      log('Loading apiEventList');
+      await fetchApiEventList(setEventTypes);
+      log('Loaded apiEventList');
 
-      setVars({ ':userEmail': userEmail, ':userID': userID });
-      setVars({ ':acctID': acctID, ':acctName': acctName, ':roleID': roleID });
-      setVars({ ':isAuth': "1" });
+      log('Loading pageConfigs');
+      await fetchPageConfigs(setPageConfigs);
+      log('Loaded pageConfigs');
 
-      // Debug log to ensure variables are set
-      console.log('Variables set:', {
-        ':userEmail': getVar(':userEmail'),
-        ':userID': getVar(':userID'),
-        ':acctID': getVar(':acctID'),
-        ':acctName': getVar(':acctName'),
-        ':roleID': getVar(':roleID')
-      });
+      setUserID(userID);
+      setUserEmail(userEmail);
+      setRoleID(roleID);
+      setVars({ ':acctID': acctID, ':acctName': acctName, ':isAuth': "1" });
 
-      const currentVars = listVars();
-      logAndTime('Current Variables:', JSON.stringify(currentVars, null, 2));
-
-      logAndTime('User logged in successfully');
+      log('User logged in successfully');
 
       navigate('/dashboard');
     } catch (error) {
-      logAndTime(`Login failed: ${error.message}`);
-      alert(`${fileName} Login failed. Please try again.`);
+      log(`Login failed: ${error.message}`);
+      alert(`Login failed. Please try again.`);
     }
   };
 
@@ -106,3 +98,9 @@ const Login = () => {
 };
 
 export default Login;
+
+
+
+
+
+

@@ -1,5 +1,5 @@
 import React from 'react';
-import useExternalStore from '../../utils/useExternalStore';
+import useExternalStore from '../../utils/externalStore';
 
 const VariableList = () => {
   const variables = useExternalStore();

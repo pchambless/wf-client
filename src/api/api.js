@@ -1,72 +1,127 @@
 import axios from 'axios';
+import createLogger from '../utils/logger';
 
-const API_BASE_URL = 'http://localhost:3001/api';
-const fileName = 'api: ';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-/**
- * Fetches the list of event types from the API.
- *
- * @returns {Promise<Array<{ eventType: string, params: Array, purpose: string }>>} An array of event types with their parameters and purpose.
- * @throws {Error} Throws an error if the response from the API is not an array.
- */
-export const fetchEventTypes = async () => {
+export const execEventType = async (eventType, params) => {
+  const fileName = 'api.execEventType';
+  const log = createLogger(fileName);
   try {
-    const response = await axios.get(`${API_BASE_URL}/util/fetchEventTypes`);
-    console.log(fileName, 'Fetched event types:', response.data.eventTypes); // Log the fetched event types
+    const response = await axios.post(`${API_BASE_URL}/api/execEventType`, {
+      eventType,
+      params
+    });
+    return response.data;
+  } catch (error) {
+    log(`Error executing event type ${eventType}:`, error);
+    throw error;
+  }
+};
 
-    if (!Array.isArray(response.data.eventTypes)) {
+export const fetchApiEventList = async (setEventList) => {
+  const fileName = 'api.fetchApiEventList';
+  const log = createLogger(fileName);
+  try {
+    const response = await execEventType('apiEventList', {});
+    log('Fetched from fetchApiEventList:', response); // Log the fetched API event list
+
+    if (!Array.isArray(response)) {
       throw new Error('Expected an array but received a different type.');
     }
 
-    const eventTypes = response.data.eventTypes.map(event => ({
-      eventType: event.eventType,
-      params: JSON.parse(event.params), // Parse the params string into an array
-      purpose: event.purpose
-    }));
+    const eventTypes = response.map(event => {
+      try {
+        return {
+          eventID: event.eventID,
+          listEvent: event.eventType,
+          method: event.method,
+          params: event.params ? JSON.parse(event.params) : [],
+          purpose: event.purpose
+        };
+      } catch (error) {
+        log('Error parsing event:', error);
+        throw error;
+      }
+    });
+
+    log('Parsed apiEventList:', eventTypes);
+    setEventList(eventTypes);
     return eventTypes;
   } catch (error) {
-    console.error(fileName, 'Error fetching event types:', error);
+    log('Error fetching apiEventList:', error);
     throw error;
   }
 };
 
-/**
- * Fetches the list of API columns from the API.
- *
- * @returns {Promise<Object>} An object containing the API columns as key-value pairs, where the key is the column's variable name and the value is an empty string with a leading colon.
- * @throws {Error} Throws an error if the response from the API is not an array.
- */
-export const fetchApiColumns = async () => {
+
+
+export const fetchPageConfigs = async (setPageConfigs) => {
+  const fileName = 'api.fetchPageConfigs';
+  const log = createLogger(fileName);
   try {
-    const response = await axios.get(`${API_BASE_URL}/util/fetchApiColumns`);
-    const apiColumns = response.data.apiColumns;
+    const response = await execEventType('apiPageConfigList', {});
+    log('Fetched from fetchPageConfigs:', response); // Log the fetched page configs
 
-    // Initialize variables to empty strings with leading ":"
-    const variables = apiColumns.reduce((acc, column) => {
-      acc[column.variableName] = ''; // Initialize with empty string, retain leading ":"
-      return acc;
-    }, {});
+    if (!Array.isArray(response)) {
+      throw new Error('Expected an array but received a different type.');
+    }
 
-    console.log(fileName, 'apiColumns, variables:', variables); // Log the final variables for debugging
+    const pageConfigs = response.map(config => {
+      try {
+        log('Parsing columnMap for config:', config.pageName);
+        log('columnMap:', config.columnMap); // Log the columnMap before parsing
+        const columnMap = typeof config.columnMap === 'string' ? JSON.parse(config.columnMap) : config.columnMap;
+        log('Parsed columnMap:', columnMap); // Log the parsed columnMap
+        return {
+          pageName: config.pageName,
+          pageTitle: config.pageTitle,
+          dbTable: config.dbTable,
+          listEvent: config.listEvent,
+          appLayout: config.appLayout,
+          keyField: config.keyField,
+          columnMap: columnMap.map(col => ({
+            ...col,
+            colVal: '' // Add colVal attribute
+          }))
+        };
+      } catch (error) {
+        log('Error parsing pageConfig for config:', config.pageName);
+        log('Offending columnMap:', config.columnMap);
+        log('Error:', error.message);
+        log('Stack:', error.stack);
+        throw error;
+      }
+    });
 
-    return variables;
+    log('Parsed pageConfigs:', pageConfigs); // Log the parsed pageConfigs
+    setPageConfigs(pageConfigs);
+    return pageConfigs;
   } catch (error) {
-    console.error(fileName, 'Error fetching API columns:', error);
+    log('Error fetching pageConfigs:', error.message);
+    log('Stack:', error.stack);
     throw error;
   }
 };
 
-/**
- * Logs the user into the system using the provided email and password.
- *
- * @param {string} email - The user's email address.
- * @param {string} password - The user's password.
- * @returns {Promise<Object>} A promise that resolves to the server response data upon successful login, or a promise that rejects with an error object containing a `success` property set to `false` and a `message` property set to the error message upon login failure.
- * @throws {Error} Throws an error if the HTTP request to the server fails.
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const login = async (email, password) => {
+  const fileName = 'api.login';
+  const log = createLogger(fileName);
   try {
-    const response = await fetch(`http://localhost:3001/api/auth/login`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -75,35 +130,22 @@ export const login = async (email, password) => {
     });
 
     if (!response.ok) { // Updated this line
-      throw new Error(fileName, `HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log(fileName, 'Login response data:', data);
+    log('Login response data:', data);
     return data; // Return the server response directly
   } catch (error) {
-    console.error(fileName, 'Login error:', error);
+    log('Login error:', error);
     return { success: false, message: error.message };
   }
 };
 
-/**
- * Executes the specified event type with the provided parameters.
- *
- * @param {string} eventType - The name of the event type to be executed.
- * @param {Object} params - An object containing the parameters required for the specified event type.
- * @returns {Promise<Object>} A promise that resolves to the server response data upon successful execution, or a promise that rejects with an error object containing a `success` property set to `false` and a `message` property set to the error message upon execution failure.
- * @throws {Error} Throws an error if the HTTP request to the server fails.
- */
-export const execEventType = async (eventType, params) => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/execEventType`, {
-      eventType,
-      params
-    });
-    return response.data;
-  } catch (error) {
-    console.error(fileName, `Error executing event type ${eventType}:`, error);
-    throw error;
-  }
-};
+
+
+
+
+
+
+

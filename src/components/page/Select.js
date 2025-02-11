@@ -1,53 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import useExternalStore, { setVars, getVar } from '../utils/useExternalStore';
+import React, { useState, useCallback } from 'react';
+import { setVars } from '../../utils/externalStore';
+import { fetchData } from '../../utils/dataFetcher';
 
-const fileName = 'Select: ';
-
-const Select = ({ options = [], label, valueKey, labelKey, onChange, onFocus, varName, labelName }) => {
+const Select = ({ eventType, placeholder, onChange, params }) => {
+  const [options, setOptions] = useState([]);
   const [selectedValue, setSelectedValue] = useState('');
-  const variables = useExternalStore(); // Use externalStore to get the variables
+  const [valueKey, setValueKey] = useState('');
+  const [labelKey, setLabelKey] = useState('');
+  const [varName, setVarName] = useState('');
 
-  useEffect(() => {
-    console.log(fileName, 'Options updated:', options);
-    console.log(fileName, 'valueKey:', valueKey, 'labelKey:', labelKey, 'varName:', varName, 'labelName:', labelName);
-    options.forEach((option, index) => {
-      console.log(fileName, `Option ${index}:`, option);
-    });
-  }, [options, valueKey, labelKey, varName, labelName]);
+  const fetchOptions = useCallback(async () => {
+    try {
+      const response = await fetchData(eventType, params);
+      console.log(`Fetched options for ${eventType}:`, response); // Log the fetched data
+      if (response.length > 0) {
+        const keys = Object.keys(response[0]);
+        setValueKey(keys[0]);
+        setLabelKey(keys[1]);
+        setVarName(keys[0]); // Set the variable name based on the first column name
+      }
+      setOptions(response);
+    } catch (error) {
+      console.error(`Error fetching options for ${eventType}:`, error);
+    }
+  }, [eventType, params]);
+
+  const handleFocus = () => {
+    if (options.length === 0) {
+      fetchOptions();
+    }
+  };
 
   const handleChange = (e) => {
     const value = e.target.value;
-    console.log(fileName, 'Selected value:', value);
-
-    const selectedOption = (options || []).find(option => option[valueKey] === value);
-    console.log(fileName, 'Selected option:', selectedOption);
-
-    const labelValue = selectedOption ? selectedOption[labelKey] : '';
-    console.log(fileName, 'Label value:', labelValue);
-
     setSelectedValue(value);
-    if (onChange) onChange(value);
+    setVars({ [':' + varName]: value }); // Prefix the variable name with a ":"
 
-    console.log(fileName, 'Setting variables:', { [varName]: value, [labelName]: labelValue });
-    setVars({ [varName]: value });
-    setVars({ [labelName]: labelValue });
+    if (onChange) onChange(value);
   };
 
   return (
-    <select
-      value={selectedValue}
-      onChange={handleChange}
-      onFocus={onFocus}
-      className="p-2 border rounded"
-    >
-      <option value="" disabled>{label}</option>
-      {Array.isArray(options) ? options.map((option) => (
-        <option key={option[valueKey]} value={option[valueKey]}>
-          {option[labelKey]}
-        </option>
-      )) : null}
-    </select>
+    <div className="select-container">
+      <select
+        id={varName}
+        name={varName}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        className="p-2 border rounded w-full"
+        value={selectedValue}
+      >
+        <option value="" disabled>{placeholder}</option>
+        {options.map((option) => (
+          <option key={option[valueKey]} value={option[valueKey]}>
+            {option[labelKey]}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 };
 
 export default Select;
+
+

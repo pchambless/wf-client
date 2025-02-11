@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ReactModal from 'react-modal';
 import useLogger from '../../hooks/useLogger';
 import { setVars } from '../../utils/externalStore';
-import { useEventTypeContext } from '../../context/EventTypeContext';
+import { useGlobalContext } from '../../context/GlobalContext';
 
 const TableModal = ({ 
   isOpen, 
@@ -14,7 +14,7 @@ const TableModal = ({
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { execEvent } = useEventTypeContext();
+  const { execEvent } = useGlobalContext();
   const log = useLogger('TableModal');
 
   const visibleColumns = content?.columns

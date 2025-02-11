@@ -1,6 +1,6 @@
 import React from 'react';
-import MdlMessage from './MdlMessage';
-import MdlTable from './MdlTable';
+import MdlMessage from './MessageModal';
+import MdlTable from './TableModal';
 
 const CustomModal = ({ isOpen, onRequestClose, content, onRowClick }) => {
   console.log('CustomModal rendering', { isOpen, contentType: content.type });

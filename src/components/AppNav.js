@@ -1,108 +1,38 @@
-import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import '../styles/tailwind.css';
+import React, { useState, Suspense, lazy } from 'react';
+import { Route, Routes, Navigate } from 'react-router-dom';
+import Container from './Container';
+import { useEventTypeContext } from '../context/EventTypeContext'; // Adjusted import path
+import { getVar } from '../utils/externalStore'; // Import getVar from externalStore
 
 const AppNav = () => {
-  const [activeMenu, setActiveMenu] = useState(null);
-  const navigate = useNavigate();
+  const { pageConfigs } = useEventTypeContext();
+  const isAuthenticated = getVar(':isAuth') === '1'; // Check authentication status using getVar
 
-  const toggleMenu = (menuName) => {
-    setActiveMenu((prevMenu) => (prevMenu === menuName ? null : menuName));
-  };
-
-  const handleNavigation = (path) => {
-    navigate(path);
-    setActiveMenu(null); // Close the dropdown menu
+  const renderLayout = (pageConfig) => {
+    const Component = lazy(() => import(`../${pageConfig.appLayout}`));
+    return <Component pageConfig={pageConfig} />;
   };
 
   return (
-    <nav className="flex p-2 space-x-2 bg-gray-200 border-t border-[#008060]">
-      {/* Dashboard Link */}
-      <div
-        onClick={() => handleNavigation('/dashboard')}
-        className="px-3 py-1 border rounded cursor-pointer"
-      >
-        Dashboard
-      </div>
-
-      {/* Ingredients Dropdown */}
-      <div className="relative">
-        <button
-          onClick={() => toggleMenu('ingredients')}
-          className="px-3 py-1 border rounded"
-        >
-          Ingredients
-        </button>
-        {activeMenu === 'ingredients' && (
-          <div className="absolute mt-1 bg-white border rounded shadow-lg">
-            <NavLink
-              to="/ingredients"
-              className="block px-4 py-2 hover:bg-gray-100"
-              onClick={() => setActiveMenu(null)} // Close the dropdown menu
-            >
-              Ingredient Types
-            </NavLink>
-            <NavLink
-              to="/ingredients/ingr"
-              className="block px-4 py-2 hover:bg-gray-100"
-              onClick={() => setActiveMenu(null)} // Close the dropdown menu
-            >
-              Ingredients
-            </NavLink>
-            <NavLink
-              to="/ingredients/ingrbtch"
-              className="block px-4 py-2 hover:bg-gray-100"
-              onClick={() => setActiveMenu(null)} // Close the dropdown menu
-            >
-              Ingredient Batches
-            </NavLink>
-          </div>
-        )}
-      </div>
-
-      {/* Products Dropdown */}
-      <div className="relative">
-        <button
-          onClick={() => toggleMenu('products')}
-          className="px-3 py-1 border rounded"
-        >
-          Products
-        </button>
-        {activeMenu === 'products' && (
-          <div className="absolute mt-1 bg-white border rounded shadow-lg">
-            <NavLink
-              to="/products/prodtype"
-              className="block px-4 py-2 hover:bg-gray-100"
-              onClick={() => setActiveMenu(null)} // Close the dropdown menu
-            >
-              Product Types
-            </NavLink>
-            <NavLink
-              to="/products/prod"
-              className="block px-4 py-2 hover:bg-gray-100"
-              onClick={() => setActiveMenu(null)} // Close the dropdown menu
-            >
-              Products
-            </NavLink>
-            <NavLink
-              to="/products/rcpe"
-              className="block px-4 py-2 hover:bg-gray-100"
-              onClick={() => setActiveMenu(null)} // Close the dropdown menu
-            >
-              Recipes
-            </NavLink>
-            <NavLink
-              to="/products/prodbtch"
-              className="block px-4 py-2 hover:bg-gray-100"
-              onClick={() => setActiveMenu(null)} // Close the dropdown menu
-            >
-              Product Batches
-            </NavLink>
-          </div>
-        )}
-      </div>
-    </nav>
+    <Routes>
+      {isAuthenticated ? (
+        <Route path="/" element={<Container />}>
+          <Route path="dashboard" element={<Suspense fallback={<div>Loading...</div>}>{renderLayout({ appLayout: 'pages/Dashboard' })}</Suspense>} />
+          {pageConfigs.map((config) => (
+            <Route key={config.pageName} path={`${config.pageName}`} element={<Suspense fallback={<div>Loading...</div>}>{renderLayout(config)}</Suspense>} />
+          ))}
+        </Route>
+      ) : (
+        <Route path="*" element={<Navigate to="/login" />} />
+      )}
+    </Routes>
   );
 };
 
 export default AppNav;
+
+
+
+
+
+

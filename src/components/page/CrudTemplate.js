@@ -4,8 +4,8 @@ import Form from './Form';
 import Table from './Table';
 import useLogger from '../../hooks/useLogger';
 
-const PageTemplate = React.memo(({ pageConfig, children }) => {
-  const log = useLogger('PageTemplate');
+const CrudTemplate = React.memo(({ pageConfig, children }) => {
+  const log = useLogger('CrudTemplate');
   const { updatePageTitle } = usePageContext();
   const [formData, setFormData] = useState({});
   const [formMode, setFormMode] = useState('add');
@@ -30,6 +30,11 @@ const PageTemplate = React.memo(({ pageConfig, children }) => {
     }
   }, []);
 
+  const handleFormSubmit = useCallback(async (formData) => {
+    // Handle form submission logic here
+    log('Form submitted:', formData);
+  }, [log]);
+
   const shouldRenderTable = useMemo(() => !!pageConfig.listEvent, [pageConfig.listEvent]);
   const shouldRenderForm = useMemo(() => !!(pageConfig.editEvent || pageConfig.addEvent), [pageConfig.editEvent, pageConfig.addEvent]);
 
@@ -51,8 +56,9 @@ const PageTemplate = React.memo(({ pageConfig, children }) => {
           <div className="flex-1 p-4 rounded-lg bg-product-bg border-3 border-ingredient-brdr">
             <Form
               pageConfig={pageConfig}
-              initialData={formData}
+              data={formData}
               mode={formMode}
+              onSubmit={handleFormSubmit}
               onModeChange={handleFormModeChange}
             />
           </div>
@@ -67,4 +73,5 @@ const PageTemplate = React.memo(({ pageConfig, children }) => {
   );
 });
 
-export default PageTemplate;
+export default CrudTemplate;
+
