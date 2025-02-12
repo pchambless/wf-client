@@ -1,16 +1,16 @@
 import React from 'react';
-import '../styles/tailwind.css';
-import PageHeader from '../components/page/PageHeader'
+import { Container as MuiContainer, Box } from '@mui/material'; // Import Material-UI components
+import PageHeader from '../components/page/PageHeader';
 
 const Container = ({ children, openModal, acctName }) => {
   return (
-    <div className="flex flex-col min-h-screen bg-lightGray">
+    <MuiContainer maxWidth="lg" sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'lightGray' }}>
       <PageHeader openModal={openModal} acctName={acctName} />
-      <main className="flex flex-row flex-grow p-4">
+      <Box component="main" sx={{ flexGrow: 1, p: 4, display: 'flex', flexDirection: 'row' }}>
         {children}
-      </main>
+      </Box>
       {/* You can add a footer here if needed */}
-    </div>
+    </MuiContainer>
   );
 };
 

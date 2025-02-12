@@ -1,7 +1,6 @@
 import React, { createContext, useState, useContext, useMemo, useCallback, useEffect, useRef } from 'react';
 import { getVar } from '../utils/externalStore';
-import TableModal from '../components/modal/TableModal';
-import MessageModal from '../components/modal/MessageModal';
+import Modal from '../components/modal/Modal'; // Import the renamed Modal component
 
 const ModalContext = createContext();
 
@@ -13,21 +12,6 @@ export const ModalProvider = ({ children }) => {
   const previousFocusRef = useRef(null);
 
   const mapping = useMemo(() => ({
-    userAccts: {
-      title: 'Select Account',
-      type: 'table',
-      listEvent: 'userAccts',
-      columns: ['acctID', 'acctName'],
-      columnLabels: {
-        acctID: 'Account ID',
-        acctName: 'Account Name'
-      },
-      hiddenColumns: ['acctID'],
-      setVars: {
-        ':acctID': 'acctID',
-        ':acctName': 'acctName'
-      }
-    },
     deleteConfirm: {
       title: 'Confirm Deletion',
       type: 'message',
@@ -92,40 +76,17 @@ export const ModalProvider = ({ children }) => {
     console.log('ModalContext: Rendering modal of type:', modalConfig.type);
 
     const commonProps = {
-      isOpen: modalIsOpen,
-      onRequestClose: closeModal,
-      onAfterOpen: () => {
-        // Set focus to the first focusable element in the modal
-        const focusableElements = document.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        if (focusableElements.length) {
-          focusableElements[0].focus();
-        }
-      },
-      shouldFocusAfterRender: true,
-      shouldReturnFocusAfterClose: true,
+      open: modalIsOpen,
+      onClose: closeModal,
     };
 
-    switch (modalConfig.type) {
-      case 'table':
-        return (
-          <TableModal
-            {...commonProps}
-            title={modalConfig.title}
-            content={modalConfig}
-          />
-        );
-      case 'message':
-        return (
-          <MessageModal
-            {...commonProps}
-            title={modalConfig.title}
-            message={modalConfig.message}
-          />
-        );
-      default:
-        console.log('ModalContext: Unknown modal type:', modalConfig.type);
-        return null;
-    }
+    return (
+      <Modal
+        isOpen={modalIsOpen}
+        onRequestClose={closeModal}
+        content={modalConfig}
+      />
+    );
   };
 
   return (

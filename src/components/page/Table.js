@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { Table as MuiTable, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, CircularProgress, Typography } from '@mui/material';
 import useLogger from '../../hooks/useLogger';
 import { setVars } from '../../utils/externalStore';
 import { fetchData } from '../../utils/dataFetcher';
@@ -65,68 +66,52 @@ const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
 
   if (loading) {
     log('Rendering loading state');
-    return <div>Loading...</div>;
+    return <CircularProgress />;
   }
 
   if (error) {
     log('Rendering error state:', error);
-    return <div>Error fetching data: {error}</div>;
+    return <Typography color="error">Error fetching data: {error}</Typography>;
   }
 
   if (!data || data.length === 0) {
     log('Rendering empty data state');
-    return <div>No data available.</div>;
+    return <Typography>No data available.</Typography>;
   }
 
   log('Rendering table with data:', data);
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white border-2 border-gray-300">
-        <thead>
-          <tr className="bg-gray-200">
+    <TableContainer component={Paper}>
+      <MuiTable>
+        <TableHead>
+          <TableRow>
             {columns.map((column) => (
-              <th
-                key={column.field}
-                className={`px-4 py-2 text-xs font-bold tracking-wider text-left text-gray-700 uppercase border-b-2 border-gray-300 ${column.hidden ? 'hidden' : ''}`}
-                style={column.style}
-              >
+              <TableCell key={column.field} style={column.style} className={column.hidden ? 'hidden' : ''}>
                 {column.label}
-              </th>
+              </TableCell>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {data.map((row, index) => (
-            <tr
-              key={row.id || index}
-              onClick={() => handleRowClick(row)}
-              className={`cursor-pointer ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100`}
-            >
+            <TableRow key={row.id || index} onClick={() => handleRowClick(row)} className="cursor-pointer">
               {columns.map((column) => (
-                <td
-                  key={`${row[keyField] || index}-${column.field}`}
-                  className={`px-4 py-2 border-b border-gray-200 whitespace-nowrap ${column.hidden ? 'hidden' : ''}`}
-                  style={column.style}
-                >
+                <TableCell key={`${row[keyField] || index}-${column.field}`} style={column.style} className={column.hidden ? 'hidden' : ''}>
                   {row[column.field]}
-                </td>
+                </TableCell>
               ))}
-            </tr>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </MuiTable>
       {onAddNewClick && (
-        <button onClick={onAddNewClick} className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600">
+        <Button onClick={onAddNewClick} variant="contained" color="primary" style={{ marginTop: '16px' }}>
           Add New
-        </button>
+        </Button>
       )}
-    </div>
+    </TableContainer>
   );
 };
 
 export default React.memo(Table);
-
-
-
-

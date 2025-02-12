@@ -5,6 +5,7 @@ import createLogger from '../../utils/logger';
 import logo from '../../assets/wf-icon.png';
 import Select from './Select'; // Import the Select component
 import { useNavigate } from 'react-router-dom';
+import { AppBar, Toolbar, Typography, Button, Box, Container, IconButton } from '@mui/material';
 
 const PageHeader = () => {
   const log = createLogger('PageHeader');
@@ -51,44 +52,58 @@ const PageHeader = () => {
   log('Rendering');
 
   return (
-    <div>
-      <header className="flex items-center justify-between p-4 bg-gray-100 border-b border-[#008060] rounded-lg shadow-md">
-        <div className="flex items-center">
-          <img src={logo} alt="Whatsfresh Logo" className="w-12 h-12 mr-2" />
-          <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
-        </div>
-        <div className="flex items-center justify-center flex-1">
-          <Select
-            eventType="userAcctList"
-            placeholder="Select Account"
-            onChange={handleAccountChange}
-            params={{ ':userID': userID }} // Pass userID with ':' as a parameter
-          />
-        </div>
-        <div className="flex items-center space-x-4">
-          <button
+    <AppBar position="static" color="default" sx={{ bgcolor: 'lightGray' }}>
+      <Container maxWidth="lg">
+        <Toolbar disableGutters>
+          <IconButton edge="start" color="inherit" aria-label="logo">
+            <img src={logo} alt="Whatsfresh Logo" style={{ width: '48px', height: '48px' }} />
+          </IconButton>
+          <Typography variant="h6" color="inherit" noWrap sx={{ flexGrow: 1, fontWeight: 'bold' }}>
+            {pageTitle}
+          </Typography>
+          <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'left' }}>
+            <Select
+              eventType="userAcctList"
+              placeholder="Select Account"
+              onChange={handleAccountChange}
+              params={{ ':userID': userID }} // Pass userID with ':' as a parameter
+              sx={{ fontWeight: 'bold', bgcolor: 'inherit', textAlign: 'center', flexShrink: 0 }}
+            />
+          </Box>
+          <Button
             onClick={handleLogout}
-            className="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700"
+            sx={{
+              backgroundColor: 'red',
+              color: 'white',
+              borderRadius: '8px',
+              '&:hover': {
+                backgroundColor: 'darkred',
+              },
+            }}
           >
             Logout
-          </button>
-        </div>
-      </header>
-      <div className="flex justify-center my-4">
-        <button
+          </Button>
+        </Toolbar>
+      </Container>
+      <Box sx={{ display: 'flex', justifyContent: 'center', my: 2, bgcolor: 'lightGray' }}>
+        <Button
+          variant={selectedArea === 'defineBusiness' ? 'contained' : 'outlined'}
+          color="primary"
           onClick={() => handleAreaChange('defineBusiness')}
-          className={`px-4 py-2 mx-2 ${selectedArea === 'defineBusiness' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'} rounded`}
+          sx={{ mx: 1 }}
         >
           Define My Business
-        </button>
-        <button
+        </Button>
+        <Button
+          variant={selectedArea === 'recordBatches' ? 'contained' : 'outlined'}
+          color="primary"
           onClick={() => handleAreaChange('recordBatches')}
-          className={`px-4 py-2 mx-2 ${selectedArea === 'recordBatches' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'} rounded`}
+          sx={{ mx: 1 }}
         >
           Record My Batches
-        </button>
-      </div>
-    </div>
+        </Button>
+      </Box>
+    </AppBar>
   );
 };
 

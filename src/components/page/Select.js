@@ -1,15 +1,20 @@
-import React, { useState, useCallback } from 'react';
-import { setVars } from '../../utils/externalStore';
+import React, { useState, useCallback, useEffect } from 'react';
+import { getVar, setVar } from '../../utils/externalStore';
 import { fetchData } from '../../utils/dataFetcher';
+import { FormControl, InputLabel, Select, MenuItem, CircularProgress, Typography } from '@mui/material';
 
-const Select = ({ eventType, placeholder, onChange, params }) => {
+const CustomSelect = ({ eventType, placeholder, onChange, params }) => {
   const [options, setOptions] = useState([]);
-  const [selectedValue, setSelectedValue] = useState('');
+  const [selectedValue, setSelectedValue] = useState(getVar(':' + eventType) || '');
   const [valueKey, setValueKey] = useState('');
   const [labelKey, setLabelKey] = useState('');
   const [varName, setVarName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const fetchOptions = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
       const response = await fetchData(eventType, params);
       console.log(`Fetched options for ${eventType}:`, response); // Log the fetched data
@@ -22,44 +27,51 @@ const Select = ({ eventType, placeholder, onChange, params }) => {
       setOptions(response);
     } catch (error) {
       console.error(`Error fetching options for ${eventType}:`, error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
   }, [eventType, params]);
 
-  const handleFocus = () => {
-    if (options.length === 0) {
-      fetchOptions();
-    }
-  };
+  useEffect(() => {
+    fetchOptions();
+  }, [fetchOptions]);
 
   const handleChange = (e) => {
     const value = e.target.value;
     setSelectedValue(value);
-    setVars({ [':' + varName]: value }); // Prefix the variable name with a ":"
+    setVar(':' + varName, value); // Prefix the variable name with a ":"
 
     if (onChange) onChange(value);
   };
 
+  if (loading) {
+    return <CircularProgress />;
+  }
+
+  if (error) {
+    return <Typography color="error">Error fetching options: {error}</Typography>;
+  }
+
   return (
-    <div className="select-container">
-      <select
+    <FormControl fullWidth>
+      <InputLabel id={`${varName}-label`}>{placeholder}</InputLabel>
+      <Select
+        labelId={`${varName}-label`}
         id={varName}
-        name={varName}
-        onChange={handleChange}
-        onFocus={handleFocus}
-        className="p-2 border rounded w-full"
         value={selectedValue}
+        label={placeholder}
+        onChange={handleChange}
       >
-        <option value="" disabled>{placeholder}</option>
+        <MenuItem value="" disabled>{placeholder}</MenuItem>
         {options.map((option) => (
-          <option key={option[valueKey]} value={option[valueKey]}>
+          <MenuItem key={option[valueKey]} value={option[valueKey]}>
             {option[labelKey]}
-          </option>
+          </MenuItem>
         ))}
-      </select>
-    </div>
+      </Select>
+    </FormControl>
   );
 };
 
-export default Select;
-
-
+export default CustomSelect;

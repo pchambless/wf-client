@@ -2,76 +2,80 @@ import React, { useEffect, useState } from 'react';
 import { useModalContext } from '../context/ModalContext';
 import useLogger from '../hooks/useLogger';
 import { useGlobalContext } from '../context/GlobalContext';
+import { fetchData } from '../utils/dataFetcher';
+import { Container, Typography, Button, Box, CircularProgress, Paper, TableContainer } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
 
 const Dashboard = () => {
   const pageTitle = 'Dashboard';
   const { openModal } = useModalContext();
-  const logAndTime = useLogger('Dashboard');
-  const { updatePageTitle, pageConfigs } = useGlobalContext();
-  const [selectedConfig, setSelectedConfig] = useState(null);
+  const log = useLogger('Dashboard');
+  const { updatePageTitle } = useGlobalContext();
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    logAndTime('Dashboard component mounted');
+    log('Dashboard component mounted');
     updatePageTitle(pageTitle);
-  }, [logAndTime, updatePageTitle, pageTitle]);
+    fetchData('apiPageConfigList', '[]')
+      .then((result) => {
+        setData(result.map((item, index) => ({ id: index, ...item }))); // Ensure each row has a unique id
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [log, updatePageTitle, pageTitle]);
 
   const handleOpenTestModal = () => {
-    logAndTime('Opening test modal');
+    log('Opening test modal');
     openModal('deleteConfirm');
   };
 
-  const handleRowClick = (config) => {
-    setSelectedConfig(config);
-  };
+  if (loading) {
+    return <CircularProgress />;
+  }
+
+  if (error) {
+    return <Typography color="error">Error fetching data: {error}</Typography>;
+  }
+
+  const columns = [
+    { field: 'pageName', headerName: 'Page Name', flex: 1 },
+    { field: 'pageTitle', headerName: 'Page Title', flex: 1 },
+    { field: 'dbTable', headerName: 'DB Table', flex: 1 },
+    { field: 'listEvent', headerName: 'List Event', flex: 1 },
+    { field: 'appLayout', headerName: 'App Layout', flex: 1 },
+    { field: 'keyField', headerName: 'Key Field', flex: 1 },
+  ];
 
   return (
-    <div className="flex flex-col h-full p-4">
-      <h1 className="mb-4 text-2xl font-bold">{pageTitle}</h1>
-      <div className="flex-grow mb-4">
-        <button
-          onClick={handleOpenTestModal}
-          className="px-4 py-2 mb-4 text-white bg-blue-600 rounded hover:bg-blue-700"
-        >
+    <Container maxWidth="lg">
+      <Box mb={4}>
+        <Button variant="contained" color="primary" onClick={handleOpenTestModal}>
           Open Test Modal
-        </button>
-      </div>
-      <div className="flex">
-        <div className="w-1/2">
-          <table className="min-w-full bg-white">
-            <thead>
-              <tr>
-                <th className="py-2">Page Title</th>
-                <th className="py-2">App Layout</th>
-                <th className="py-2">List Event</th>
-                <th className="py-2">DB Table</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageConfigs.map((config) => (
-                <tr key={config.pageName} onClick={() => handleRowClick(config)} className="cursor-pointer">
-                  <td className="py-2">{config.pageTitle}</td>
-                  <td className="py-2">{config.appLayout}</td>
-                  <td className="py-2">{config.listEvent}</td>
-                  <td className="py-2">{config.dbTable}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="w-1/2 p-4">
-          {selectedConfig && (
-            <div>
-              <h2 className="text-xl font-bold">Column Map</h2>
-              <textarea
-                className="w-full h-64 p-2 border rounded"
-                readOnly
-                value={JSON.stringify(selectedConfig.columnMap, null, 2)}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+        </Button>
+      </Box>
+      <TableContainer component={Paper} sx={{ height: 500, width: '100%' }}>
+        <DataGrid
+          rows={data}
+          columns={columns}
+          paginationMode="server" // Set pagination mode to server
+          rowCount={data.length} // Provide row count
+          disableSelectionOnClick
+          density="compact" // Set density to compact
+          sx={{
+            '& .MuiDataGrid-cell': {
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            },
+          }}
+        />
+      </TableContainer>
+    </Container>
   );
 };
 
