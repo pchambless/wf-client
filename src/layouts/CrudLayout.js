@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Box, Grid } from '@mui/material';
 import useLogger from '../hooks/useLogger';
 import Form from '../components/page/Form';
 import Table from '../components/page/Table';
-import { usePageContext } from '../context/PageContext';
+import { useGlobalContext } from '../context/GlobalContext';
 
 const CrudLayout = ({ pageConfig }) => {
   const log = useLogger('CrudLayout');
-  const { updatePageTitle } = usePageContext();
-  const [data, setData] = useState([]);
+  const { updatePageTitle } = useGlobalContext();
   const [selectedItem, setSelectedItem] = useState(null);
   const [mode, setMode] = useState('view');
 
@@ -23,7 +23,6 @@ const CrudLayout = ({ pageConfig }) => {
       try {
         const response = await fetch(`/api/${pageConfig.listEvent}`);
         const result = await response.json();
-        setData(result);
         log('Data fetched successfully:', result);
       } catch (error) {
         log('Error fetching data:', error);
@@ -36,11 +35,6 @@ const CrudLayout = ({ pageConfig }) => {
   const handleSelectItem = (item) => {
     setSelectedItem(item);
     setMode('edit');
-  };
-
-  const handleAddItem = () => {
-    setSelectedItem(null);
-    setMode('add');
   };
 
   const handleFormSubmit = async (formData) => {
@@ -61,7 +55,6 @@ const CrudLayout = ({ pageConfig }) => {
         try {
           const response = await fetch(`/api/${pageConfig.listEvent}`);
           const result = await response.json();
-          setData(result);
           log('Data fetched successfully:', result);
         } catch (error) {
           log('Error fetching data:', error);
@@ -85,32 +78,34 @@ const CrudLayout = ({ pageConfig }) => {
   const shouldRenderForm = useMemo(() => !!(pageConfig.editEvent || pageConfig.addEvent), [pageConfig.editEvent, pageConfig.addEvent]);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex flex-row w-full space-x-4">
+    <Box display="flex" flexDirection="column" height="100%">
+      <Grid container spacing={2}>
         {shouldRenderTable && (
-          <div className="flex-1 p-4 rounded-lg bg-product-bg border-3 border-ingredient-brdr">
-            <Table
-              pageConfig={pageConfig}
-              onRowClick={handleSelectItem}
-            />
-          </div>
+          <Grid item xs={12} md={6}>
+            <Box p={2} borderRadius={2} bgcolor="background.paper" boxShadow={3}>
+              <Table
+                pageConfig={pageConfig}
+                onRowClick={handleSelectItem}
+              />
+            </Box>
+          </Grid>
         )}
         {shouldRenderForm && (
-          <div className="flex-1 p-4 rounded-lg bg-product-bg border-3 border-ingredient-brdr">
-            <Form
-              pageConfig={pageConfig}
-              data={selectedItem}
-              mode={mode}
-              onSubmit={handleFormSubmit}
-              onModeChange={handleFormModeChange}
-            />
-          </div>
+          <Grid item xs={12} md={6}>
+            <Box p={2} borderRadius={2} bgcolor="background.paper" boxShadow={3}>
+              <Form
+                pageConfig={pageConfig}
+                data={selectedItem}
+                mode={mode}
+                onSubmit={handleFormSubmit}
+                onModeChange={handleFormModeChange}
+              />
+            </Box>
+          </Grid>
         )}
-      </div>
-    </div>
+      </Grid>
+    </Box>
   );
 };
 
 export default CrudLayout;
-
-

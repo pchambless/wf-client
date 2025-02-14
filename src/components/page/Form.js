@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import useLogger from '../../hooks/useLogger';
-import { usePageConfigsContext } from '../../context/PageConfigContext';
 import { setVars } from '../../utils/externalStore';
 
 const Form = ({ pageConfig, data, mode, onSubmit }) => {

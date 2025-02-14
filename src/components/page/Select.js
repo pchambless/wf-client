@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { getVar, setVar } from '../../utils/externalStore';
+import { getVar, setVars } from '../../utils/externalStore';
 import { fetchData } from '../../utils/dataFetcher';
-import { FormControl, InputLabel, Select, MenuItem, CircularProgress, Typography } from '@mui/material';
+import { FormControl, InputLabel, Select as MuiSelect, MenuItem, CircularProgress, Typography } from '@mui/material';
 
-const CustomSelect = ({ eventType, placeholder, onChange, params }) => {
+const Select = ({ eventType, placeholder, onChange, params }) => {
   const [options, setOptions] = useState([]);
   const [selectedValue, setSelectedValue] = useState(getVar(':' + eventType) || '');
   const [valueKey, setValueKey] = useState('');
@@ -40,7 +40,7 @@ const CustomSelect = ({ eventType, placeholder, onChange, params }) => {
   const handleChange = (e) => {
     const value = e.target.value;
     setSelectedValue(value);
-    setVar(':' + varName, value); // Prefix the variable name with a ":"
+    setVars({ [':' + varName]: value }); // Prefix the variable name with a ":"
 
     if (onChange) onChange(value);
   };
@@ -56,7 +56,7 @@ const CustomSelect = ({ eventType, placeholder, onChange, params }) => {
   return (
     <FormControl fullWidth>
       <InputLabel id={`${varName}-label`}>{placeholder}</InputLabel>
-      <Select
+      <MuiSelect
         labelId={`${varName}-label`}
         id={varName}
         value={selectedValue}
@@ -69,9 +69,9 @@ const CustomSelect = ({ eventType, placeholder, onChange, params }) => {
             {option[labelKey]}
           </MenuItem>
         ))}
-      </Select>
+      </MuiSelect>
     </FormControl>
   );
 };
 
-export default CustomSelect;
+export default Select;

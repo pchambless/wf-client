@@ -1,58 +1,39 @@
-import React, { useState, useCallback } from 'react';
-import { setVars } from '../../utils/externalStore';
+import React, { useCallback, useEffect } from 'react';
+import { setVars, getVar } from '../../utils/externalStore';
 import { useGlobalContext } from '../../context/GlobalContext';
 import createLogger from '../../utils/logger';
 import logo from '../../assets/wf-icon.png';
-import Select from './Select'; // Import the Select component
-import { useNavigate } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Button, Box, Container, IconButton } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, Container, IconButton, FormControl, InputLabel, Select as MuiSelect, MenuItem, CircularProgress } from '@mui/material';
 
 const PageHeader = () => {
   const log = createLogger('PageHeader');
-  const { pageTitle, userID } = useGlobalContext();
-  const navigate = useNavigate();
+  const { pageTitle, getUserAcctList } = useGlobalContext();
+  const userAcctList = getUserAcctList();
+  const selectedAccount = getVar(':acctID') || '';
 
-  const [selectedArea, setSelectedArea] = useState('defineBusiness');
-  const [batchType, setBatchType] = useState('ingr'); // New state to track batch type prefix
-  const [selects, setSelects] = useState([
-    { value: '', options: [], placeholder: 'Select Type', varName: 'typeID', listEvent: `${batchType}TypeList` },
-    { value: '', options: [], placeholder: 'Select Entity', varName: 'entityID', listEvent: `${batchType}List`, visible: false },
-  ]);
+  useEffect(() => {
+    log('PageHeader mounted');
+  }, [log]);
 
-  const handleAccountChange = (value) => {
+  const handleAccountChange = useCallback((e) => {
+    const value = e.target.value;
     setVars(':acctID', value);
-  };
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     log('Logging out');
     localStorage.clear();
-    navigate('/login');
-  };
-
-  const handleAreaChange = (area) => {
-    setSelectedArea(area);
-  };
-
-  const updateSelects = async (index, value) => {
-    const newSelects = [...selects];
-    newSelects[index].value = value;
-
-    // Show the next select widget
-    if (index < selects.length - 1) {
-      newSelects[index + 1].visible = true;
-    } else {
-      // Navigate to the batch list page
-      const batchListPath = batchType === 'ingr' ? `/ingredientBatches/${value}` : `/productBatches/${value}`;
-      navigate(batchListPath);
-    }
-
-    setSelects(newSelects);
-  };
+    window.location.href = '/login';
+  }, [log]);
 
   log('Rendering');
 
+  if (!userAcctList || userAcctList.length === 0) {
+    return <CircularProgress />;
+  }
+
   return (
-    <AppBar position="static" color="default" sx={{ bgcolor: 'lightGray' }}>
+    <AppBar position="static" color="default" sx={{ bgcolor: 'lightGray', pt: 1 }}> {/* Add padding-top */}
       <Container maxWidth="lg">
         <Toolbar disableGutters>
           <IconButton edge="start" color="inherit" aria-label="logo">
@@ -61,14 +42,24 @@ const PageHeader = () => {
           <Typography variant="h6" color="inherit" noWrap sx={{ flexGrow: 1, fontWeight: 'bold' }}>
             {pageTitle}
           </Typography>
-          <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'left' }}>
-            <Select
-              eventType="userAcctList"
-              placeholder="Select Account"
-              onChange={handleAccountChange}
-              params={{ ':userID': userID }} // Pass userID with ':' as a parameter
-              sx={{ fontWeight: 'bold', bgcolor: 'inherit', textAlign: 'center', flexShrink: 0 }}
-            />
+          <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+            <FormControl fullWidth>
+              <InputLabel id="select-account-label">Select Account</InputLabel>
+              <MuiSelect
+                labelId="select-account-label"
+                id="select-account"
+                value={selectedAccount}
+                label="Select Account"
+                onChange={handleAccountChange}
+              >
+                <MenuItem value="" disabled>Select Account</MenuItem>
+                {userAcctList.map((account) => (
+                  <MenuItem key={account.acctID} value={account.acctID}>
+                    {account.acctName}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
           </Box>
           <Button
             onClick={handleLogout}
@@ -85,24 +76,6 @@ const PageHeader = () => {
           </Button>
         </Toolbar>
       </Container>
-      <Box sx={{ display: 'flex', justifyContent: 'center', my: 2, bgcolor: 'lightGray' }}>
-        <Button
-          variant={selectedArea === 'defineBusiness' ? 'contained' : 'outlined'}
-          color="primary"
-          onClick={() => handleAreaChange('defineBusiness')}
-          sx={{ mx: 1 }}
-        >
-          Define My Business
-        </Button>
-        <Button
-          variant={selectedArea === 'recordBatches' ? 'contained' : 'outlined'}
-          color="primary"
-          onClick={() => handleAreaChange('recordBatches')}
-          sx={{ mx: 1 }}
-        >
-          Record My Batches
-        </Button>
-      </Box>
     </AppBar>
   );
 };

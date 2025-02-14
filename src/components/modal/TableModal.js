@@ -1,136 +1,53 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import ReactModal from 'react-modal';
-import useLogger from '../../hooks/useLogger';
-import { setVars } from '../../utils/externalStore';
-import { useGlobalContext } from '../../context/GlobalContext';
+import React from 'react';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { useModalContext } from '../../context/ModalContext';
 
-const TableModal = ({ 
-  isOpen, 
-  onRequestClose, 
-  title, 
-  content,
-  onRowClick: externalOnRowClick
-}) => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const { execEvent } = useGlobalContext();
-  const log = useLogger('TableModal');
+const TableModal = ({ isOpen: propIsOpen, onRequestClose: propOnRequestClose, title: propTitle, content: propContent, onRowClick }) => {
+  const { modalIsOpen: contextIsOpen, modalConfig, closeModal } = useModalContext();
 
-  const visibleColumns = content?.columns
-    ? content.columns.filter(col => !content.hiddenColumns?.includes(col))
-    : [];
+  const isOpen = propIsOpen !== undefined ? propIsOpen : contextIsOpen;
+  const onRequestClose = propOnRequestClose || closeModal;
+  const title = propTitle || modalConfig.title;
+  const content = propContent || modalConfig.content;
 
-  const fetchData = useCallback(async () => {
-    if (!content || !content.listEvent) {
-      log('No listEvent provided in content');
-      setLoading(false);
-      return;
-    }
-    try {
-      setLoading(true);
-      log(`Fetching data with listEvent: ${content.listEvent}`);
-      const result = await execEvent(content.listEvent);
-      log('Data fetched:', result);
-      if (Array.isArray(result)) {
-        setData(result);
-        log(`Data set with ${result.length} items`);
-      } else {
-        log('Fetched data is not an array:', result);
-        setData([]);
-      }
-    } catch (err) {
-      setError(err.message);
-      log('Error fetching data:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [content, execEvent, log]);
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchData();
-    }
-  }, [isOpen, fetchData]);
-
-  const handleRowClick = useCallback((row) => {
-    if (content.setVars) {
-      const varsToSet = {};
-      Object.entries(content.setVars).forEach(([key, columnName]) => {
-        varsToSet[key] = row[columnName];
-      });
-      setVars(varsToSet);
-      log('Set variables:', varsToSet);
-    }
-    if (externalOnRowClick) {
-      externalOnRowClick(row);
-      log('Called external onRowClick handler');
-    }
-    onRequestClose();
-    log('Closed modal after row click');
-  }, [content.setVars, externalOnRowClick, onRequestClose, log]);
-
-  log('Rendering TableModal', { 
-    isOpen, 
-    loading, 
-    error, 
-    dataLength: data.length, 
-    visibleColumnsLength: visibleColumns.length,
-    content: content
-  });
+  if (!isOpen || (modalConfig.type !== 'table' && !propIsOpen)) {
+    return null;
+  }
 
   return (
-    <ReactModal
-      isOpen={isOpen}
-      onRequestClose={onRequestClose}
-      contentLabel={title}
-      className="modal"
-      overlayClassName="overlay"
-    >
-      <h2>{title}</h2>
-      {loading ? (
-        <div>Loading...</div>
-      ) : error ? (
-        <div>Error fetching data: {error}</div>
-      ) : data.length === 0 ? (
-        <div>No data available.</div>
-      ) : (
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              {visibleColumns.map((col) => (
-                <th 
-                  key={col}
-                  scope="col" 
-                  className="px-3 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
-                >
-                  {content.columnLabels[col] || col}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {data.map((row, index) => (
-              <tr 
-                key={index} 
-                onClick={() => handleRowClick(row)}
-                className="cursor-pointer hover:bg-gray-100"
-              >
-                {visibleColumns.map((col) => (
-                  <td 
-                    key={col} 
-                    className="px-3 py-2 text-sm text-gray-500 whitespace-nowrap"
-                  >
-                    {row[col]}
-                  </td>
+    <Dialog open={isOpen} onClose={onRequestClose} aria-labelledby="table-dialog-title" maxWidth="md" fullWidth>
+      <DialogTitle id="table-dialog-title">{title}</DialogTitle>
+      <DialogContent>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                {content.columns.map((column) => (
+                  <TableCell key={column.field}>{column.label}</TableCell>
                 ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </ReactModal>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {content.data.map((row, index) => (
+                <TableRow key={index} onClick={() => onRowClick && onRowClick(row)}>
+                  {content.columns.map((column) => (
+                    <TableCell key={column.field}>{row[column.field]}</TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onRequestClose} color="primary">
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 
 export default TableModal;
+
+

@@ -44,6 +44,7 @@ const Login = () => {
       setUserID(userID);
       setUserEmail(userEmail);
       setRoleID(roleID);
+      setVars({ ':userID': userID, ':roleID': roleID, ':userEmail': userEmail });
       setVars({ ':acctID': acctID, ':acctName': acctName, ':isAuth': "1" });
 
       log('User logged in successfully');

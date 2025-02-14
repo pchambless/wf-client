@@ -19,7 +19,15 @@ const store = configureStore({
   reducer: reducer
 });
 
+const logCaller = () => {
+  const error = new Error();
+  const stack = error.stack.split('\n');
+  const caller = stack[3].trim();
+  console.log(`Called from: ${caller}`);
+};
+
 const setVars = (vars) => {
+  logCaller();
   console.log('setVars called with:', vars);
   const prevState = store.getState();
   
@@ -33,13 +41,14 @@ const setVars = (vars) => {
     const newValue = updatedState[key];
     if (prevState[key] !== newValue) {
       console.log(`Variable ${key} changed from ${prevState[key]} to ${newValue}`);
-    } else {
-      console.log(`Variable ${key} did not change. Still ${newValue}`);
+ //   } else {
+ //     console.log(`Variable ${key} did not change. Still ${newValue}`);
     }
   });
 };
 
 const getVars = (vars) => {
+  logCaller();
   const state = store.getState();
   
   if (!Array.isArray(vars)) {
@@ -56,14 +65,16 @@ const getVars = (vars) => {
 };
 
 const getVar = (variableName) => {
+  logCaller();
   const state = store.getState();
-  console.log(`getVar called for ${variableName}`);
+//  console.log(`getVar called for ${variableName}`);
   const value = state.hasOwnProperty(variableName) ? state[variableName] : null;
   console.log(`getVar result for ${variableName}:`, value);
   return value;
 };
 
 const setVar = (key, value) => {
+  logCaller();
   setVars({ [key]: value });
   return getVar(key);
 };
@@ -71,12 +82,14 @@ const setVar = (key, value) => {
 const subscribe = (listener) => store.subscribe(listener);
 
 const listVars = () => {
+  logCaller();
   const state = store.getState();
   console.log('Current state:', state);
   return state;
 };
 
 const useExternalStore = () => {
+  logCaller();
   return useSyncExternalStore(
     subscribe, 
     () => store.getState(), 
@@ -86,6 +99,7 @@ const useExternalStore = () => {
 
 // Debug function to clear all variables
 const clearAllVars = () => {
+  logCaller();
   store.dispatch({ type: 'SET_VARS', payload: {} });
   console.log('All variables cleared. New state:', store.getState());
 };

@@ -2,36 +2,46 @@ import React, { useEffect, useState } from 'react';
 import { useModalContext } from '../context/ModalContext';
 import useLogger from '../hooks/useLogger';
 import { useGlobalContext } from '../context/GlobalContext';
-import { fetchData } from '../utils/dataFetcher';
-import { Container, Typography, Button, Box, CircularProgress, Paper, TableContainer } from '@mui/material';
+import { Container, Typography, Button, Box, CircularProgress, Paper, TableContainer, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
 const Dashboard = () => {
   const pageTitle = 'Dashboard';
   const { openModal } = useModalContext();
   const log = useLogger('Dashboard');
-  const { updatePageTitle } = useGlobalContext();
+  const { updatePageTitle, getPageConfig } = useGlobalContext();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedMenu, setSelectedMenu] = useState('dashboard');
+  const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
     log('Dashboard component mounted');
     updatePageTitle(pageTitle);
-    fetchData('apiPageConfigList', '[]')
-      .then((result) => {
-        setData(result.map((item, index) => ({ id: index, ...item }))); // Ensure each row has a unique id
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [log, updatePageTitle, pageTitle]);
+    try {
+      const pageConfigs = getPageConfig();
+      if (!pageConfigs) {
+        throw new Error(log('Page configs not found'));
+      }
+      const formattedData = pageConfigs.map((item, index) => ({ id: index, ...item })); // Ensure each row has a unique id
+      setData(formattedData);
+      setFilteredData(formattedData.filter(item => item.menu === selectedMenu));
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  }, [log, updatePageTitle, pageTitle, selectedMenu, getPageConfig]);
 
   const handleOpenTestModal = () => {
     log('Opening test modal');
     openModal('deleteConfirm');
+  };
+
+  const handleMenuChange = (event) => {
+    setSelectedMenu(event.target.value);
+    setFilteredData(data.filter(item => item.menu === event.target.value));
   };
 
   if (loading) {
@@ -51,6 +61,16 @@ const Dashboard = () => {
     { field: 'keyField', headerName: 'Key Field', flex: 1 },
   ];
 
+  const menuOptions = [
+    'dashboard',
+    'admin',
+    'account',
+    'ingredients',
+    'products',
+    'batches',
+    'login'
+  ];
+
   return (
     <Container maxWidth="lg">
       <Box mb={4}>
@@ -58,12 +78,30 @@ const Dashboard = () => {
           Open Test Modal
         </Button>
       </Box>
+      <Box mb={4}>
+        <FormControl fullWidth>
+          <InputLabel id="menu-select-label">Select Menu</InputLabel>
+          <Select
+            labelId="menu-select-label"
+            id="menu-select"
+            value={selectedMenu}
+            label="Select Menu"
+            onChange={handleMenuChange}
+          >
+            {menuOptions.map((menu) => (
+              <MenuItem key={menu} value={menu}>
+                {menu}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
       <TableContainer component={Paper} sx={{ height: 500, width: '100%' }}>
         <DataGrid
-          rows={data}
+          rows={filteredData}
           columns={columns}
           paginationMode="server" // Set pagination mode to server
-          rowCount={data.length} // Provide row count
+          rowCount={filteredData.length} // Provide row count
           disableSelectionOnClick
           density="compact" // Set density to compact
           sx={{

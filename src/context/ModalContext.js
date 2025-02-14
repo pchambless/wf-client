@@ -75,11 +75,6 @@ export const ModalProvider = ({ children }) => {
 
     console.log('ModalContext: Rendering modal of type:', modalConfig.type);
 
-    const commonProps = {
-      open: modalIsOpen,
-      onClose: closeModal,
-    };
-
     return (
       <Modal
         isOpen={modalIsOpen}

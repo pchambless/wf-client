@@ -69,10 +69,12 @@ export const fetchPageConfigs = async (setPageConfigs) => {
     const pageConfigs = response.map(config => {
       try {
         log('Parsing columnMap for config:', config.pageName);
-        log('columnMap:', config.columnMap); // Log the columnMap before parsing
+//        log('columnMap:', config.columnMap); // Log the columnMap before parsing
         const columnMap = typeof config.columnMap === 'string' ? JSON.parse(config.columnMap) : config.columnMap;
-        log('Parsed columnMap:', columnMap); // Log the parsed columnMap
+//        log('Parsed columnMap:', columnMap); // Log the parsed columnMap
         return {
+          pageID: config.pageID,
+          menu: config.menu,
           pageName: config.pageName,
           pageTitle: config.pageTitle,
           dbTable: config.dbTable,
@@ -86,7 +88,6 @@ export const fetchPageConfigs = async (setPageConfigs) => {
         };
       } catch (error) {
         log('Error parsing pageConfig for config:', config.pageName);
-        log('Offending columnMap:', config.columnMap);
         log('Error:', error.message);
         log('Stack:', error.stack);
         throw error;
@@ -102,19 +103,6 @@ export const fetchPageConfigs = async (setPageConfigs) => {
     throw error;
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 export const login = async (email, password) => {

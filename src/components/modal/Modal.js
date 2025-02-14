@@ -40,3 +40,5 @@ const Modal = ({ isOpen, onRequestClose, content, onRowClick }) => {
 };
 
 export default Modal;
+
+

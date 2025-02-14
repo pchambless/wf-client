@@ -1,17 +1,14 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { getVar, setVars } from '../utils/externalStore';
 
 const GlobalContext = createContext();
 
 export const GlobalProvider = ({ children }) => {
   const [eventTypes, setEventTypes] = useState([]);
   const [pageConfigs, setPageConfigs] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const [userID, setUserID] = useState(getVar(':userID') || '');
-  const [userEmail, setUserEmail] = useState(getVar(':userEmail') || '');
-  const [roleID, setRoleID] = useState(getVar('roleID') || '');
+  const [pageID, setPageID] = useState(null); // Remove default value
+  const [isLoading] = useState(false);
+  const [error] = useState(null);
+  const [userAcctList, setUserAcctList] = useState([]);
 
   const [pageTitle, setPageTitle] = useState('Home');
 
@@ -19,15 +16,31 @@ export const GlobalProvider = ({ children }) => {
     setPageTitle(newTitle);
   }, []);
 
+  const getEventType = useCallback((eventType) => {
+    return eventTypes.find(event => event.eventType === eventType);
+  }, [eventTypes]);
+
+  const getPageConfig = useCallback((pageID) => {
+    return pageConfigs.find(config => config.pageID === pageID);
+  }, [pageConfigs]);
+
+  const getUserAcctList = useCallback(() => {
+    return userAcctList;
+  }, [userAcctList]);
+
+  const getPageID = useCallback(() => {
+    return pageID;
+  }, [pageID]);
+
   return (
     <GlobalContext.Provider value={{
       eventTypes, setEventTypes,
       pageConfigs, setPageConfigs,
       isLoading, error,
-      userID, setUserID,
-      userEmail, setUserEmail,
-      roleID, setRoleID,
-      pageTitle, updatePageTitle
+      pageTitle, updatePageTitle,
+      getEventType, getPageConfig,
+      userAcctList, setUserAcctList, getUserAcctList,
+      pageID, setPageID, getPageID
     }}>
       {children}
     </GlobalContext.Provider>
