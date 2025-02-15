@@ -8,8 +8,8 @@ import Modal from 'react-modal';
 // Set the app element for accessibility
 Modal.setAppElement('#root');
 
-const container = document.getElementById('root');
-const root = createRoot(container);
+const login = document.getElementById('root');
+const root = createRoot(login);
 root.render(
   <React.StrictMode>
     <App />

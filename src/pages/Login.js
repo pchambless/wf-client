@@ -10,7 +10,7 @@ const Login = () => {
   const log = useLogger('Login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setEventTypes, setPageConfigs, setUserID, setUserEmail, setRoleID } = useGlobalContext();
+  const { setEventTypes, setPageConfigs, setPageID } = useGlobalContext();
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -41,15 +41,13 @@ const Login = () => {
       await fetchPageConfigs(setPageConfigs);
       log('Loaded pageConfigs');
 
-      setUserID(userID);
-      setUserEmail(userEmail);
-      setRoleID(roleID);
+    
       setVars({ ':userID': userID, ':roleID': roleID, ':userEmail': userEmail });
       setVars({ ':acctID': acctID, ':acctName': acctName, ':isAuth': "1" });
 
       log('User logged in successfully');
-
-      navigate('/dashboard');
+      setPageID(38);  // Welcome Page ID
+      navigate('/welcome');
     } catch (error) {
       log(`Login failed: ${error.message}`);
       alert(`Login failed. Please try again.`);

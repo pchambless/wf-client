@@ -21,6 +21,11 @@ export const ModalProvider = ({ children }) => {
       title: 'Text Message',
       type: 'message',
       message: 'This is a text message modal.'
+    },
+    error: {
+      title: 'Error',
+      type: 'message',
+      message: 'An error occurred.'
     }
   }), []);
 
