@@ -1,36 +1,53 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useLogger from '../hooks/useLogger';
+import { clearAllVars, setVars, getVar } from '../utils/externalStore';
 
 const GlobalContext = createContext();
 
 export const GlobalProvider = ({ children }) => {
   const [eventTypes, setEventTypes] = useState([]);
   const [pageConfigs, setPageConfigs] = useState([]);
-  const [pageID, setPageID] = useState(null); // Remove default value
+  const [pageName, setPageName] = useState(null); // Replace pageID with pageName
   const [isLoading] = useState(false);
   const [error] = useState(null);
+  const log = useLogger('GlobalProvider');
   const [userAcctList, setUserAcctList] = useState([]);
-
+  const [selectedAccount, setSelectedAccount] = useState(getVar(':acctID') || null); // Initialize with :acctID from externalStore
   const [pageTitle, setPageTitle] = useState('Home');
+  const navigate = useNavigate();
 
   const updatePageTitle = useCallback((newTitle) => {
     setPageTitle(newTitle);
   }, []);
 
   const getEventType = useCallback((eventType) => {
+    log('getEventType:', eventType);
     return eventTypes.find(event => event.eventType === eventType);
-  }, [eventTypes]);
+  }, [eventTypes, log]);
 
-  const getPageConfig = useCallback((pageID) => {
-    return pageConfigs.find(config => config.pageID === pageID);
+  const getPageConfig = useCallback((pageName) => {
+    return pageConfigs.find(config => config.pageName === pageName);
   }, [pageConfigs]);
 
   const getUserAcctList = useCallback(() => {
     return userAcctList;
   }, [userAcctList]);
 
-  const getPageID = useCallback(() => {
-    return pageID;
-  }, [pageID]);
+  const getPageName = useCallback(() => {
+    return pageName;
+  }, [pageName]);
+
+  const setAccount = useCallback((acctID) => {
+    setSelectedAccount(acctID);
+    setVars({ ':acctID': acctID });
+  }, []);
+
+  const logout = useCallback(() => {
+    clearAllVars();
+    setSelectedAccount(null); // Reset selectedAccount state
+    navigate('/login');
+  }, [navigate]);
 
   return (
     <GlobalContext.Provider value={{
@@ -40,7 +57,9 @@ export const GlobalProvider = ({ children }) => {
       pageTitle, updatePageTitle,
       getEventType, getPageConfig,
       userAcctList, setUserAcctList, getUserAcctList,
-      pageID, setPageID, getPageID
+      pageName, setPageName, getPageName, // Replace pageID with pageName
+      selectedAccount, setAccount, // Use setAccount to update selectedAccount and :acctID
+      logout // Add logout function
     }}>
       {children}
     </GlobalContext.Provider>

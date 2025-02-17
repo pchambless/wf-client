@@ -2368,6 +2368,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mui/icons-material@npm:^6.4.4":
+  version: 6.4.4
+  resolution: "@mui/icons-material@npm:6.4.4"
+  dependencies:
+    "@babel/runtime": "npm:^7.26.0"
+  peerDependencies:
+    "@mui/material": ^6.4.4
+    "@types/react": ^17.0.0 || ^18.0.0 || ^19.0.0
+    react: ^17.0.0 || ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: 10c0/c8118db2650f588e9b551317794138df8232638b1a03ec1ec5078431109d33a1b21195b4d5e1aa92d812cc64ca669ac2e53983d0ed3789f6f8bd3ee003bd9da8
+  languageName: node
+  linkType: hard
+
 "@mui/material@npm:^6.4.4":
   version: 6.4.4
   resolution: "@mui/material@npm:6.4.4"
@@ -2505,8 +2521,8 @@ __metadata:
   linkType: hard
 
 "@mui/x-data-grid@npm:^7.26.0":
-  version: 7.26.0
-  resolution: "@mui/x-data-grid@npm:7.26.0"
+  version: 7.27.0
+  resolution: "@mui/x-data-grid@npm:7.27.0"
   dependencies:
     "@babel/runtime": "npm:^7.25.7"
     "@mui/utils": "npm:^5.16.6 || ^6.0.0"
@@ -2527,7 +2543,7 @@ __metadata:
       optional: true
     "@emotion/styled":
       optional: true
-  checksum: 10c0/c41f3246f0937a00e2ad82248b25326e3360a8fd50a6b3f8b7f8ca88af051f03d44e4732a90e9834718057530de0fcd3e8d4740d9bb964c6d409712256b470ec
+  checksum: 10c0/f50a8d9195ec44cd2b636cfc80e1cb9068c890d894a4b8e6ffee57740de877b86021da559cb04400c5a943b09f500bedcdd571acb9a97ce4a8e77ac86991e59d
   languageName: node
   linkType: hard
 
@@ -4775,8 +4791,8 @@ __metadata:
   linkType: hard
 
 "babel-preset-react-app@npm:^10.0.1":
-  version: 10.0.1
-  resolution: "babel-preset-react-app@npm:10.0.1"
+  version: 10.1.0
+  resolution: "babel-preset-react-app@npm:10.1.0"
   dependencies:
     "@babel/core": "npm:^7.16.0"
     "@babel/plugin-proposal-class-properties": "npm:^7.16.0"
@@ -4785,6 +4801,7 @@ __metadata:
     "@babel/plugin-proposal-numeric-separator": "npm:^7.16.0"
     "@babel/plugin-proposal-optional-chaining": "npm:^7.16.0"
     "@babel/plugin-proposal-private-methods": "npm:^7.16.0"
+    "@babel/plugin-proposal-private-property-in-object": "npm:^7.16.7"
     "@babel/plugin-transform-flow-strip-types": "npm:^7.16.0"
     "@babel/plugin-transform-react-display-name": "npm:^7.16.0"
     "@babel/plugin-transform-runtime": "npm:^7.16.4"
@@ -4794,7 +4811,7 @@ __metadata:
     "@babel/runtime": "npm:^7.16.3"
     babel-plugin-macros: "npm:^3.1.0"
     babel-plugin-transform-react-remove-prop-types: "npm:^0.4.24"
-  checksum: 10c0/aba225d0caf2591f7cc1aeed69369d1e86419a92fcf6025312421c238f4468347a7b6c12a45a4fb15e879a01f5a060439842fbde5739d7be31077b35c7d20fa5
+  checksum: 10c0/4cb4d85cc08dd813ac9a3e9c39e764e0b32d3333c9464517f5ae9a2289a41fe40e107c5909e8cc9ff6627a38b0c0d50b1c86679bde7623bb36b257902fb8bb20
   languageName: node
   linkType: hard
 
@@ -5088,9 +5105,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.0, caniuse-lite@npm:^1.0.30001646, caniuse-lite@npm:^1.0.30001688":
-  version: 1.0.30001699
-  resolution: "caniuse-lite@npm:1.0.30001699"
-  checksum: 10c0/e87b3a0602c3124131f6a21f1eb262378e17a2ee3089e3c472ac8b9caa85cf7d6a219655379302c29c6f10a74051f2a712639d7f98ee0444c73fefcbaf25d519
+  version: 1.0.30001700
+  resolution: "caniuse-lite@npm:1.0.30001700"
+  checksum: 10c0/3d391bcdd193208166d3ad759de240b9c18ac3759dbd57195770f0fcd2eedcd47d5e853609aba1eee5a2def44b0a14eee457796bdb3451a27de0c8b27355017c
   languageName: node
   linkType: hard
 
@@ -5334,7 +5351,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"commander@npm:^13.0.0":
+"commander@npm:^13.1.0":
   version: 13.1.0
   resolution: "commander@npm:13.1.0"
   checksum: 10c0/7b8c5544bba704fbe84b7cab2e043df8586d5c114a4c5b607f83ae5060708940ed0b5bd5838cf8ce27539cde265c1cbd59ce3c8c6b017ed3eec8943e3a415164
@@ -6165,8 +6182,8 @@ __metadata:
   linkType: hard
 
 "dependency-cruiser@npm:^16.9.0":
-  version: 16.9.0
-  resolution: "dependency-cruiser@npm:16.9.0"
+  version: 16.10.0
+  resolution: "dependency-cruiser@npm:16.10.0"
   dependencies:
     acorn: "npm:^8.14.0"
     acorn-jsx: "npm:^5.3.2"
@@ -6174,9 +6191,9 @@ __metadata:
     acorn-loose: "npm:^8.4.0"
     acorn-walk: "npm:^8.3.4"
     ajv: "npm:^8.17.1"
-    commander: "npm:^13.0.0"
-    enhanced-resolve: "npm:^5.18.0"
-    ignore: "npm:^7.0.0"
+    commander: "npm:^13.1.0"
+    enhanced-resolve: "npm:^5.18.1"
+    ignore: "npm:^7.0.3"
     interpret: "npm:^3.1.1"
     is-installed-globally: "npm:^1.0.0"
     json5: "npm:^2.2.3"
@@ -6186,10 +6203,10 @@ __metadata:
     prompts: "npm:^2.4.2"
     rechoir: "npm:^0.8.0"
     safe-regex: "npm:^2.1.1"
-    semver: "npm:^7.6.3"
+    semver: "npm:^7.7.1"
     teamcity-service-messages: "npm:^0.1.14"
     tsconfig-paths-webpack-plugin: "npm:^4.2.0"
-    watskeburt: "npm:^4.2.2"
+    watskeburt: "npm:^4.2.3"
   bin:
     depcruise: bin/dependency-cruise.mjs
     depcruise-baseline: bin/depcruise-baseline.mjs
@@ -6197,7 +6214,7 @@ __metadata:
     depcruise-wrap-stream-in-html: bin/wrap-stream-in-html.mjs
     dependency-cruise: bin/dependency-cruise.mjs
     dependency-cruiser: bin/dependency-cruise.mjs
-  checksum: 10c0/3c0314fbedb72fb3663d8bfa2414cf0dd5b4bacceb9681911fc732fecadf6de98374a9fabfc8a05cd3cab5b34abebe5f168035aac1b921e7c3cc9d5f2927870b
+  checksum: 10c0/3deb5633b04bc86b6a6ee16d1665df13316157b70dbe2c21359878a865926d0ce77d3f93f35bedff4a35982902ff865f99bfddc141e1c0a10e4b2cef576d3186
   languageName: node
   linkType: hard
 
@@ -6536,9 +6553,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.5.73":
-  version: 1.5.100
-  resolution: "electron-to-chromium@npm:1.5.100"
-  checksum: 10c0/4c3b42062e9d0fe10b22c54fc1ee9cc973e346fc71deff1084b75247a1448518a22e75f5a4cfcd07f86c7789f1122d4476a2ceae831e97963995f33ddfc6299e
+  version: 1.5.101
+  resolution: "electron-to-chromium@npm:1.5.101"
+  checksum: 10c0/9c6579e58b09cc27151ad135444253d241b8a354c2d1a122d280086549ce3c78a47388f6c37774d93ee73b353defdc1f215b702de2b18d34d53fcf8ed25e5f53
   languageName: node
   linkType: hard
 
@@ -6600,7 +6617,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"enhanced-resolve@npm:^5.17.1, enhanced-resolve@npm:^5.18.0, enhanced-resolve@npm:^5.7.0":
+"enhanced-resolve@npm:^5.17.1, enhanced-resolve@npm:^5.18.1, enhanced-resolve@npm:^5.7.0":
   version: 5.18.1
   resolution: "enhanced-resolve@npm:5.18.1"
   dependencies:
@@ -7679,24 +7696,26 @@ __metadata:
   linkType: hard
 
 "form-data@npm:^3.0.0":
-  version: 3.0.2
-  resolution: "form-data@npm:3.0.2"
+  version: 3.0.3
+  resolution: "form-data@npm:3.0.3"
   dependencies:
     asynckit: "npm:^0.4.0"
     combined-stream: "npm:^1.0.8"
-    mime-types: "npm:^2.1.12"
-  checksum: 10c0/1157ba53ce3a381ea3321b5506ae843ead4027e1b4567b74afa7d84df7043b33c5e518bb267dac56036c3dd8f4d8268be3e7181691488fff766bfccdc98d3bf7
+    es-set-tostringtag: "npm:^2.1.0"
+    mime-types: "npm:^2.1.35"
+  checksum: 10c0/a62b275f9736ff94f327c66d5f6c581391eafe07c912b12c3738e822aa3b1f27fb23d7138af5b48163497a278e2f84ec9f4a27e60dd511b7683fb76a835bb395
   languageName: node
   linkType: hard
 
 "form-data@npm:^4.0.0":
-  version: 4.0.1
-  resolution: "form-data@npm:4.0.1"
+  version: 4.0.2
+  resolution: "form-data@npm:4.0.2"
   dependencies:
     asynckit: "npm:^0.4.0"
     combined-stream: "npm:^1.0.8"
+    es-set-tostringtag: "npm:^2.1.0"
     mime-types: "npm:^2.1.12"
-  checksum: 10c0/bb102d570be8592c23f4ea72d7df9daa50c7792eb0cf1c5d7e506c1706e7426a4e4ae48a35b109e91c85f1c0ec63774a21ae252b66f4eb981cb8efef7d0463c8
+  checksum: 10c0/e534b0cf025c831a0929bf4b9bbe1a9a6b03e273a8161f9947286b9b13bf8fb279c6944aae0070c4c311100c6d6dbb815cd955dc217728caf73fad8dc5b8ee9c
   languageName: node
   linkType: hard
 
@@ -8464,7 +8483,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ignore@npm:^7.0.0":
+"ignore@npm:^7.0.3":
   version: 7.0.3
   resolution: "ignore@npm:7.0.3"
   checksum: 10c0/8e21637513cbcd888a4873d34d5c651a2e24b3c4c9a6b159335a26bed348c3c386c51d6fab23577f59140e1b226323138fbd50e63882d4568fd12aa6c822029e
@@ -10068,12 +10087,12 @@ __metadata:
   linkType: hard
 
 "launch-editor@npm:^2.6.0":
-  version: 2.9.1
-  resolution: "launch-editor@npm:2.9.1"
+  version: 2.10.0
+  resolution: "launch-editor@npm:2.10.0"
   dependencies:
     picocolors: "npm:^1.0.0"
     shell-quote: "npm:^1.8.1"
-  checksum: 10c0/891f1d136ed8e4ea12e16c196a0d2e07f23c7b983e3ab532b2be1775fb244909581507cce97c50f9d5ca92680b53e4a75c72ddcf20184aa6c4da6ebbe87703f5
+  checksum: 10c0/8b5a26be6b0da1da039ed2254b837dea0651a6406ea4dc4c9a5b28ea72862f1b12880135c495baf9d8a08997473b44034172506781744cf82e155451a40b7d51
   languageName: node
   linkType: hard
 
@@ -10441,7 +10460,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mime-types@npm:^2.1.12, mime-types@npm:^2.1.27, mime-types@npm:^2.1.31, mime-types@npm:~2.1.17, mime-types@npm:~2.1.24, mime-types@npm:~2.1.34":
+"mime-types@npm:^2.1.12, mime-types@npm:^2.1.27, mime-types@npm:^2.1.31, mime-types@npm:^2.1.35, mime-types@npm:~2.1.17, mime-types@npm:~2.1.24, mime-types@npm:~2.1.34":
   version: 2.1.35
   resolution: "mime-types@npm:2.1.35"
   dependencies:
@@ -12486,9 +12505,9 @@ __metadata:
   linkType: hard
 
 "react-error-overlay@npm:^6.0.11":
-  version: 6.0.11
-  resolution: "react-error-overlay@npm:6.0.11"
-  checksum: 10c0/8fc93942976e0c704274aec87dbc8e21f62a2cc78d1c93f9bcfff9f7494b00c60f7a2f0bd48d832bcd3190627c0255a1df907373f61f820371373a65ec4b2d64
+  version: 6.1.0
+  resolution: "react-error-overlay@npm:6.1.0"
+  checksum: 10c0/2b52308b9e489dfaa25df85c7ed5c200371bc214245161a0833b729f9c6b1a2e591e1d1e07c3d3859ffa19b84a386c219d93df9ba13d819be34c20f40e71a555
   languageName: node
   linkType: hard
 
@@ -13383,7 +13402,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.3.2, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.3":
+"semver@npm:^7.3.2, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.7.1":
   version: 7.7.1
   resolution: "semver@npm:7.7.1"
   bin:
@@ -15032,7 +15051,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"watskeburt@npm:^4.2.2":
+"watskeburt@npm:^4.2.3":
   version: 4.2.3
   resolution: "watskeburt@npm:4.2.3"
   bin:
@@ -15239,6 +15258,7 @@ __metadata:
   dependencies:
     "@emotion/react": "npm:^11.14.0"
     "@emotion/styled": "npm:^11.14.0"
+    "@mui/icons-material": "npm:^6.4.4"
     "@mui/material": "npm:^6.4.4"
     "@mui/system": "npm:^6.4.3"
     "@mui/x-data-grid": "npm:^7.26.0"

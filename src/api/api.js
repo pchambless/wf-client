@@ -6,6 +6,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 export const execEventType = async (eventType, params) => {
   const fileName = 'api.execEventType';
   const log = createLogger(fileName);
+  log(eventType, params)
   try {
     const response = await axios.post(`${API_BASE_URL}/api/execEventType`, {
       eventType,
@@ -18,12 +19,12 @@ export const execEventType = async (eventType, params) => {
   }
 };
 
-export const fetchApiEventList = async (setEventList) => {
-  const fileName = 'api.fetchApiEventList';
+export const fetchEventList = async (setEventList) => {
+  const fileName = 'api.fetchEventList';
   const log = createLogger(fileName);
   try {
     const response = await execEventType('apiEventList', {});
-    log('Fetched from fetchApiEventList:', response); // Log the fetched API event list
+    log('Fetched from fetchEventList:', response); // Log the fetched API event list
 
     if (!Array.isArray(response)) {
       throw new Error('Expected an array but received a different type.');
@@ -33,7 +34,7 @@ export const fetchApiEventList = async (setEventList) => {
       try {
         return {
           eventID: event.eventID,
-          listEvent: event.eventType,
+          eventType: event.eventType,
           method: event.method,
           params: event.params ? JSON.parse(event.params) : [],
           purpose: event.purpose
@@ -94,7 +95,7 @@ export const fetchPageConfigs = async (setPageConfigs) => {
       }
     });
 
-    log('Parsed pageConfigs:', pageConfigs); // Log the parsed pageConfigs
+//    log('Parsed pageConfigs:', pageConfigs); // Log the parsed pageConfigs
     setPageConfigs(pageConfigs);
     return pageConfigs;
   } catch (error) {

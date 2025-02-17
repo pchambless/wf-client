@@ -5,7 +5,7 @@ const log = createLogger('dataFetcher');
 
 export const fetchData = async (eventType, params) => {
   try {
-    log(`Fetching data for eventType: ${eventType}`);
+    log(`RequestBody: ${eventType}`);
     const data = await execEventType(eventType, params);
     log('Data fetched:', data);
     return data;

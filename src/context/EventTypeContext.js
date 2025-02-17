@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import { execEventType } from '../api/api';
 import useLogger from '../hooks/useLogger';
 import { getVar } from '../utils/externalStore';
-import { useGlobalContext } from '../context/GlobalContext'; // Import useGlobalContext
+import { useGlobalContext } from '../context/GlobalContext'; 
 
 const EventTypeContext = createContext();
 
@@ -15,8 +15,8 @@ export const EventTypeProvider = ({ children }) => {
   const [error] = useState(null);
 
   const eventTypeLookup = useCallback((eventType) => {
-    log('eventTypeLookup');
-    const event = getEventType(eventType); // Use getEventType from GlobalContext
+    log('eventTypeLookup',getEventType(eventType));
+    const event = getEventType(eventType); 
     if (!event) {
       throw new Error(`No event type found for ${eventType}`);
     }

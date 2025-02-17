@@ -3,13 +3,15 @@ import { Box, Button, Menu, MenuItem } from '@mui/material';
 import useLogger from '../../hooks/useLogger';
 import { getVar } from '../../utils/externalStore';
 import { useGlobalContext } from '../../context/GlobalContext';
+import { useNavigate } from 'react-router-dom';
 
-const MenuStrip = ({ handleNavigate }) => {
+const MenuStrip = () => {
   const log = useLogger('MenuStrip');
   const roleID = getVar(':roleID');
   log('roleID:', roleID);
 
-  const { pageConfigs, updatePageTitle, setPageID } = useGlobalContext();
+  const { pageConfigs, updatePageTitle, setPageName } = useGlobalContext();
+  const navigate = useNavigate();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuId, setMenuId] = useState(null);
@@ -25,14 +27,14 @@ const MenuStrip = ({ handleNavigate }) => {
     setMenuId(null);
   };
 
-  const handleMenuItemClick = (pageID) => {
-    log(`Menu item clicked with pageID: ${pageID}`);
-    const pageConfig = pageConfigs.find(config => config.pageID === pageID);
+  const handleMenuItemClick = (pageName) => {
+    log(`Menu item clicked with pageName: ${pageName}`);
+    const pageConfig = pageConfigs.find(config => config.pageName === pageName);
     if (pageConfig) {
-      log(`Navigating to page with pageID: ${pageID}`);
+      log(`Navigating to page with pageName: ${pageName}`);
       updatePageTitle(pageConfig.pageTitle);
-      setPageID(pageID); // Set the pageID in the GlobalContext
-      handleNavigate(`/page/${pageID}`, pageConfig);
+      setPageName(pageConfig.pageName); // Set the pageName in the GlobalContext
+      navigate(`/crud`, { state: { pageConfig } });
     }
     handleMenuClose();
   };
@@ -84,7 +86,7 @@ const MenuStrip = ({ handleNavigate }) => {
         {pageConfigs
           .filter(config => config.menu === 'dashboard')
           .map(config => (
-            <MenuItem key={config.pageID} onClick={() => handleMenuItemClick(config.pageID)}>
+            <MenuItem key={config.pageName} onClick={() => handleMenuItemClick(config.pageName)}>
               {config.pageTitle}
             </MenuItem>
           ))}
@@ -98,7 +100,7 @@ const MenuStrip = ({ handleNavigate }) => {
         {pageConfigs
           .filter(config => config.menu === 'ingredients')
           .map(config => (
-            <MenuItem key={config.pageID} onClick={() => handleMenuItemClick(config.pageID)}>
+            <MenuItem key={config.pageName} onClick={() => handleMenuItemClick(config.pageName)}>
               {config.pageTitle}
             </MenuItem>
           ))}
@@ -112,7 +114,7 @@ const MenuStrip = ({ handleNavigate }) => {
         {pageConfigs
           .filter(config => config.menu === 'products')
           .map(config => (
-            <MenuItem key={config.pageID} onClick={() => handleMenuItemClick(config.pageID)}>
+            <MenuItem key={config.pageName} onClick={() => handleMenuItemClick(config.pageName)}>
               {config.pageTitle}
             </MenuItem>
           ))}
@@ -126,7 +128,7 @@ const MenuStrip = ({ handleNavigate }) => {
         {pageConfigs
           .filter(config => config.menu === 'admin')
           .map(config => (
-            <MenuItem key={config.pageID} onClick={() => handleMenuItemClick(config.pageID)}>
+            <MenuItem key={config.pageName} onClick={() => handleMenuItemClick(config.pageName)}>
               {config.pageTitle}
             </MenuItem>
           ))}

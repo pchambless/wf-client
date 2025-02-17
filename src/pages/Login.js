@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalContext } from '../context/GlobalContext';
+import { useEventTypeContext } from '../context/EventTypeContext';
 import logo from '../assets/wf-icon.png';
 import useLogger from '../hooks/useLogger';
-import { login, fetchApiEventList, fetchPageConfigs } from '../api/api';
+import { login, fetchEventList, fetchPageConfigs } from '../api/api';
 import { setVars } from '../utils/externalStore';
+
 
 const Login = () => {
   const log = useLogger('Login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setEventTypes, setPageConfigs, setPageID } = useGlobalContext();
+  const { setEventTypes, setPageConfigs, setUserAcctList, setAccount } = useGlobalContext();
+  const { execEvent } = useEventTypeContext();
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -31,22 +34,27 @@ const Login = () => {
         throw new Error(response.message || 'Login failed');
       }
 
-      const { userID, roleID, acctID, acctName, userEmail } = response.data.user;
+      const { userID, roleID, acctID, userEmail } = response.data.user;
 
-      log('Loading apiEventList');
-      await fetchApiEventList(setEventTypes);
-      log('Loaded apiEventList');
+      log('loadiing EventTypes');
+      await fetchEventList(setEventTypes);
+      log('Loaded EventTypes');
 
       log('Loading pageConfigs');
       await fetchPageConfigs(setPageConfigs);
       log('Loaded pageConfigs');
 
-    
       setVars({ ':userID': userID, ':roleID': roleID, ':userEmail': userEmail });
-      setVars({ ':acctID': acctID, ':acctName': acctName, ':isAuth': "1" });
+      setVars({ ':acctID': acctID, ':isAuth': "1" });
+
+      setAccount(acctID); // Set the selectedAccount state
+
+      log('Fetching userAcctList');
+      const userAcctList = await execEvent('userAcctList');
+      await setUserAcctList(userAcctList);
 
       log('User logged in successfully');
-      setPageID(38);  // Welcome Page ID
+      log('Navigating to /welcome');
       navigate('/welcome');
     } catch (error) {
       log(`Login failed: ${error.message}`);
@@ -97,9 +105,3 @@ const Login = () => {
 };
 
 export default Login;
-
-
-
-
-
-

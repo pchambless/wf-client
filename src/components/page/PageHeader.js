@@ -1,83 +1,58 @@
-import React, { useCallback, useEffect } from 'react';
-import { setVars, getVar } from '../../utils/externalStore';
+import React, { useEffect } from 'react';
+import { AppBar, Toolbar, Typography, Select, MenuItem, Button, Box } from '@mui/material';
 import { useGlobalContext } from '../../context/GlobalContext';
-import createLogger from '../../utils/logger';
-import logo from '../../assets/wf-icon.png';
-import { AppBar, Toolbar, Typography, Button, Box, Container, IconButton, FormControl, InputLabel, Select as MuiSelect, MenuItem, CircularProgress } from '@mui/material';
+import { getVar } from '../../utils/externalStore'; // Import getVar
+import logo from '../../assets/wf-icon.png'; // Import the logo
+import LogoutIcon from '@mui/icons-material/Logout'; // Import the logout icon
 
 const PageHeader = () => {
-  const log = createLogger('PageHeader');
-  const { pageTitle, getUserAcctList } = useGlobalContext();
-  const userAcctList = getUserAcctList();
-  const selectedAccount = getVar(':acctID') || '';
+  const { userAcctList, selectedAccount, setAccount, pageTitle, logout } = useGlobalContext();
+
+  const handleAccountChange = (event) => {
+    setAccount(event.target.value);
+  };
 
   useEffect(() => {
-    log('PageHeader mounted');
-  }, [log]);
-
-  const handleAccountChange = useCallback((e) => {
-    const value = e.target.value;
-    setVars(':acctID', value);
-  }, []);
-
-  const handleLogout = useCallback(() => {
-    log('Logging out');
-    localStorage.clear();
-    window.location.href = '/login';
-  }, [log]);
-
-  log('Rendering');
-
-  if (!userAcctList || userAcctList.length === 0) {
-    return <CircularProgress />;
-  }
+    const defaultAccountID = getVar(':dfltAcctID'); // Retrieve the default account ID
+    if (userAcctList.length > 0 && !selectedAccount) {
+      setAccount(defaultAccountID || userAcctList[0].acctID); // Set default account if not already set
+    }
+  }, [userAcctList, selectedAccount, setAccount]);
 
   return (
-    <AppBar position="static" color="default" sx={{ bgcolor: 'lightGray', pt: 1 }}> {/* Add padding-top */}
-      <Container maxWidth="lg">
-        <Toolbar disableGutters>
-          <IconButton edge="start" color="inherit" aria-label="logo">
-            <img src={logo} alt="Whatsfresh Logo" style={{ width: '48px', height: '48px' }} />
-          </IconButton>
-          <Typography variant="h6" color="inherit" noWrap sx={{ flexGrow: 1, fontWeight: 'bold' }}>
-            {pageTitle}
-          </Typography>
-          <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
-            <FormControl fullWidth>
-              <InputLabel id="select-account-label">Select Account</InputLabel>
-              <MuiSelect
-                labelId="select-account-label"
-                id="select-account"
-                value={selectedAccount}
-                label="Select Account"
-                onChange={handleAccountChange}
-              >
-                <MenuItem value="" disabled>Select Account</MenuItem>
-                {userAcctList.map((account) => (
-                  <MenuItem key={account.acctID} value={account.acctID}>
-                    {account.acctName}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-          </Box>
-          <Button
-            onClick={handleLogout}
-            sx={{
-              backgroundColor: 'red',
-              color: 'white',
-              borderRadius: '8px',
-              '&:hover': {
-                backgroundColor: 'darkred',
-              },
-            }}
+    <AppBar position="static" sx={{ bgcolor: 'background.paper' }}> {/* Ensure the background color is correct */}
+      <Toolbar>
+        <img src={logo} alt="Whatsfresh Logo" style={{ marginRight: '16px', width: '40px', height: '40px' }} /> {/* Resize the logo */}
+        <Typography variant="h3" sx={{ flexGrow: 1, color: '#cc0000' }}> {/* Set the text color to magenta */}
+          {pageTitle}
+        </Typography>
+        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+          <Select
+            value={selectedAccount || ''}
+            onChange={handleAccountChange}
+            displayEmpty
+            inputProps={{ 'aria-label': 'Select Account' }}
+            sx={{ marginRight: '16px' }} // Add some margin to the right
           >
-            Logout
-          </Button>
-        </Toolbar>
-      </Container>
+            {userAcctList.map((account) => (
+              <MenuItem key={account.acctID} value={account.acctID}>
+                {account.acctName}
+              </MenuItem>
+            ))}
+          </Select>
+        </Box>
+        <Button
+          variant="contained"
+          color="error"
+          startIcon={<LogoutIcon />}
+          onClick={logout}
+          sx={{ color: 'white' }} // Ensure the text color is white
+        >
+          Logout
+        </Button>
+      </Toolbar>
     </AppBar>
   );
 };
 
-export default React.memo(PageHeader);
+export default PageHeader;
