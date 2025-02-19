@@ -4,10 +4,10 @@ import { FormControl, TextField, CircularProgress, Typography } from '@mui/mater
 import Autocomplete from '@mui/material/Autocomplete';
 import { useEventTypeContext } from '../../context/EventTypeContext'; // Use useEventTypeContext
 
-const Select = ({ eventType, placeholder, onChange }) => {
+const Select = ({ eventType, placeholder, onChange, value }) => {
   const { execEvent } = useEventTypeContext(); // Use execEvent from useEventTypeContext
   const [options, setOptions] = useState([]);
-  const [selectedValue, setSelectedValue] = useState(getVar(':' + eventType) || '');
+  const [selectedValue, setSelectedValue] = useState(value || getVar(':' + eventType) || '');
   const [valueKey, setValueKey] = useState('');
   const [labelKey, setLabelKey] = useState('');
   const [varName, setVarName] = useState('');
@@ -38,6 +38,10 @@ const Select = ({ eventType, placeholder, onChange }) => {
   useEffect(() => {
     fetchOptions();
   }, [fetchOptions]);
+
+  useEffect(() => {
+    setSelectedValue(value || getVar(':' + eventType) || '');
+  }, [value, eventType]);
 
   const handleChange = (event, value) => {
     const selectedOption = options.find(option => option[labelKey] === value);

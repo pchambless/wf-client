@@ -27,7 +27,7 @@ const CrudForm = ({ pageConfig, formData, setFormData }) => {
     return Object.values(groupedFields).map((group, groupIndex) => (
       <Box display="flex" key={groupIndex} mb={2}>
         {group.map((field, index) => {
-          const fieldValue = getVar(`:${field.setVar}`) || ""; // Get value from external store
+          const fieldValue = getVar(`${field.setVar}`) || ""; // Get value from external store
           const isRequired = field.required === 1 || field.required === undefined;
 
           if (field.selList) {
