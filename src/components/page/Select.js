@@ -1,9 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { getVar, setVars } from '../../utils/externalStore';
-import { fetchData } from '../../utils/dataFetcher';
-import { FormControl, InputLabel, Select as MuiSelect, MenuItem, CircularProgress, Typography } from '@mui/material';
+import { FormControl, TextField, CircularProgress, Typography } from '@mui/material';
+import Autocomplete from '@mui/material/Autocomplete';
+import { useEventTypeContext } from '../../context/EventTypeContext'; // Use useEventTypeContext
 
-const Select = ({ eventType, placeholder, onChange, params }) => {
+const Select = ({ eventType, placeholder, onChange }) => {
+  const { execEvent } = useEventTypeContext(); // Use execEvent from useEventTypeContext
   const [options, setOptions] = useState([]);
   const [selectedValue, setSelectedValue] = useState(getVar(':' + eventType) || '');
   const [valueKey, setValueKey] = useState('');
@@ -16,33 +18,34 @@ const Select = ({ eventType, placeholder, onChange, params }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetchData(eventType, params);
+      const response = await execEvent(eventType);
       console.log(`Fetched options for ${eventType}:`, response); // Log the fetched data
       if (response.length > 0) {
         const keys = Object.keys(response[0]);
         setValueKey(keys[0]);
         setLabelKey(keys[1]);
         setVarName(keys[0]); // Set the variable name based on the first column name
+        setOptions([{ [keys[0]]: '', [keys[1]]: 'None' }, ...response]); // Add default 'None' option
       }
-      setOptions(response);
     } catch (error) {
       console.error(`Error fetching options for ${eventType}:`, error);
       setError(error.message);
     } finally {
       setLoading(false);
     }
-  }, [eventType, params]);
+  }, [eventType, execEvent]);
 
   useEffect(() => {
     fetchOptions();
   }, [fetchOptions]);
 
-  const handleChange = (e) => {
-    const value = e.target.value;
-    setSelectedValue(value);
-    setVars({ [':' + varName]: value }); // Prefix the variable name with a ":"
+  const handleChange = (event, value) => {
+    const selectedOption = options.find(option => option[labelKey] === value);
+    const selectedValue = selectedOption ? selectedOption[valueKey] : '';
+    setSelectedValue(selectedValue);
+    setVars({ [':' + varName]: selectedValue }); // Prefix the variable name with a ":"
 
-    if (onChange) onChange(value);
+    if (onChange) onChange(selectedValue);
   };
 
   if (loading) {
@@ -55,21 +58,18 @@ const Select = ({ eventType, placeholder, onChange, params }) => {
 
   return (
     <FormControl fullWidth>
-      <InputLabel id={`${varName}-label`}>{placeholder}</InputLabel>
-      <MuiSelect
-        labelId={`${varName}-label`}
-        id={varName}
-        value={selectedValue}
-        label={placeholder}
+      <Autocomplete
+        options={options.map(option => option[labelKey])}
+        value={options.find(option => option[valueKey] === selectedValue)?.[labelKey] || ''}
         onChange={handleChange}
-      >
-        <MenuItem value="" disabled>{placeholder}</MenuItem>
-        {options.map((option) => (
-          <MenuItem key={option[valueKey]} value={option[valueKey]}>
-            {option[labelKey]}
-          </MenuItem>
-        ))}
-      </MuiSelect>
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label={placeholder}
+            variant="outlined"
+          />
+        )}
+      />
     </FormControl>
   );
 };

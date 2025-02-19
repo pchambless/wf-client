@@ -1,7 +1,9 @@
 import React from 'react';
-import { TextField, Select, MenuItem, FormControl, InputLabel, Box } from '@mui/material';
+import { TextField, Box } from '@mui/material';
+import Select from '../page/Select'; // Import the Select component
+import { getVar } from '../../utils/externalStore'; // Import getVar
 
-const DynaForm = ({ pageConfig, formData, setFormData, selectOptions }) => {
+const CrudForm = ({ pageConfig, formData, setFormData }) => {
   const handleInputChange = (key, value) => {
     setFormData(prevData => ({
       ...prevData,
@@ -25,25 +27,18 @@ const DynaForm = ({ pageConfig, formData, setFormData, selectOptions }) => {
     return Object.values(groupedFields).map((group, groupIndex) => (
       <Box display="flex" key={groupIndex} mb={2}>
         {group.map((field, index) => {
-          const fieldValue = formData[field.field] || "";
+          const fieldValue = getVar(`:${field.setVar}`) || ""; // Get value from external store
           const isRequired = field.required === 1 || field.required === undefined;
 
           if (field.selList) {
             return (
               <Box key={index} flex={1} mr={2}>
-                <FormControl fullWidth margin="normal" required={isRequired}>
-                  <InputLabel>{field.label}</InputLabel>
-                  <Select
-                    value={fieldValue}
-                    onChange={(e) => handleInputChange(field.field, e.target.value)}
-                  >
-                    {selectOptions[field.field]?.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Select
+                  eventType={field.selList}
+                  placeholder={field.label}
+                  onChange={(value) => handleInputChange(field.field, value)}
+                  value={fieldValue} // Set the value from external store
+                />
               </Box>
             );
           }
@@ -57,6 +52,7 @@ const DynaForm = ({ pageConfig, formData, setFormData, selectOptions }) => {
                 required={isRequired}
                 fullWidth
                 margin="normal"
+                sx={{ backgroundColor: '#f5f5f5' }} // Set background color to very light gray
               />
             </Box>
           );
@@ -72,4 +68,4 @@ const DynaForm = ({ pageConfig, formData, setFormData, selectOptions }) => {
   );
 };
 
-export default DynaForm;
+export default CrudForm;

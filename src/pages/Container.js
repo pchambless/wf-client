@@ -5,7 +5,7 @@ import MenuStrip from '../components/page/MenuStrip'; // Import MenuStrip
 
 const Container = ({ children }) => {
   return (
-    <MuiContainer maxWidth="xl" sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'lightGray', padding: '0 16px' }}>
+    <MuiContainer maxWidth="xl" sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'lightGray', padding: '0' }}>
       <PageHeader />
       <MenuStrip />
       <Box component="main" sx={{ flexGrow: 1, p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>

@@ -13,7 +13,7 @@ const PageHeader = () => {
   };
 
   useEffect(() => {
-    const defaultAccountID = getVar(':dfltAcctID'); // Retrieve the default account ID
+    const defaultAccountID = getVar(':acctID'); // Retrieve the default account ID
     if (userAcctList.length > 0 && !selectedAccount) {
       setAccount(defaultAccountID || userAcctList[0].acctID); // Set default account if not already set
     }

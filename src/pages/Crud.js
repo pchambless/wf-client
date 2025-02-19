@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import CrudTemplate from '../components/page/CrudTemplate';
+import CrudTemplate from '../components/crud/CrudTemplate';
 import Container from './Container'; // Import Container
 
 const Crud = () => {
