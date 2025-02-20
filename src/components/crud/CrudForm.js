@@ -52,6 +52,8 @@ const CrudForm = ({ pageConfig, formData, setFormData }) => {
                 required={isRequired}
                 fullWidth
                 margin="normal"
+                multiline={field.label === 'Description'} // Make the Description field multiline
+                rows={field.label === 'Description' ? 4 : 1} // Set the number of rows for the Description field
                 sx={{ backgroundColor: '#f5f5f5' }} // Set background color to very light gray
               />
             </Box>
