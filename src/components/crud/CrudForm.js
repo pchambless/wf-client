@@ -1,71 +1,59 @@
 import React from 'react';
-import { TextField, Box } from '@mui/material';
-import Select from '../page/Select'; // Import the Select component
-import { getVar } from '../../utils/externalStore'; // Import getVar
+import { TextField, Grid, Button, Box } from '@mui/material';
 
-const CrudForm = ({ pageConfig, formData, setFormData }) => {
-  const handleInputChange = (key, value) => {
-    setFormData(prevData => ({
+const CrudForm = ({ pageConfig, formData, setFormData, selectOptions }) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
       ...prevData,
-      [key]: value
+      [name]: value,
     }));
   };
 
-  const renderFields = () => {
-    if (!Array.isArray(pageConfig)) {
-      return <div>Error: Invalid pageConfig format</div>;
-    }
-
-    const groupedFields = pageConfig.reduce((acc, field) => {
-      if (field.group === 0) return acc; // Skip fields with group 0
-      const group = field.group || 0; // Default to group 0 if not specified
-      if (!acc[group]) acc[group] = [];
-      acc[group].push(field);
-      return acc;
-    }, {});
-
-    return Object.values(groupedFields).map((group, groupIndex) => (
-      <Box display="flex" key={groupIndex} mb={2}>
-        {group.map((field, index) => {
-          const fieldValue = getVar(`${field.setVar}`) || ""; // Get value from external store
-          const isRequired = field.required === 1 || field.required === undefined;
-
-          if (field.selList) {
-            return (
-              <Box key={index} flex={1} mr={2}>
-                <Select
-                  eventType={field.selList}
-                  placeholder={field.label}
-                  onChange={(value) => handleInputChange(field.field, value)}
-                  value={fieldValue} // Set the value from external store
-                />
-              </Box>
-            );
-          }
-
-          return (
-            <Box key={index} flex={1} mr={2}>
-              <TextField
-                label={field.label}
-                value={fieldValue}
-                onChange={(e) => handleInputChange(field.field, e.target.value)}
-                required={isRequired}
-                fullWidth
-                margin="normal"
-                multiline={field.label === 'Description'} // Make the Description field multiline
-                rows={field.label === 'Description' ? 4 : 1} // Set the number of rows for the Description field
-                sx={{ backgroundColor: '#f5f5f5' }} // Set background color to very light gray
-              />
-            </Box>
-          );
-        })}
-      </Box>
-    ));
-  };
-
   return (
-    <Box>
-      {renderFields()}
+    <Box component="form" noValidate autoComplete="off">
+      <Grid container spacing={2}>
+        {pageConfig.map((fieldConfig) => (
+          <Grid item xs={12} sm={6} key={fieldConfig.field}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              margin="dense" 
+              size="small"
+              label={fieldConfig.label}
+              name={fieldConfig.field}
+              value={formData[fieldConfig.field] || ''}
+              onChange={handleChange}
+              select={!!fieldConfig.selList}
+              SelectProps={{
+                native: true,
+              }}
+              sx={{
+                '& .MuiInputBase-root': {
+                  height: 20, // Adjust the height as needed
+                },
+                '& .MuiInputLabel-root': {
+                  top: '-6px', // Adjust the label position as needed
+                },
+              }}
+            >
+              {fieldConfig.selList && (
+                <option value=""></option>
+              )}
+              {fieldConfig.selList && selectOptions[fieldConfig.field]?.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </TextField>
+          </Grid>
+        ))}
+      </Grid>
+      <Box mt={2}>
+        <Button type="submit" variant="contained" color="primary">
+          Submit
+        </Button>
+      </Box>
     </Box>
   );
 };

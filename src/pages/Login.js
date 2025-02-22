@@ -7,12 +7,11 @@ import useLogger from '../hooks/useLogger';
 import { login, fetchEventList, fetchPageConfigs } from '../api/api';
 import { setVars } from '../utils/externalStore';
 
-
 const Login = () => {
   const log = useLogger('Login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setEventTypes, setPageConfigs, setUserAcctList, setAccount } = useGlobalContext();
+  const { setEventTypes, setPageConfigs, setUserAcctList, setAccount, setPageListData, setIsAuthenticated } = useGlobalContext();
   const { execEvent } = useEventTypeContext();
   const navigate = useNavigate();
 
@@ -36,13 +35,19 @@ const Login = () => {
 
       const { userID, roleID, acctID, userEmail } = response.data.user;
 
-      log('loadiing EventTypes');
+      log('Loading EventTypes');
       await fetchEventList(setEventTypes);
       log('Loaded EventTypes');
 
       log('Loading pageConfigs');
       await fetchPageConfigs(setPageConfigs);
       log('Loaded pageConfigs');
+
+      log('Fetching pageList');
+      const pageListResponse = await execEvent('pageList'); // Replace with your actual API endpoint
+      const pageListData = await pageListResponse;
+      await setPageListData(pageListData.rows);
+      log('Loaded pageList');
 
       setVars({ ':userID': userID, ':roleID': roleID, ':userEmail': userEmail });
       setVars({ ':acctID': acctID, ':isAuth': "1" });
@@ -52,6 +57,8 @@ const Login = () => {
       log('Fetching userAcctList');
       const userAcctList = await execEvent('userAcctList');
       await setUserAcctList(userAcctList);
+
+      setIsAuthenticated(true); // Set isAuthenticated to true
 
       log('User logged in successfully');
       log('Navigating to /welcome');

@@ -5,7 +5,9 @@ const Welcome = () => {
   return (
     <Container>
       <h1>Welcome to Whatsfresh</h1>
-      <p>This is the welcome page for unauthenticated users.</p>
+      <br></br>   
+      
+      <p>This is the welcome page.</p>
     </Container>
   );
 };

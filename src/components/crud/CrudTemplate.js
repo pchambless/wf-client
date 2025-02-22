@@ -6,6 +6,7 @@ import { useEventTypeContext } from '../../context/EventTypeContext';
 import { useGlobalContext } from '../../context/GlobalContext';
 import CrudTable from './CrudTable'; // Import CrudTable
 import CrudForm from './CrudForm'; // Import CrudForm
+import Modal from '../modal/Modal'; // Import Modal
 
 const CrudTemplate = React.memo(({ pageConfig, children }) => {
   const log = useLogger('CrudTemplate');
@@ -18,6 +19,7 @@ const CrudTemplate = React.memo(({ pageConfig, children }) => {
   const [error, setError] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null); // State to store selected row
   const [selectOptions, setSelectOptions] = useState({}); // State to store select options
+  const [modalContent, setModalContent] = useState(null); // State to manage modal content
 
   log('PageConfig:', pageConfig);
 
@@ -50,6 +52,7 @@ const CrudTemplate = React.memo(({ pageConfig, children }) => {
     } catch (err) {
       log('Error fetching data:', err);
       setError(err.message);
+      setModalContent({ type: 'error', message: err.message }); // Set modal content for error
     } finally {
       setLoading(false);
     }
@@ -59,6 +62,19 @@ const CrudTemplate = React.memo(({ pageConfig, children }) => {
     log('useEffect triggered');
     fetchDataCallback();
   }, [fetchDataCallback, log, pageConfig]);
+
+  useEffect(() => {
+    return () => {
+      // Reset state when component is unmounted
+      setData([]);
+      setFormData({});
+      setFormMode('add');
+      setSelectedRow(null);
+      setSelectOptions({});
+      setError(null);
+      setModalContent(null);
+    };
+  }, []);
 
   const fetchSelectOptions = useCallback(async () => {
     const options = {};
@@ -107,6 +123,11 @@ const CrudTemplate = React.memo(({ pageConfig, children }) => {
     log('Form submitted:', formData);
   }, [log]);
 
+  const handleModalClose = () => {
+    setModalContent(null);
+    setError(null);
+  };
+
   const shouldRenderTable = useMemo(() => !!listEvent, [listEvent]);
   const shouldRenderForm = useMemo(() => formMode === 'edit' || formMode === 'add', [formMode]);
 
@@ -120,7 +141,12 @@ const CrudTemplate = React.memo(({ pageConfig, children }) => {
 
   if (error) {
     log('Rendering error state:', error);
-    return <Typography color="error">Error fetching data: {error}</Typography>;
+    return (
+      <>
+        <Typography color="error">Error fetching data: {error}</Typography>
+        <Modal isOpen={!!modalContent} onRequestClose={handleModalClose} content={modalContent} />
+      </>
+    );
   }
 
   if (!data || data.length === 0) {
@@ -157,6 +183,7 @@ const CrudTemplate = React.memo(({ pageConfig, children }) => {
           {children}
         </Box>
       )}
+      <Modal isOpen={!!modalContent} onRequestClose={handleModalClose} content={modalContent} />
     </Box>
   );
 });

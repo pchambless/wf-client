@@ -2,14 +2,17 @@ import React, { useEffect } from 'react';
 import { AppBar, Toolbar, Typography, Select, MenuItem, Button, Box } from '@mui/material';
 import { useGlobalContext } from '../../context/GlobalContext';
 import { getVar } from '../../utils/externalStore'; // Import getVar
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 import logo from '../../assets/wf-icon.png'; // Import the logo
 import LogoutIcon from '@mui/icons-material/Logout'; // Import the logout icon
 
 const PageHeader = () => {
   const { userAcctList, selectedAccount, setAccount, pageTitle, logout } = useGlobalContext();
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const handleAccountChange = (event) => {
     setAccount(event.target.value);
+    navigate('/welcome'); // Redirect to Welcome page
   };
 
   useEffect(() => {

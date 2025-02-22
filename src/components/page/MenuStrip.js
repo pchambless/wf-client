@@ -1,139 +1,46 @@
 import React, { useState } from 'react';
-import { Box, Button, Menu, MenuItem } from '@mui/material';
-import useLogger from '../../hooks/useLogger';
-import { getVar } from '../../utils/externalStore';
-import { useGlobalContext } from '../../context/GlobalContext';
+import { AppBar, Toolbar, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { getVar } from '../../utils/externalStore';
 
 const MenuStrip = () => {
-  const log = useLogger('MenuStrip');
-  const roleID = getVar(':roleID');
-  log('roleID:', roleID);
-
-  const { pageConfigs, updatePageTitle, setPageName } = useGlobalContext();
   const navigate = useNavigate();
-
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [menuId, setMenuId] = useState(null);
-
-  const handleMenuOpen = (event, id) => {
-    log('In MenuStrip');
-    setAnchorEl(event.currentTarget);
-    setMenuId(id);
-  };
+  const [ setAnchorEl] = useState(null);
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setMenuId(null);
   };
 
-  const handleMenuItemClick = (pageName) => {
-    log(`Menu item clicked with pageName: ${pageName}`);
-    const pageConfig = pageConfigs.find(config => config.pageName === pageName);
-    if (pageConfig) {
-      log(`Navigating to page with pageName: ${pageName}`);
-      updatePageTitle(pageConfig.pageTitle);
-      setPageName(pageConfig.pageName); // Set the pageName in the GlobalContext
-      navigate(`/crud`, { state: { pageConfig } });
-    }
+  const handleMenuItemClick = (path) => {
+    navigate(path);
     handleMenuClose();
   };
 
-  log('Rendering MenuStrip');
-
   return (
-    <Box display="flex" justifyContent="center" my={2} bgcolor="lightGray">
-      <Button
-        aria-controls="dashboard-menu"
-        aria-haspopup="true"
-        onClick={(event) => handleMenuOpen(event, 'dashboard')}
-        sx={{ mx: 1 }}
-      >
-        Dashboard
-      </Button>
-      <Button
-        aria-controls="ingredients-menu"
-        aria-haspopup="true"
-        onClick={(event) => handleMenuOpen(event, 'ingredients')}
-        sx={{ mx: 1 }}
-      >
-        Ingredients
-      </Button>
-      <Button
-        aria-controls="products-menu"
-        aria-haspopup="true"
-        onClick={(event) => handleMenuOpen(event, 'products')}
-        sx={{ mx: 1 }}
-      >
-        Products
-      </Button>
-      {roleID === '1' && (
-        <Button
-          aria-controls="admin-menu"
-          aria-haspopup="true"
-          onClick={(event) => handleMenuOpen(event, 'admin')}
-          sx={{ mx: 1 }}
-        >
-          Admin
+    <AppBar position="static">
+      <Toolbar>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          Menu
+        </Typography>
+        <Button color="inherit" onClick={() => handleMenuItemClick('/dashboard')}>
+          Dashboard
         </Button>
-      )}
-      <Menu
-        id="dashboard-menu"
-        anchorEl={anchorEl}
-        open={menuId === 'dashboard'}
-        onClose={handleMenuClose}
-      >
-        {pageConfigs
-          .filter(config => config.menu === 'dashboard')
-          .map(config => (
-            <MenuItem key={config.pageName} onClick={() => handleMenuItemClick(config.pageName)}>
-              {config.pageTitle}
-            </MenuItem>
-          ))}
-      </Menu>
-      <Menu
-        id="ingredients-menu"
-        anchorEl={anchorEl}
-        open={menuId === 'ingredients'}
-        onClose={handleMenuClose}
-      >
-        {pageConfigs
-          .filter(config => config.menu === 'ingredients')
-          .map(config => (
-            <MenuItem key={config.pageName} onClick={() => handleMenuItemClick(config.pageName)}>
-              {config.pageTitle}
-            </MenuItem>
-          ))}
-      </Menu>
-      <Menu
-        id="products-menu"
-        anchorEl={anchorEl}
-        open={menuId === 'products'}
-        onClose={handleMenuClose}
-      >
-        {pageConfigs
-          .filter(config => config.menu === 'products')
-          .map(config => (
-            <MenuItem key={config.pageName} onClick={() => handleMenuItemClick(config.pageName)}>
-              {config.pageTitle}
-            </MenuItem>
-          ))}
-      </Menu>
-      <Menu
-        id="admin-menu"
-        anchorEl={anchorEl}
-        open={menuId === 'admin'}
-        onClose={handleMenuClose}
-      >
-        {pageConfigs
-          .filter(config => config.menu === 'admin')
-          .map(config => (
-            <MenuItem key={config.pageName} onClick={() => handleMenuItemClick(config.pageName)}>
-              {config.pageTitle}
-            </MenuItem>
-          ))}
-      </Menu>
-    </Box>
+        <Button color="inherit" onClick={() => handleMenuItemClick('/ingredients')}>
+          Ingredients
+        </Button>
+        <Button color="inherit" onClick={() => handleMenuItemClick('/products')}>
+          Products
+        </Button>
+        <Button color="inherit" onClick={() => handleMenuItemClick('/accounts')}>
+          Accounts
+        </Button>
+        {getVar(':roleID') === 1 && (
+          <Button color="inherit" onClick={() => handleMenuItemClick('/admin')}>
+            Admin
+          </Button>
+        )}
+      </Toolbar>
+    </AppBar>
   );
 };
 

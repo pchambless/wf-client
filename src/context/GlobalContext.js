@@ -15,6 +15,8 @@ export const GlobalProvider = ({ children }) => {
   const [userAcctList, setUserAcctList] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(getVar(':acctID') || null); // Initialize with :acctID from externalStore
   const [pageTitle, setPageTitle] = useState('Home');
+  const [pageList, setPageList] = useState([]); // Add pageList state
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Add isAuthenticated state
   const navigate = useNavigate();
 
   const updatePageTitle = useCallback((newTitle) => {
@@ -43,9 +45,14 @@ export const GlobalProvider = ({ children }) => {
     setVars({ ':acctID': acctID });
   }, []);
 
+  const setPageListData = useCallback((data) => {
+    setPageList(data);
+  }, []);
+
   const logout = useCallback(() => {
     clearAllVars();
     setSelectedAccount(null); // Reset selectedAccount state
+    setIsAuthenticated(false); // Reset isAuthenticated state
     navigate('/login');
   }, [navigate]);
 
@@ -59,6 +66,8 @@ export const GlobalProvider = ({ children }) => {
       userAcctList, setUserAcctList, getUserAcctList,
       pageName, setPageName, getPageName, // Replace pageID with pageName
       selectedAccount, setAccount, // Use setAccount to update selectedAccount and :acctID
+      pageList, setPageListData, // Add pageList and setPageListData
+      isAuthenticated, setIsAuthenticated, // Add isAuthenticated and setIsAuthenticated
       logout // Add logout function
     }}>
       {children}
