@@ -1,24 +1,24 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Tabs, Tab } from '@mui/material';
 
-const IngredientsTabs = ({ selectedRows, onTabChange }) => {
+const ProductTabs = ({ selectedRows, onTabChange }) => {
   const tabsConfig = useMemo(() => [
     {
       tab: 1,
-      pageName: 'IngrTypes',
-      tabTitle: 'Ingredient Types',
+      pageName: 'ProdTypes',
+      tabTitle: 'Product Types',
       appLayout: 'Crud'
     },
     {
       tab: 2,
-      pageName: 'Ingredients',
-      tabTitle: 'Ingredients',
+      pageName: 'Products',
+      tabTitle: 'Products',
       appLayout: 'Crud'
     },
     {
       tab: 3,
-      pageName: 'IngrBatches',
-      tabTitle: 'Ingredient Batches',
+      pageName: 'ProdBatches',
+      tabTitle: 'Product Batches',
       appLayout: 'Crud'
     }
   ], []);
@@ -45,4 +45,4 @@ const IngredientsTabs = ({ selectedRows, onTabChange }) => {
   );
 };
 
-export default IngredientsTabs;
+export default ProductTabs;

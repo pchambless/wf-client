@@ -8,9 +8,9 @@ import CrudTable from './CrudTable'; // Import CrudTable
 import CrudForm from './CrudForm'; // Import CrudForm
 import Modal from '../modal/Modal'; // Import Modal
 
-const CrudTemplate = React.memo(({ pageConfig, children }) => {
+const CrudTemplate = React.memo(({ pageName, tabIndex, onRowSelection, children }) => {
   const log = useLogger('CrudTemplate');
-  const { updatePageTitle } = useGlobalContext();
+  const { updatePageTitle, getPageConfig } = useGlobalContext();
   const [data, setData] = useState([]);
   const [formData, setFormData] = useState({});
   const [formMode, setFormMode] = useState('add');
@@ -21,7 +21,9 @@ const CrudTemplate = React.memo(({ pageConfig, children }) => {
   const [selectOptions, setSelectOptions] = useState({}); // State to store select options
   const [modalContent, setModalContent] = useState(null); // State to manage modal content
 
-  log('PageConfig:', pageConfig);
+  log('PageName:', pageName);
+
+  const pageConfig = useMemo(() => getPageConfig(pageName), [pageName, getPageConfig]);
 
   useEffect(() => {
     if (pageConfig.pageTitle) {
@@ -61,7 +63,7 @@ const CrudTemplate = React.memo(({ pageConfig, children }) => {
   useEffect(() => {
     log('useEffect triggered');
     fetchDataCallback();
-  }, [fetchDataCallback, log, pageConfig]);
+  }, [fetchDataCallback, log]);
 
   useEffect(() => {
     return () => {
@@ -108,7 +110,12 @@ const CrudTemplate = React.memo(({ pageConfig, children }) => {
         setVars({ [column.setVar]: row[column.field] });
       }
     });
-  }, [columnMap, keyField, log]);
+
+    if (onRowSelection) {
+      console.log('Row selection callback triggered');
+      onRowSelection();
+    }
+  }, [columnMap, keyField, log, onRowSelection]);
 
   const handleFormModeChange = useCallback((mode) => {
     setFormMode(mode);

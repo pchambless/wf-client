@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const Breadcrumb = ({ crumbs }) => {
   return (
-    <nav className="breadcrumb flex space-x-2">
+    <nav className="flex space-x-2 breadcrumb">
       {crumbs.map((crumb, index) => (
         <span key={index}>
           {index > 0 && ' / '}

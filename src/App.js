@@ -11,12 +11,10 @@ import { ModalProvider } from './context/ModalContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login'; // Import Login
 import Welcome from './pages/Welcome'; // Import Welcome
-import Ingredients from './pages/Ingredients'; // Import Ingredients
-import Products from './pages/Products'; // Import Products
-import Accounts from './pages/Accounts'; // Import Accounts
+import Ingredient from './pages/Ingredient'; // Import Ingredients
+import Product from './pages/Product'; // Import Products
+import Account from './pages/Account'; // Import Accounts
 import Admin from './pages/Admin'; // Import Admin
-import MenuStrip from './components/page/MenuStrip'; // Import MenuStrip
-import { Container } from '@mui/material'; // Import Container
 
 const theme = createTheme(themeOptions); // Create theme using themeOptions
 
@@ -24,20 +22,28 @@ const AppContent = () => {
   const { isAuthenticated } = useGlobalContext();
 
   return (
-    <>
-      {isAuthenticated && <MenuStrip />}
-      <Container maxWidth="lg" sx={{ padding: '16px' }}> {/* Adjust padding as needed */}
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/welcome" element={<Welcome />} />
-          <Route path="/ingredients" element={<Ingredients />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/accounts" element={<Accounts />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="*" element={<Navigate to="/login" />} />
-        </Routes>
-      </Container>
-    </>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="*"
+        element={
+          isAuthenticated ? (
+            <>
+              <Routes>
+                <Route path="/welcome" element={<Welcome />} />
+                <Route path="/ingredient" element={<Ingredient />} />
+                <Route path="/product" element={<Product />} />
+                <Route path="/account" element={<Account />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="*" element={<Navigate to="/welcome" />} />
+              </Routes>
+            </>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+    </Routes>
   );
 };
 
