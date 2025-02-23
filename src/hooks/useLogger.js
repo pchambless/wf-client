@@ -2,6 +2,7 @@ import { useCallback, useRef } from 'react';
 
 const useLogger = (componentName) => {
   const lastLogTime = useRef({});
+  const prevComponent = useRef(null);
 
   return useCallback((message, ...args) => {
     const now = new Date();
@@ -20,8 +21,14 @@ const useLogger = (componentName) => {
         typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
       );
 
-      console.log(`[${componentName}] ${formattedTime} - ${message}`, ...formattedArgs);
+      // Include previous component name if different from current component name
+      const prevComponentName = prevComponent.current && prevComponent.current !== componentName
+        ? ` (prev: ${prevComponent.current})`
+        : '';
+
+      console.log(`[${componentName}]${formattedTime} - ${message} from ${prevComponentName} `, ...formattedArgs);
       lastLogTime.current[logKey] = now;
+      prevComponent.current = componentName;
     }
   }, [componentName]);
 };
