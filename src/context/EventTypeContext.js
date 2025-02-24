@@ -15,7 +15,7 @@ export const EventTypeProvider = ({ children }) => {
   const [error] = useState(null);
 
   const eventTypeLookup = useCallback((eventType) => {
-    log('eventTypeLookup',getEventType(eventType));
+    log('eventTypeLookup', getEventType(eventType));
     const event = getEventType(eventType); 
     if (!event) {
       throw new Error(`No event type found for ${eventType}`);
@@ -50,6 +50,7 @@ export const EventTypeProvider = ({ children }) => {
   return (
     <EventTypeContext.Provider
       value={{
+        eventTypeLookup, // Include eventTypeLookup in the context value
         execEvent,
         error,
       }}

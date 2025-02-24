@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalContext } from '../context/GlobalContext';
 import { useEventTypeContext } from '../context/EventTypeContext';
@@ -6,14 +6,21 @@ import logo from '../assets/wf-icon.png';
 import useLogger from '../hooks/useLogger';
 import { login, fetchEventList, fetchPageConfigs } from '../api/api';
 import { setVars } from '../utils/externalStore';
+import { Box, Button, Container, TextField, Typography, Avatar, CssBaseline } from '@mui/material';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
 const Login = () => {
   const log = useLogger('Login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setEventTypes, setPageConfigs, setUserAcctList, setAccount, setPageListData, setIsAuthenticated } = useGlobalContext();
-  const { execEvent } = useEventTypeContext();
+  const { setEventTypes, setPageConfigs, setUserAcctList, setAccount, setIsAuthenticated } = useGlobalContext();
+  const { execEvent, eventTypeLookup } = useEventTypeContext();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    log('Component mounted, checking event types');
+    log(`Event type for userAcctList: ${eventTypeLookup('userAcctList')}`);
+  }, [eventTypeLookup, log]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -35,6 +42,11 @@ const Login = () => {
 
       const { userID, roleID, acctID, userEmail } = response.data.user;
 
+      setVars({ ':userID': userID, ':roleID': roleID, ':userEmail': userEmail });
+      setVars({ ':acctID': acctID, ':isAuth': "1" });
+
+      setAccount(acctID); // Set the selectedAccount state
+
       log('Loading EventTypes');
       await fetchEventList(setEventTypes);
       log('Loaded EventTypes');
@@ -43,20 +55,14 @@ const Login = () => {
       await fetchPageConfigs(setPageConfigs);
       log('Loaded pageConfigs');
 
-      log('Fetching pageList');
-      const pageListResponse = await execEvent('pageList'); // Replace with your actual API endpoint
-      const pageListData = await pageListResponse;
-      await setPageListData(pageListData.rows);
-      log('Loaded pageList');
-
-      setVars({ ':userID': userID, ':roleID': roleID, ':userEmail': userEmail });
-      setVars({ ':acctID': acctID, ':isAuth': "1" });
-
-      setAccount(acctID); // Set the selectedAccount state
-
       log('Fetching userAcctList');
-      const userAcctList = await execEvent('userAcctList');
-      await setUserAcctList(userAcctList);
+      if (eventTypeLookup('userAcctList')) {
+        const userAcctList = await execEvent('userAcctList');
+        await setUserAcctList(userAcctList);
+        log('Fetched userAcctList');
+      } else {
+        throw new Error('No event type found for userAcctList');
+      }
 
       setIsAuthenticated(true); // Set isAuthenticated to true
 
@@ -70,44 +76,79 @@ const Login = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-product-bg">
-      <div className="w-full max-w-md p-8 space-y-8 bg-gray-100 rounded-lg shadow-md">
-        <div className="flex items-center justify-center">
-          <img src={logo} alt="Whatsfresh Logo" className="w-12 h-12 mr-2" />
-          <h2 className="text-3xl font-bold text-gray-800">Whatsfresh Today?</h2>
-        </div>
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
+    <Container component="main" maxWidth="xs">
+      <CssBaseline />
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
+          <LockOutlinedIcon />
+        </Avatar>
+        <Typography component="h1" variant="h5">
+          Sign in
+        </Typography>
+        <Box
+          sx={{
+            backgroundColor: '#f5f5f5', // Very light gray background
+            padding: 3,
+            borderRadius: 2,
+            boxShadow: 1,
+            mt: 2,
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              mb: 2,
+            }}
+          >
+            <img src={logo} alt="Whatsfresh Logo" className="w-12 h-12 mr-2" />
+          </Box>
+          <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt: 1 }}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
               id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 mt-1 text-sm bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
+              sx={{ backgroundColor: 'white' }} // White background for input fields
             />
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-            <input
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
               type="password"
               id="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 mt-1 text-sm bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
+              sx={{ backgroundColor: 'white' }} // White background for input fields
             />
-          </div>
-          <button
-            type="submit"
-            className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Login
-          </button>
-        </form>
-      </div>
-    </div>
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2 }}
+            >
+              Sign In
+            </Button>
+          </Box>
+        </Box>
+      </Box>
+    </Container>
   );
 };
 

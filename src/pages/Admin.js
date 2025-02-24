@@ -22,6 +22,12 @@ const defaultTabConfigs = [
     pageName: 'MeasUnits',
     tabTitle: 'MeasUnits',
     appLayout: 'Crud'
+  },
+  {
+    tab: 3,
+    pageName: 'wfPages',
+    tabTitle: 'WF Pages',
+    appLayout: 'Crud'
   }
 ];
 
@@ -48,13 +54,19 @@ const Admin = ({ tabConfigs = defaultTabConfigs }) => {
       pageName: 'MeasUnits',
       tabTitle: 'MeasUnits',
       appLayout: 'Crud'
+    },
+    {
+      tab: 3,
+      pageName: 'wfPages',
+      tabTitle: 'WF Pages',
+      appLayout: 'Crud'
     }
   ], []);
 
   useEffect(() => {
     log('useEffect triggered');
     log('tabConfigs:', tabConfigs);
-    const config = tabConfigs.filter(config => config.tab === 0 || config.tab === 1 || config.tab === 2);
+    const config = tabConfigs.filter(config => config.tab === 0 || config.tab === 1 || config.tab === 2 || config.tab === 3);
     log('Filtered config:', config);
     setTabConfig(prevConfig => {
       if (JSON.stringify(prevConfig) !== JSON.stringify(config)) {
