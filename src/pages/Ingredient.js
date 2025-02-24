@@ -97,7 +97,7 @@ const Ingredient = ({ tabConfigs = defaultTabConfigs }) => {
       log('ingrTypeName:', ingrTypeName);
       setTabLabels(prevLabels => [
         prevLabels[0],
-        `Ingredients: ${ingrTypeName}`,
+        `${ingrTypeName}`,
         prevLabels[2]
       ]);
     }

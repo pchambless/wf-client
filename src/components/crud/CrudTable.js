@@ -7,8 +7,8 @@ const CrudTable = ({ data, columnMap, onRowClick, selectedRow }) => {
       <MuiTable size="small" stickyHeader>
         <TableHead>
           <TableRow>
-            {columnMap.filter(column => column.label && column.label !== 'Description' && !column.selList).map((column) => (
-              <TableCell key={column.field} style={column.style} className={column.hidden ? 'hidden' : ''}>
+            {columnMap.filter(column => column.label && column.label !== 'Description' && column.label !== 'Comments' && !column.selList).map((column) => (
+              <TableCell key={column.field} style={{ ...column.style, whiteSpace: column.type === 'DATE' ? 'nowrap' : 'normal' }} className={column.hidden ? 'hidden' : ''}>
                 {column.label}
               </TableCell>
             ))}
@@ -19,12 +19,11 @@ const CrudTable = ({ data, columnMap, onRowClick, selectedRow }) => {
             <TableRow
               key={row.id || index}
               onClick={() => onRowClick(row)}
-              className="cursor-pointer"
               selected={selectedRow === row.id}
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: 'pointer', backgroundColor: selectedRow === row.id ? '#e0e0e0' : 'inherit' }}
             >
-              {columnMap.filter(column => column.label && column.label !== 'Description' && !column.selList).map((column) => (
-                <TableCell key={`${row.id || index}-${column.field}`} style={column.style} className={column.hidden ? 'hidden' : ''}>
+              {columnMap.filter(column => column.label && column.label !== 'Comments' && column.label !== 'Description' && !column.selList).map((column) => (
+                <TableCell key={`${row.id || index}-${column.field}`} style={{ ...column.style, whiteSpace: column.type === 'DATE' ? 'nowrap' : 'normal' }} className={column.hidden ? 'hidden' : ''}>
                   {row[column.field]}
                 </TableCell>
               ))}

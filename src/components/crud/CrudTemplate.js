@@ -128,6 +128,8 @@ const CrudTemplate = React.memo(({ pageName, tabIndex, onRowSelection, children 
   const handleFormSubmit = useCallback(async (formData) => {
     // Handle form submission logic here
     log('Form submitted:', formData);
+    // Add your form submission logic here
+    // For example, you can call an API to save the form data
   }, [log]);
 
   const handleModalClose = () => {
@@ -156,11 +158,6 @@ const CrudTemplate = React.memo(({ pageName, tabIndex, onRowSelection, children 
     );
   }
 
-  if (!data || data.length === 0) {
-    log('Rendering empty data state');
-    return <Typography>No data available.</Typography>;
-  }
-
   return (
     <Box display="flex" flexDirection="column" height="100%" width="100%">
       <Grid container spacing={2}>
@@ -170,17 +167,18 @@ const CrudTemplate = React.memo(({ pageName, tabIndex, onRowSelection, children 
               <Button onClick={() => handleFormModeChange('add')} variant="contained" color="primary" style={{ marginBottom: '16px' }}>
                 Add New
               </Button>
-              <CrudTable data={data} columnMap={columnMap} onRowClick={handleRowClick} selectedRow={selectedRow} selectOptions={selectOptions} /> {/* Pass selectedRow and selectOptions */}
+              {data.length === 0 ? (
+                <Typography>No data available. Please add new entries.</Typography>
+              ) : (
+                <CrudTable data={data} columnMap={columnMap} onRowClick={handleRowClick} selectedRow={selectedRow} selectOptions={selectOptions} />
+              )}
             </Box>
           </Grid>
         )}
         {shouldRenderForm && (
           <Grid item xs={12} md={6}>
             <Box p={2} borderRadius={2} bgcolor="background.paper" boxShadow={3} height="100%">
-              <CrudForm pageConfig={columnMap} formData={formData} setFormData={setFormData} selectOptions={selectOptions} /> {/* Use CrudForm */}
-              <Button onClick={() => handleFormSubmit(formData)} variant="contained" color="primary" disabled={formMode === 'view'}>
-                {formMode === 'add' ? 'Add' : 'Update'}
-              </Button>
+              <CrudForm pageConfig={columnMap} formData={formData} setFormData={setFormData} selectOptions={selectOptions} formMode={formMode} onSubmit={handleFormSubmit} /> {/* Pass formMode and handleFormSubmit */}
             </Box>
           </Grid>
         )}

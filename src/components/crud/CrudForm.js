@@ -1,14 +1,19 @@
 import React from 'react';
-import { TextField, Box } from '@mui/material';
+import { TextField, Box, Button } from '@mui/material';
 import Select from '../page/Select'; // Import the Select component
 import { getVar } from '../../utils/externalStore'; // Import getVar
 
-const CrudForm = ({ pageConfig, formData, setFormData }) => {
+const CrudForm = ({ pageConfig, formData, setFormData, formMode, onSubmit }) => {
   const handleInputChange = (key, value) => {
     setFormData(prevData => ({
       ...prevData,
       [key]: value
     }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(formData);
   };
 
   const renderFields = () => {
@@ -64,8 +69,11 @@ const CrudForm = ({ pageConfig, formData, setFormData }) => {
   };
 
   return (
-    <Box>
+    <Box component="form" onSubmit={handleSubmit}>
       {renderFields()}
+      <Button type="submit" variant="contained" color="primary">
+        {formMode === 'add' ? 'Add' : 'Submit'}
+      </Button>
     </Box>
   );
 };
