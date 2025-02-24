@@ -6,21 +6,28 @@ import logo from '../assets/wf-icon.png';
 import useLogger from '../hooks/useLogger';
 import { login, fetchEventList, fetchPageConfigs } from '../api/api';
 import { setVars } from '../utils/externalStore';
-import { Box, Button, Container, TextField, Typography, Avatar, CssBaseline } from '@mui/material';
+import { Box, Button, Container, TextField, Typography, Avatar, CssBaseline, CircularProgress } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
 const Login = () => {
   const log = useLogger('Login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(true);
   const { setEventTypes, setPageConfigs, setUserAcctList, setAccount, setIsAuthenticated } = useGlobalContext();
   const { execEvent, eventTypeLookup } = useEventTypeContext();
   const navigate = useNavigate();
 
   useEffect(() => {
-    log('Component mounted, checking event types');
-    log(`Event type for userAcctList: ${eventTypeLookup('userAcctList')}`);
-  }, [eventTypeLookup, log]);
+    const loadEventTypes = async () => {
+      log('Loading EventTypes');
+      await fetchEventList(setEventTypes);
+      log('Loaded EventTypes');
+      setLoading(false);
+    };
+
+    loadEventTypes();
+  }, [setEventTypes, log]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -47,10 +54,6 @@ const Login = () => {
 
       setAccount(acctID); // Set the selectedAccount state
 
-      log('Loading EventTypes');
-      await fetchEventList(setEventTypes);
-      log('Loaded EventTypes');
-
       log('Loading pageConfigs');
       await fetchPageConfigs(setPageConfigs);
       log('Loaded pageConfigs');
@@ -74,6 +77,24 @@ const Login = () => {
       alert(`Login failed. Please try again.`);
     }
   };
+
+  if (loading) {
+    return (
+      <Container component="main" maxWidth="xs">
+        <CssBaseline />
+        <Box
+          sx={{
+            marginTop: 8,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container component="main" maxWidth="xs">
