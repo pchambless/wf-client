@@ -115,7 +115,7 @@ const Login = () => {
         </Typography>
         <Box
           sx={{
-            backgroundColor: '#f5f5f5', // Very light gray background
+            backgroundColor: '#e6e6e6', // Very light gray background
             padding: 3,
             borderRadius: 2,
             boxShadow: 1,
@@ -126,10 +126,14 @@ const Login = () => {
             sx={{
               display: 'flex',
               justifyContent: 'center',
+              alignItems: 'center',
               mb: 2,
             }}
           >
             <img src={logo} alt="Whatsfresh Logo" className="w-12 h-12 mr-2" />
+            <Typography variant="h6" sx={{ color: 'darkgreen', textAlign: 'center' }}>
+              Whatsfresh Today?
+            </Typography>
           </Box>
           <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt: 1 }}>
             <TextField
