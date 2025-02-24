@@ -40,7 +40,9 @@
     "test": "jest --watchAll",
     "eject": "react-scripts eject",
     "start-all": "node ../scripts/start-all.js",
-    "depcruise": "yarn dlx dependency-cruiser src --output-type mermaid --output-to wf-client.mmd --no-config --include-only '^src(/|$)'"
+    "depcruise": "yarn dlx dependency-cruiser src --output-type mermaid --output-to wf-client.mmd --no-config --include-only '^src(/|$)'",
+    "ngrok": "ngrok http --url=crisp-sharply-mutt.ngrok-free.app 3000",
+    "dev": "concurrently \"yarn start\" \"wait-on http://localhost:3000 && yarn run ngrok\""
   },
   "eslintConfig": {
     "extends": [
@@ -74,7 +76,8 @@
     "html-webpack-plugin": "^5.6.3",
     "postcss": "^8.4.49",
     "supertest": "^7.0.0",
-    "tailwindcss": "^3.4.15"
+    "tailwindcss": "^3.4.15",
+    "wait-on": "^6.0.1"
   },
   "jest": {
     "testMatch": [
