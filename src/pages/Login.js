@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalContext } from '../context/GlobalContext';
 import { useEventTypeContext } from '../context/EventTypeContext';
@@ -13,34 +13,26 @@ const Login = () => {
   const log = useLogger('Login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { setEventTypes, setPageConfigs, setUserAcctList, setAccount, setIsAuthenticated } = useGlobalContext();
   const { execEvent, eventTypeLookup } = useEventTypeContext();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const loadEventTypes = async () => {
-      log('Loading EventTypes');
-      await fetchEventList(setEventTypes);
-      log('Loaded EventTypes');
-      setLoading(false);
-    };
-
-    loadEventTypes();
-  }, [setEventTypes, log]);
-
   const handleLogin = async (e) => {
     e.preventDefault();
-    log('Login attempt started');
-    log(`Email: ${email}`);
+    const endTimer = log.startPerformanceTimer('loginProcess');
+    log.info('Login attempt started', { email });
 
     if (!email || !password) {
+      log.warn('Login attempt failed - missing credentials');
       alert('Please fill in all fields.');
+      endTimer();
       return;
     }
 
     try {
-      log('Sending login request...');
+      setLoading(true);
+      log.debug('Sending login request...');
       const response = await login(email, password);
 
       if (!response.success) {
@@ -49,52 +41,74 @@ const Login = () => {
 
       const { userID, roleID, acctID, userEmail } = response.data.user;
 
-      setVars({ ':userID': userID, ':roleID': roleID, ':userEmail': userEmail });
-      setVars({ ':acctID': acctID, ':isAuth': "1" });
+      // Set user variables
+      log.debug('Setting user variables');
+      setVars({ 
+        ':userID': userID, 
+        ':roleID': roleID, 
+        ':userEmail': userEmail,
+        ':acctID': acctID, 
+        ':isAuth': "1" 
+      });
 
-      setAccount(acctID); // Set the selectedAccount state
+      setAccount(acctID);
 
-      log('Loading pageConfigs');
-      await fetchPageConfigs(setPageConfigs);
-      log('Loaded pageConfigs');
+      // Load event types first
+      log.info('Loading EventTypes');
+      await fetchEventList(setEventTypes);
+      log.info('Loaded EventTypes');
 
-      log('Fetching userAcctList');
-      if (eventTypeLookup('userAcctList')) {
-        const userAcctList = await execEvent('userAcctList');
-        await setUserAcctList(userAcctList);
-        log('Fetched userAcctList');
-      } else {
-        throw new Error('No event type found for userAcctList');
+      // Load page configurations
+      log.info('Loading page configurations');
+      try {
+        const configs = await fetchPageConfigs(setPageConfigs);
+        if (!configs || configs.length === 0) {
+          throw new Error('No page configurations received');
+        }
+        log.info('Page configurations loaded successfully', { 
+          configCount: configs.length 
+        });
+      } catch (configError) {
+        log.error('Failed to load page configurations', { 
+          error: configError.message 
+        });
+        throw new Error('Failed to initialize application configuration');
       }
 
-      setIsAuthenticated(true); // Set isAuthenticated to true
+      // Fetch user account list
+      log.debug('Fetching user account list');
+      if (eventTypeLookup('userAcctList')) {
+        try {
+          const userAcctList = await execEvent('userAcctList');
+          await setUserAcctList(userAcctList);
+          log.debug('User account list fetched successfully', {
+            accountCount: userAcctList.length
+          });
+        } catch (acctError) {
+          log.error('Failed to fetch user account list', {
+            error: acctError.message
+          });
+          // Don't throw here, as this is not critical for app function
+        }
+      } else {
+        log.warn('userAcctList event type not found');
+      }
 
-      log('User logged in successfully');
-      log('Navigating to /welcome');
+      setIsAuthenticated(true);
+      log.info('Login successful, navigating to welcome page');
+      endTimer();
       navigate('/welcome');
+
     } catch (error) {
-      log(`Login failed: ${error.message}`);
-      alert(`Login failed. Please try again.`);
+      log.error('Login process failed', {
+        error: error.message,
+        stack: error.stack
+      });
+      setLoading(false);
+      alert(error.message || 'Login failed. Please try again.');
+      endTimer();
     }
   };
-
-  if (loading) {
-    return (
-      <Container component="main" maxWidth="xs">
-        <CssBaseline />
-        <Box
-          sx={{
-            marginTop: 8,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      </Container>
-    );
-  }
 
   return (
     <Container component="main" maxWidth="xs">
@@ -107,71 +121,77 @@ const Login = () => {
           alignItems: 'center',
         }}
       >
-        <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-          <LockOutlinedIcon />
-        </Avatar>
-        <Typography component="h1" variant="h5">
-          Sign in
-        </Typography>
-        <Box
-          sx={{
-            backgroundColor: '#e6e6e6', // Very light gray background
-            padding: 3,
-            borderRadius: 2,
-            boxShadow: 1,
-            mt: 2,
-          }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              mb: 2,
-            }}
-          >
-            <img src={logo} alt="Whatsfresh Logo" className="w-12 h-12 mr-2" />
-            <Typography variant="h6" sx={{ color: 'darkgreen', textAlign: 'center' }}>
-              Whatsfresh Today?
+        {loading ? (
+          <CircularProgress />
+        ) : (
+          <>
+            <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
+              <LockOutlinedIcon />
+            </Avatar>
+            <Typography component="h1" variant="h5">
+              Sign in
             </Typography>
-          </Box>
-          <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt: 1 }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              sx={{ backgroundColor: 'white' }} // White background for input fields
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              sx={{ backgroundColor: 'white' }} // White background for input fields
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
+            <Box
+              sx={{
+                backgroundColor: '#e6e6e6', // Very light gray background
+                padding: 3,
+                borderRadius: 2,
+                boxShadow: 1,
+                mt: 2,
+              }}
             >
-              Sign In
-            </Button>
-          </Box>
-        </Box>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  mb: 2,
+                }}
+              >
+                <img src={logo} alt="Whatsfresh Logo" className="w-12 h-12 mr-2" />
+                <Typography variant="h6" sx={{ color: 'darkgreen', textAlign: 'center' }}>
+                  Whatsfresh Today?
+                </Typography>
+              </Box>
+              <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt: 1 }}>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="email"
+                  label="Email Address"
+                  name="email"
+                  autoComplete="email"
+                  autoFocus
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  sx={{ backgroundColor: 'white' }} // White background for input fields
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  type="password"
+                  id="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  sx={{ backgroundColor: 'white' }} // White background for input fields
+                />
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                >
+                  Sign In
+                </Button>
+              </Box>
+            </Box>
+          </>
+        )}
       </Box>
     </Container>
   );

@@ -1,78 +1,124 @@
 import axios from 'axios';
-import createLogger from '../utils/logger';
+import { createLogger } from '../utils/logger/LogService';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const log = createLogger('api');
+
+let isInitialized = false;
+
+const api = axios.create({
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Simple request logging
+api.interceptors.request.use(request => {
+  console.log('Full request details:', {
+    method: request.method?.toUpperCase(),
+    url: request.url,
+    fullUrl: request.baseURL ? `${request.baseURL}${request.url}` : request.url,
+    headers: request.headers,
+    data: request.data
+  });
+  return request;
+});
+
+// Simple error logging
+api.interceptors.response.use(
+  response => response,
+  error => {
+    console.error('API Error:', {
+      message: error.message,
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+    return Promise.reject(error);
+  }
+);
 
 export const execEventType = async (eventType, params) => {
-  const fileName = 'api.execEventType';
-  const log = createLogger(fileName);
-  log(eventType, params)
   try {
-    const response = await axios.post(`${API_BASE_URL}/api/execEventType`, {
+    log.debug('Executing event type', { eventType, params });
+    const response = await api.post('/api/execEventType', {
       eventType,
       params
     });
     return response.data;
   } catch (error) {
-    log(`Error executing event type ${eventType}:`, error);
+    // Check if the error is due to API info response
+    if (error.isApiInfo) {
+      log.error('API route not properly initialized:', {
+        eventType,
+        error: error.message
+      });
+      throw new Error('API not properly initialized. Please try again.');
+    }
+
+    log.error(`Error executing event type ${eventType}:`, {
+      error: error.message,
+      params,
+      response: error.response?.data
+    });
     throw error;
   }
 };
 
 export const fetchEventList = async (setEventList) => {
-  const fileName = 'api.fetchEventList';
-  const log = createLogger(fileName);
   try {
+    log.debug('Fetching event list');
     const response = await execEventType('apiEventList', {});
-    log('Fetched from fetchEventList:', response); // Log the fetched API event list
+    log.debug('Fetched event list response:', response);
 
     if (!Array.isArray(response)) {
-      throw new Error('Expected an array but received a different type.');
+      throw new Error('Expected an array but received: ' + typeof response);
     }
 
-    const eventTypes = response.map(event => {
-      try {
-        return {
-          eventID: event.eventID,
-          eventType: event.eventType,
-          method: event.method,
-          params: event.params ? JSON.parse(event.params) : [],
-          purpose: event.purpose
-        };
-      } catch (error) {
-        log('Error parsing event:', error);
-        throw error;
-      }
-    });
+    const eventTypes = response.map(event => ({
+      eventID: event.eventID,
+      eventType: event.eventType,
+      method: event.method,
+      params: event.params ? JSON.parse(event.params) : [],
+      purpose: event.purpose
+    }));
 
-    log('Parsed apiEventList:', eventTypes);
+    log.info('Event list processed successfully', { count: eventTypes.length });
+    isInitialized = true;
     setEventList(eventTypes);
     return eventTypes;
   } catch (error) {
-    log('Error fetching apiEventList:', error);
+    isInitialized = false;
+    log.error('Error fetching event list:', {
+      error: error.message,
+      stack: error.stack,
+      initialized: isInitialized
+    });
     throw error;
   }
 };
 
-
-
 export const fetchPageConfigs = async (setPageConfigs) => {
-  const fileName = 'api.fetchPageConfigs';
-  const log = createLogger(fileName);
+  if (!isInitialized) {
+    log.warn('Attempting to fetch page configs before initialization');
+  }
+
   try {
+    log.debug('Fetching page configurations');
     const response = await execEventType('apiPageConfigList', {});
-    log('Fetched from fetchPageConfigs:', response); // Log the fetched page configs
+    log.debug('Fetched page configs response:', response);
 
     if (!Array.isArray(response)) {
-      throw new Error('Expected an array but received a different type.');
+      throw new Error('Expected an array but received: ' + typeof response);
     }
 
     const pageConfigs = response.map(config => {
       try {
-        log('Parsing columnMap for config:', config.pageName);
-//        log('columnMap:', config.columnMap); // Log the columnMap before parsing
-        const columnMap = typeof config.columnMap === 'string' ? JSON.parse(config.columnMap) : config.columnMap;
-//        log('Parsed columnMap:', columnMap); // Log the parsed columnMap
+        const columnMap = typeof config.columnMap === 'string' 
+          ? JSON.parse(config.columnMap) 
+          : config.columnMap;
+
         return {
           pageID: config.pageID,
           menu: config.menu,
@@ -84,50 +130,49 @@ export const fetchPageConfigs = async (setPageConfigs) => {
           keyField: config.keyField,
           columnMap: columnMap.map(col => ({
             ...col,
-            colVal: '' // Add colVal attribute
+            colVal: ''
           }))
         };
       } catch (error) {
-        log('Error parsing pageConfig for config:', config.pageName);
-        log('Error:', error.message);
-        log('Stack:', error.stack);
+        log.error('Error parsing page config:', {
+          pageName: config.pageName,
+          error: error.message
+        });
         throw error;
       }
     });
 
-//    log('Parsed pageConfigs:', pageConfigs); // Log the parsed pageConfigs
+    log.info('Page configurations processed successfully', { count: pageConfigs.length });
     setPageConfigs(pageConfigs);
     return pageConfigs;
   } catch (error) {
-    log('Error fetching pageConfigs:', error.message);
-    log('Stack:', error.stack);
+    log.error('Error fetching page configs:', {
+      error: error.message,
+      stack: error.stack,
+      initialized: isInitialized
+    });
     throw error;
   }
 };
 
-
 export const login = async (email, password) => {
-  const fileName = 'api.login';
-  const log = createLogger(fileName);
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ userEmail: email, password })
+    const response = await api.post('/api/auth/login', {
+      userEmail: email,
+      password
     });
 
-    if (!response.ok) { // Updated this line
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    log('Login response data:', data);
-    return data; // Return the server response directly
+    log.debug('Login response received');
+    return {
+      success: true,
+      data: response.data
+    };
   } catch (error) {
-    log('Login error:', error);
-    return { success: false, message: error.message };
+    log.error('Login failed:', error.message);
+    return {
+      success: false,
+      message: error.response?.data?.message || error.message
+    };
   }
 };
 

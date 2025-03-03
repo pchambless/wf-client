@@ -2,13 +2,17 @@
   "name": "wf-client",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:3001",
   "dependencies": {
+    "@date-io/date-fns": "^3.2.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.4",
+    "@mui/lab": "6.0.0-beta.28",
     "@mui/material": "^6.4.4",
     "@mui/system": "^6.4.3",
     "@mui/x-data-grid": "^7.26.0",
+    "@mui/x-date-pickers": "^7.27.1",
     "@reduxjs/toolkit": "^2.5.0",
     "@svgr/core": "^8.1.0",
     "@svgr/plugin-svgo": "^8.1.0",
@@ -17,6 +21,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.9",
+    "date-fns": "2.x",
     "lodash": "^4.17.21",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
@@ -25,7 +30,7 @@
     "react-model": "^4.3.1",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.0.1",
-    "react-scripts": "^5.0.1",
+    "react-scripts": "5.0.1",
     "redux": "^5.0.1",
     "resolve-url-loader": "^5.0.0",
     "svgo": "^3.3.2",
@@ -41,8 +46,8 @@
     "eject": "react-scripts eject",
     "start-all": "node ../scripts/start-all.js",
     "depcruise": "yarn dlx dependency-cruiser src --output-type mermaid --output-to wf-client.mmd --no-config --include-only '^src(/|$)'",
-    "ngrok": "ngrok http --url=crisp-sharply-mutt.ngrok-free.app 3000",
-    "dev": "concurrently \"yarn start\" \"wait-on http://localhost:3000 && yarn run ngrok\""
+    "ngrok": "ngrok http --url=crisp-sharply-mutt.ngrok-free.app 3001",
+    "dev": "concurrently \"yarn start\" \"wait-on http://localhost:3001 && yarn run ngrok\""
   },
   "eslintConfig": {
     "extends": [
@@ -74,6 +79,7 @@
     "eslint": "^8.0.0",
     "eslint-config-react-app": "^7.0.1",
     "html-webpack-plugin": "^5.6.3",
+    "http-proxy-middleware": "^3.0.3",
     "postcss": "^8.4.49",
     "supertest": "^7.0.0",
     "tailwindcss": "^3.4.15",
@@ -83,5 +89,6 @@
     "testMatch": [
       "**/tests/**/*.js?(x)"
     ]
-  }
+  },
+  "packageManager": "yarn@4.6.0"
 }

@@ -1,30 +1,56 @@
-import React from 'react';
-import { Modal, Box, Typography, Button } from '@mui/material';
+import React, { useEffect } from 'react';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
+import useLogger from '../../hooks/useLogger';
 
 const ErrorModal = ({ open, onClose, errorMessage }) => {
+  const log = useLogger('ErrorModal');
+
+  useEffect(() => {
+    if (open) {
+      log.error('Error modal displayed', { 
+        errorMessage,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [open, errorMessage, log]);
+
+  const handleClose = () => {
+    log.debug('Error modal closed', { 
+      errorMessage,
+      timestamp: new Date().toISOString()
+    });
+    onClose();
+  };
+
+  if (!open) {
+    return null;
+  }
+
   return (
-    <Modal open={open} onClose={onClose}>
-      <Box
-        position="absolute"
-        top="50%"
-        left="50%"
-        transform="translate(-50%, -50%)"
-        bgcolor="background.paper"
-        p={4}
-        borderRadius={2}
-        boxShadow={3}
-      >
-        <Typography variant="h6" color="error">
-          Error
-        </Typography>
-        <Typography variant="body1" mt={2}>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      aria-labelledby="error-dialog-title"
+      PaperProps={{
+        style: {
+          borderLeft: '4px solid #f44336'
+        }
+      }}
+    >
+      <DialogTitle id="error-dialog-title" style={{ color: '#f44336' }}>
+        Error
+      </DialogTitle>
+      <DialogContent>
+        <Typography color="error">
           {errorMessage}
         </Typography>
-        <Button onClick={onClose} variant="contained" color="primary" sx={{ mt: 2 }}>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose} color="primary">
           Close
         </Button>
-      </Box>
-    </Modal>
+      </DialogActions>
+    </Dialog>
   );
 };
 

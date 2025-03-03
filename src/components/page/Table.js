@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Table as MuiTable, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, CircularProgress, Typography } from '@mui/material';
 import useLogger from '../../hooks/useLogger';
 import { setVars } from '../../utils/externalStore';
-import { fetchData } from '../../utils/dataFetcher';
+import { useEventTypeContext } from '../../context/EventTypeContext';
 
 const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
   const [data, setData] = useState([]);
@@ -10,8 +10,9 @@ const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
   const [error, setError] = useState(null);
   const hasFetchedData = useRef(false);
   const log = useLogger('Table');
+  const { execEvent } = useEventTypeContext();
 
-  log('Table initialized with pageConfig:', pageConfig);
+  log.debug('Table initialized with pageConfig:', pageConfig);
 
   const {
     listEvent,
@@ -19,39 +20,43 @@ const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
     columns = [],
   } = pageConfig || {};
 
-  log('listEvent:', listEvent);
-  log('columns:', columns);
+  log.debug('listEvent:', listEvent);
+  log.debug('columns:', columns);
 
   const fetchDataCallback = useCallback(async () => {
     if (!listEvent) {
-      log('No listEvent provided, skipping data fetch');
+      log.warn('No listEvent provided, skipping data fetch');
       return;
     }
     try {
-      log('Fetching data...');
+      log.debug('Fetching data...', { listEvent });
       setLoading(true);
-      const result = await fetchData(listEvent);
-      log('Data fetched:', result);
+      const result = await execEvent(listEvent);
+      log.debug('Data fetched successfully', { listEvent, count: result?.length });
       setData(Array.isArray(result) ? result : []);
     } catch (err) {
-      log('Error fetching data:', err);
+      log.error('Error fetching data', { 
+        listEvent, 
+        error: err.message,
+        stack: err.stack 
+      });
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [listEvent, log]);
+  }, [listEvent, execEvent, log]);
 
   useEffect(() => {
-    log('useEffect triggered');
+    log.debug('useEffect triggered');
     if (!hasFetchedData.current) {
-      log('Initiating data fetch');
+      log.debug('Initiating data fetch');
       fetchDataCallback();
       hasFetchedData.current = true;
     }
   }, [fetchDataCallback, log]);
 
   const handleRowClick = useCallback((row) => {
-    log('Row clicked:', row);
+    log.debug('Row clicked', { row });
 
     columns.forEach(column => {
       if (column.setVar) {
@@ -65,21 +70,21 @@ const Table = ({ pageConfig, onRowClick, onAddNewClick }) => {
   }, [columns, onRowClick, log]);
 
   if (loading) {
-    log('Rendering loading state');
+    log.debug('Rendering loading state');
     return <CircularProgress />;
   }
 
   if (error) {
-    log('Rendering error state:', error);
+    log.debug('Rendering error state', { error });
     return <Typography color="error">Error fetching data: {error}</Typography>;
   }
 
   if (!data || data.length === 0) {
-    log('Rendering empty data state');
+    log.debug('Rendering empty data state');
     return <Typography>No data available.</Typography>;
   }
 
-  log('Rendering table with data:', data);
+  log.debug('Rendering table', { rowCount: data.length });
 
   return (
     <TableContainer component={Paper}>

@@ -1,0 +1,56 @@
+flowchart TD
+    %% Main Application Structure
+    App[App.js] --> Layout[layouts/]
+    App --> Pages[pages/]
+    App --> Context[context/]
+
+    %% Layout Structure
+    Layout --> Components[components/]
+    Layout --> Styles[styles/]
+
+    %% Component Dependencies
+    Components --> Hooks[hooks/]
+    Components --> Utils[utils/]
+    Components --> Context
+
+    %% API and Data Flow
+    Context --> API[api/]
+    API --> Utils
+
+    %% Asset Management
+    Components --> Assets[assets/]
+    Pages --> Assets
+
+    %% Styling System
+    Theme[theme.js] --> Components
+    Theme --> Pages
+    
+    %% Utility Dependencies
+    Utils --> Hooks
+    Pages --> Components
+    Pages --> Utils
+    Pages --> Hooks
+
+    %% Component Types
+    subgraph Components
+        CRUD[CRUD Components]
+        UI[UI Components]
+        Forms[Form Components]
+    end
+
+    %% Context Types
+    subgraph Context
+        EventType[EventType Context]
+        Auth[Auth Context]
+        Theme[Theme Context]
+    end
+
+    %% Styling
+    style App fill:#f9f,stroke:#333,stroke-width:2px
+    style Components fill:#bbf,stroke:#333,stroke-width:2px
+    style Context fill:#bfb,stroke:#333,stroke-width:2px
+    style API fill:#fbb,stroke:#333,stroke-width:2px
+
+    %% Notes
+    classDef note fill:#fff,stroke:#333,stroke-width:1px
+    class Notes note 

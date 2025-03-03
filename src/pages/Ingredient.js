@@ -97,7 +97,7 @@ const Ingredient = ({ tabConfigs = defaultTabConfigs }) => {
       log('ingrTypeName:', ingrTypeName);
       setTabLabels(prevLabels => [
         prevLabels[0],
-        `${ingrTypeName}`,
+        `Ingredients: ${ingrTypeName}`,
         prevLabels[2]
       ]);
     }
@@ -155,6 +155,7 @@ const Ingredient = ({ tabConfigs = defaultTabConfigs }) => {
               selectedRows={selectedRows}
               handleRowClick={handleRowClick}
               tabIndex={tabIndex}
+              setTabIndex={setTabIndex} // Pass setTabIndex to CrudTemplate
               onRowSelection={() => handleRowSelection(config.tab)}
             />
           </TabPanel>

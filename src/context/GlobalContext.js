@@ -8,15 +8,15 @@ const GlobalContext = createContext();
 export const GlobalProvider = ({ children }) => {
   const [eventTypes, setEventTypes] = useState([]);
   const [pageConfigs, setPageConfigs] = useState([]);
-  const [pageName, setPageName] = useState(null); // Replace pageID with pageName
+  const [pageName, setPageName] = useState(null);
   const [isLoading] = useState(false);
   const [error] = useState(null);
   const log = useLogger('GlobalProvider');
   const [userAcctList, setUserAcctList] = useState([]);
-  const [selectedAccount, setSelectedAccount] = useState(getVar(':acctID') || null); // Initialize with :acctID from externalStore
+  const [selectedAccount, setSelectedAccount] = useState(getVar(':acctID') || null);
   const [pageTitle, setPageTitle] = useState('Home');
-  const [pageList, setPageList] = useState([]); // Add pageList state
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Add isAuthenticated state
+  const [pageList, setPageList] = useState([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
 
   const updatePageTitle = useCallback((newTitle) => {
@@ -24,13 +24,31 @@ export const GlobalProvider = ({ children }) => {
   }, []);
 
   const getEventType = useCallback((eventType) => {
-    log('getEventType:', eventType);
+    log.debug('Getting event type', { eventType });
     return eventTypes.find(event => event.eventType === eventType);
   }, [eventTypes, log]);
 
   const getPageConfig = useCallback((pageName) => {
-    return pageConfigs.find(config => config.pageName === pageName);
-  }, [pageConfigs]);
+    if (!pageConfigs || pageConfigs.length === 0) {
+      log.warn('Attempting to access page configs before initialization');
+      return null;
+    }
+
+    // If pageName is provided, return specific page config
+    if (pageName) {
+      const config = pageConfigs.find(config => config.pageName === pageName);
+      if (!config) {
+        log.warn('Page configuration not found', { pageName });
+      }
+      return config;
+    }
+
+    // If no pageName provided, return all page configs
+    log.debug('Returning all page configurations', { 
+      configCount: pageConfigs.length 
+    });
+    return pageConfigs;
+  }, [pageConfigs, log]);
 
   const getUserAcctList = useCallback(() => {
     return userAcctList;
@@ -41,20 +59,25 @@ export const GlobalProvider = ({ children }) => {
   }, [pageName]);
 
   const setAccount = useCallback((acctID) => {
+    log.debug('Setting account', { acctID });
     setSelectedAccount(acctID);
     setVars({ ':acctID': acctID });
-  }, []);
+  }, [log]);
 
   const setPageListData = useCallback((data) => {
     setPageList(data);
   }, []);
 
   const logout = useCallback(() => {
+    log.info('User logging out, clearing application state');
     clearAllVars();
-    setSelectedAccount(null); // Reset selectedAccount state
-    setIsAuthenticated(false); // Reset isAuthenticated state
+    setSelectedAccount(null);
+    setIsAuthenticated(false);
+    setPageConfigs([]); // Clear page configurations on logout
+    setEventTypes([]);
+    setUserAcctList([]);
     navigate('/login');
-  }, [navigate]);
+  }, [navigate, log]);
 
   return (
     <GlobalContext.Provider value={{
@@ -64,11 +87,11 @@ export const GlobalProvider = ({ children }) => {
       pageTitle, updatePageTitle,
       getEventType, getPageConfig,
       userAcctList, setUserAcctList, getUserAcctList,
-      pageName, setPageName, getPageName, // Replace pageID with pageName
-      selectedAccount, setAccount, // Use setAccount to update selectedAccount and :acctID
-      pageList, setPageListData, // Add pageList and setPageListData
-      isAuthenticated, setIsAuthenticated, // Add isAuthenticated and setIsAuthenticated
-      logout // Add logout function
+      pageName, setPageName, getPageName,
+      selectedAccount, setAccount,
+      pageList, setPageListData,
+      isAuthenticated, setIsAuthenticated,
+      logout
     }}>
       {children}
     </GlobalContext.Provider>

@@ -15,40 +15,86 @@ import Ingredient from './pages/Ingredient'; // Import Ingredients
 import Product from './pages/Product'; // Import Products
 import Account from './pages/Account'; // Import Accounts
 import Admin from './pages/Admin'; // Import Admin
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { createLogger } from './utils/logger/LogService';
 
+const log = createLogger('App');
 const theme = createTheme(themeOptions); // Create theme using themeOptions
+
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated } = useGlobalContext();
+  log.debug('Checking protected route access', { isAuthenticated });
+
+  if (!isAuthenticated) {
+    log.info('User not authenticated, redirecting to login');
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
 
 const AppContent = () => {
   const { isAuthenticated } = useGlobalContext();
+  log.debug('Rendering AppContent', { isAuthenticated });
 
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route
-        path="*"
-        element={
-          isAuthenticated ? (
-            <>
-              <Routes>
-                <Route path="/welcome" element={<Welcome />} />
-                <Route path="/ingredient" element={<Ingredient />} />
-                <Route path="/product" element={<Product />} />
-                <Route path="/account" element={<Account />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="*" element={<Navigate to="/welcome" />} />
-              </Routes>
-            </>
-          ) : (
-            <Navigate to="/login" />
-          )
-        }
-      />
+      {/* Public routes */}
+      <Route path="/login" element={
+        isAuthenticated ? <Navigate to="/welcome" replace /> : <Login />
+      } />
+
+      {/* Root route redirect - handle both exact and wildcard paths */}
+      <Route index element={
+        isAuthenticated ? <Navigate to="/welcome" replace /> : <Navigate to="/login" replace />
+      } />
+
+      <Route path="/" element={
+        isAuthenticated ? <Navigate to="/welcome" replace /> : <Navigate to="/login" replace />
+      } />
+
+      {/* Protected routes */}
+      <Route path="/welcome" element={
+        <ProtectedRoute>
+          <Welcome />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/ingredient" element={
+        <ProtectedRoute>
+          <Ingredient />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/product" element={
+        <ProtectedRoute>
+          <Product />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/account" element={
+        <ProtectedRoute>
+          <Account />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/admin" element={
+        <ProtectedRoute>
+          <Admin />
+        </ProtectedRoute>
+      } />
+
+      {/* Catch all route */}
+      <Route path="*" element={
+        isAuthenticated ? <Navigate to="/welcome" replace /> : <Navigate to="/login" replace />
+      } />
     </Routes>
   );
 };
 
 const App = () => {
-  console.log('App: Rendering');
+  log.info('Initializing application');
   return (
     <Provider store={store}>
       <Router>
@@ -57,9 +103,11 @@ const App = () => {
             <ModalProvider>
               <ThemeProvider theme={theme}>
                 <CssBaseline />
-                <ErrorBoundary>
-                  <AppContent />
-                </ErrorBoundary>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <ErrorBoundary>
+                    <AppContent />
+                  </ErrorBoundary>
+                </LocalizationProvider>
               </ThemeProvider>
             </ModalProvider>
           </EventTypeProvider>

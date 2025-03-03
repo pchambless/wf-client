@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import MessageModal from './MessageModal';
 import TableModal from './TableModal';
 import ErrorModal from './ErrorModal'; // Import ErrorModal
@@ -6,47 +6,71 @@ import useLogger from '../../hooks/useLogger';
 
 const Modal = ({ isOpen, onRequestClose, content, onRowClick }) => {
   const log = useLogger('Modal');
-  log('Rendering Modal', { isOpen, contentType: content?.type });
+
+  useEffect(() => {
+    if (isOpen) {
+      log.debug('Modal opened', { 
+        contentType: content?.type,
+        hasContent: !!content,
+        hasRowClickHandler: !!onRowClick
+      });
+    } else {
+      log.debug('Modal closed');
+    }
+  }, [isOpen, content, onRowClick, log]);
 
   if (!isOpen || !content) {
-    log('Not rendering: modal is closed or content is missing');
     return null;
   }
 
-  if (content.type === 'message') {
-    log('Rendering MessageModal');
-    return (
-      <MessageModal
-        isOpen={isOpen}
-        onRequestClose={onRequestClose}
-        title={content.title}
-        message={content.message}
-      />
-    );
-  } else if (content.type === 'table') {
-    log('Rendering TableModal');
-    return (
-      <TableModal
-        isOpen={isOpen}
-        onRequestClose={onRequestClose}
-        title={content.title}
-        content={content}
-        onRowClick={onRowClick}
-      />
-    );
-  } else if (content.type === 'error') {
-    log('Rendering ErrorModal');
-    return (
-      <ErrorModal
-        open={isOpen}
-        onClose={onRequestClose}
-        errorMessage={content.message}
-      />
-    );
-  }
+  const renderModalContent = () => {
+    switch (content.type) {
+      case 'message':
+        log.debug('Rendering MessageModal', { title: content.title });
+        return (
+          <MessageModal
+            isOpen={isOpen}
+            onRequestClose={onRequestClose}
+            title={content.title}
+            message={content.message}
+          />
+        );
 
-  log('Unrecognized content type', content.type);
-  return null;
+      case 'table':
+        log.debug('Rendering TableModal', { 
+          title: content.title,
+          hasData: !!content.data,
+          columns: content.columns?.length
+        });
+        return (
+          <TableModal
+            isOpen={isOpen}
+            onRequestClose={onRequestClose}
+            title={content.title}
+            content={content}
+            onRowClick={onRowClick}
+          />
+        );
+
+      case 'error':
+        log.warn('Rendering ErrorModal', { 
+          errorMessage: content.message 
+        });
+        return (
+          <ErrorModal
+            open={isOpen}
+            onClose={onRequestClose}
+            errorMessage={content.message}
+          />
+        );
+
+      default:
+        log.error('Unknown modal type', { type: content.type });
+        return null;
+    }
+  };
+
+  return renderModalContent();
 };
 
 export default Modal;
