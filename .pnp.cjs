@@ -43,6 +43,7 @@ const RAW_RUNTIME_STATE =
           ["autoprefixer", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:10.4.20"],\
           ["axios", "npm:1.7.9"],\
           ["babel-eslint", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:10.1.0"],\
+          ["bcryptjs", "npm:3.0.2"],\
           ["concurrently", "npm:9.1.2"],\
           ["depcheck", "npm:1.4.7"],\
           ["dependency-cruiser", "npm:16.10.0"],\
@@ -66,7 +67,7 @@ const RAW_RUNTIME_STATE =
           ["tailwindcss", "npm:3.4.17"],\
           ["typescript", "patch:typescript@npm%3A4.7.4#optional!builtin<compat/typescript>::version=4.7.4&hash=65a307"],\
           ["url", "npm:0.11.4"],\
-          ["wait-on", "npm:8.0.2"],\
+          ["wait-on", "npm:6.0.1"],\
           ["web-vitals", "npm:2.1.4"],\
           ["wf-jspdf", "npm:1.2.0"]\
         ],\
@@ -7337,6 +7338,14 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["axios", [\
+      ["npm:0.25.0", {\
+        "packageLocation": "../../../AppData/Local/Yarn/Berry/cache/axios-npm-0.25.0-a1c287d287-10c0.zip/node_modules/axios/",\
+        "packageDependencies": [\
+          ["axios", "npm:0.25.0"],\
+          ["follow-redirects", "virtual:3c98466f874305529f1a16589101c28705aa489e7ec8ffcbfb5cc062090761c951973322264d8039ff40de705a591171bac1067843c49b197410972b4a9ed9f4#npm:1.15.9"]\
+        ],\
+        "linkType": "HARD"\
+      }],\
       ["npm:1.7.9", {\
         "packageLocation": "../../../AppData/Local/Yarn/Berry/cache/axios-npm-1.7.9-3c98466f87-10c0.zip/node_modules/axios/",\
         "packageDependencies": [\
@@ -7831,6 +7840,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "../../../AppData/Local/Yarn/Berry/cache/batch-npm-0.6.1-70e2e81169-10c0.zip/node_modules/batch/",\
         "packageDependencies": [\
           ["batch", "npm:0.6.1"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["bcryptjs", [\
+      ["npm:3.0.2", {\
+        "packageLocation": "../../../AppData/Local/Yarn/Berry/cache/bcryptjs-npm-3.0.2-14895420d7-10c0.zip/node_modules/bcryptjs/",\
+        "packageDependencies": [\
+          ["bcryptjs", "npm:3.0.2"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -20396,11 +20414,11 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["wait-on", [\
-      ["npm:8.0.2", {\
-        "packageLocation": "../../../AppData/Local/Yarn/Berry/cache/wait-on-npm-8.0.2-66b95a1f38-10c0.zip/node_modules/wait-on/",\
+      ["npm:6.0.1", {\
+        "packageLocation": "../../../AppData/Local/Yarn/Berry/cache/wait-on-npm-6.0.1-9e03b09170-10c0.zip/node_modules/wait-on/",\
         "packageDependencies": [\
-          ["wait-on", "npm:8.0.2"],\
-          ["axios", "npm:1.7.9"],\
+          ["wait-on", "npm:6.0.1"],\
+          ["axios", "npm:0.25.0"],\
           ["joi", "npm:17.13.3"],\
           ["lodash", "npm:4.17.21"],\
           ["minimist", "npm:1.2.8"],\
@@ -20712,6 +20730,7 @@ const RAW_RUNTIME_STATE =
           ["autoprefixer", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:10.4.20"],\
           ["axios", "npm:1.7.9"],\
           ["babel-eslint", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:10.1.0"],\
+          ["bcryptjs", "npm:3.0.2"],\
           ["concurrently", "npm:9.1.2"],\
           ["depcheck", "npm:1.4.7"],\
           ["dependency-cruiser", "npm:16.10.0"],\
@@ -20735,7 +20754,7 @@ const RAW_RUNTIME_STATE =
           ["tailwindcss", "npm:3.4.17"],\
           ["typescript", "patch:typescript@npm%3A4.7.4#optional!builtin<compat/typescript>::version=4.7.4&hash=65a307"],\
           ["url", "npm:0.11.4"],\
-          ["wait-on", "npm:8.0.2"],\
+          ["wait-on", "npm:6.0.1"],\
           ["web-vitals", "npm:2.1.4"],\
           ["wf-jspdf", "npm:1.2.0"]\
         ],\

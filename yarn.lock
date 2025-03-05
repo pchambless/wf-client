@@ -4562,6 +4562,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:^0.25.0":
+  version: 0.25.0
+  resolution: "axios@npm:0.25.0"
+  dependencies:
+    follow-redirects: "npm:^1.14.7"
+  checksum: 10c0/33475dc847e8494341db5ff5d3ce3a830e511d9698eda1e2507618a0a875ca774e7c59b9194c70664e886699b5917416175da2ea5ccb67a2945f7cdc939d7c56
+  languageName: node
+  linkType: hard
+
 "axios@npm:^1.7.9":
   version: 1.7.9
   resolution: "axios@npm:1.7.9"
@@ -4850,6 +4859,15 @@ __metadata:
   version: 0.6.1
   resolution: "batch@npm:0.6.1"
   checksum: 10c0/925a13897b4db80d4211082fe287bcf96d297af38e26448c857cee3e095c9792e3b8f26b37d268812e7f38a589f694609de8534a018b1937d7dc9f84e6b387c5
+  languageName: node
+  linkType: hard
+
+"bcryptjs@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "bcryptjs@npm:3.0.2"
+  bin:
+    bcrypt: bin/bcrypt
+  checksum: 10c0/a0923cac99f83e913f8f4e4f42df6a27c6593b24d509900331d1280c4050b1544e602a0ac67b43f7bb5c969991c3ed77fd72f19b7dc873be8ee794da3d925c7e
   languageName: node
   linkType: hard
 
@@ -7652,7 +7670,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.15.6":
+"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.14.7, follow-redirects@npm:^1.15.6":
   version: 1.15.9
   resolution: "follow-redirects@npm:1.15.9"
   peerDependenciesMeta:
@@ -9823,7 +9841,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"joi@npm:^17.13.3":
+"joi@npm:^17.6.0":
   version: 17.13.3
   resolution: "joi@npm:17.13.3"
   dependencies:
@@ -10586,7 +10604,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimist@npm:^1.2.0, minimist@npm:^1.2.6, minimist@npm:^1.2.8":
+"minimist@npm:^1.2.0, minimist@npm:^1.2.5, minimist@npm:^1.2.6":
   version: 1.2.8
   resolution: "minimist@npm:1.2.8"
   checksum: 10c0/19d3fcdca050087b84c2029841a093691a91259a47def2f18222f41e7645a0b7c44ef4b40e88a1e58a40c84d2ef0ee6047c55594d298146d0eb3f6b737c20ce6
@@ -13217,7 +13235,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rxjs@npm:^7.8.1":
+"rxjs@npm:^7.5.4, rxjs@npm:^7.8.1":
   version: 7.8.2
   resolution: "rxjs@npm:7.8.2"
   dependencies:
@@ -15046,18 +15064,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"wait-on@npm:^8.0.2":
-  version: 8.0.2
-  resolution: "wait-on@npm:8.0.2"
+"wait-on@npm:^6.0.1":
+  version: 6.0.1
+  resolution: "wait-on@npm:6.0.1"
   dependencies:
-    axios: "npm:^1.7.9"
-    joi: "npm:^17.13.3"
+    axios: "npm:^0.25.0"
+    joi: "npm:^17.6.0"
     lodash: "npm:^4.17.21"
-    minimist: "npm:^1.2.8"
-    rxjs: "npm:^7.8.1"
+    minimist: "npm:^1.2.5"
+    rxjs: "npm:^7.5.4"
   bin:
     wait-on: bin/wait-on
-  checksum: 10c0/7a2a2193f601eb30d3125595fbed1abeb3ce0c9e164146aed27d12469d9b665273dc8e508a3a869c997f37b92d93478c202b38253a95c5c29e6fc64d0a317f5b
+  checksum: 10c0/99772bc85d17f7e6ff8b0e40bd2c90a2c2025b0e9a5a3f8edcf39af0c367d8a5bbdd3d4f1190588be8b09745e80bbdf59c2c4059053a7d180e29b8711cc4a840
   languageName: node
   linkType: hard
 
@@ -15310,6 +15328,7 @@ __metadata:
     autoprefixer: "npm:^10.4.20"
     axios: "npm:^1.7.9"
     babel-eslint: "npm:^10.0.0"
+    bcryptjs: "npm:^3.0.2"
     concurrently: "npm:^9.1.0"
     depcheck: "npm:^1.4.7"
     dependency-cruiser: "npm:^16.9.0"
@@ -15333,7 +15352,7 @@ __metadata:
     tailwindcss: "npm:^3.4.15"
     typescript: "npm:4.7.4"
     url: "npm:^0.11.4"
-    wait-on: "npm:^8.0.2"
+    wait-on: "npm:^6.0.1"
     web-vitals: "npm:^2.1.4"
     wf-jspdf: "npm:^1.1.6"
   languageName: unknown

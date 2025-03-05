@@ -4,7 +4,7 @@ import { useGlobalContext } from '../context/GlobalContext';
 import { useEventTypeContext } from '../context/EventTypeContext';
 import logo from '../assets/wf-icon.png';
 import useLogger from '../hooks/useLogger';
-import { login, fetchEventList, fetchPageConfigs } from '../api/api';
+import { fetchEventList, fetchPageConfigs } from '../api/api';
 import { setVars } from '../utils/externalStore';
 import { Box, Button, Container, TextField, Typography, Avatar, CssBaseline, CircularProgress } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
@@ -40,19 +40,31 @@ const Login = () => {
     }
 
     try {
-      log('Sending login request...');
-      const response = await login(email, password);
+      log('Setting variables...');
+      setVars({ ':userEmail': email, ':enteredPassword': password });
 
-      if (!response.success) {
-        throw new Error(response.message || 'Login failed');
+      log('Sending login request...');
+      const response = await execEvent('userLogin', { ':userEmail': email, ':enteredPassword': password });
+
+      log('received request...');
+      log('Response:', response);
+
+      if (!Array.isArray(response) || response.length === 0) {
+        log('Response validation failed');
+        throw new Error('Login failed after response');
       }
 
-      const { userID, roleID, acctID, userEmail } = response.data.user;
+      log('Extracting user from response...');
+      const user = response[0];
+      log('User:', user);
+
+      const { userID, lastName, firstName, roleID, userEmail, dfltAcctID } = user;
+      log('set constants from request...');
 
       setVars({ ':userID': userID, ':roleID': roleID, ':userEmail': userEmail });
-      setVars({ ':acctID': acctID, ':isAuth': "1" });
+      setVars({ ':acctID': dfltAcctID, ':isAuth': "1" });
 
-      setAccount(acctID); // Set the selectedAccount state
+      setAccount(dfltAcctID); // Set the selectedAccount state
 
       log('Loading pageConfigs');
       await fetchPageConfigs(setPageConfigs);
@@ -73,7 +85,7 @@ const Login = () => {
       log('Navigating to /welcome');
       navigate('/welcome');
     } catch (error) {
-      log(`Login failed: ${error.message}`);
+      log(`Login failed at the end: ${error.message}`);
       alert(`Login failed. Please try again.`);
     }
   };
