@@ -1,20 +1,29 @@
-import axios from 'axios';
 import createLogger from '../utils/logger';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
+const log = createLogger('API');
+
 export const execEventType = async (eventType, params) => {
-  const fileName = 'api.execEventType';
-  const log = createLogger(fileName);
-  log(eventType, params)
   try {
-    const response = await axios.post(`${API_BASE_URL}/api/execEventType`, {
-      eventType,
-      params
+    log(`Executing event type: ${eventType}`, { params });
+    const response = await fetch(`${API_BASE_URL}/api/execEventType`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ eventType, params }),
     });
-    return response.data;
+
+    if (!response.ok) {
+      throw new Error(`Failed to execute event type: ${eventType}`);
+    }
+
+    const result = await response.json();
+    log(`Event type ${eventType} executed successfully:`, result);
+    return result;
   } catch (error) {
-    log(`Error executing event type ${eventType}:`, error);
+    log('Error executing event type:', error);
     throw error;
   }
 };
@@ -54,8 +63,6 @@ export const fetchEventList = async (setEventList) => {
   }
 };
 
-
-
 export const fetchPageConfigs = async (setPageConfigs) => {
   const fileName = 'api.fetchPageConfigs';
   const log = createLogger(fileName);
@@ -70,9 +77,7 @@ export const fetchPageConfigs = async (setPageConfigs) => {
     const pageConfigs = response.map(config => {
       try {
         log('Parsing columnMap for config:', config.pageName);
-//        log('columnMap:', config.columnMap); // Log the columnMap before parsing
         const columnMap = typeof config.columnMap === 'string' ? JSON.parse(config.columnMap) : config.columnMap;
-//        log('Parsed columnMap:', columnMap); // Log the parsed columnMap
         return {
           pageID: config.pageID,
           menu: config.menu,
@@ -95,7 +100,6 @@ export const fetchPageConfigs = async (setPageConfigs) => {
       }
     });
 
-//    log('Parsed pageConfigs:', pageConfigs); // Log the parsed pageConfigs
     setPageConfigs(pageConfigs);
     return pageConfigs;
   } catch (error) {
@@ -104,7 +108,6 @@ export const fetchPageConfigs = async (setPageConfigs) => {
     throw error;
   }
 };
-
 
 export const login = async (email, password) => {
   const fileName = 'api.login';
@@ -118,13 +121,13 @@ export const login = async (email, password) => {
       body: JSON.stringify({ userEmail: email, password })
     });
 
-    if (!response.ok) { // Updated this line
+    if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
     log('Login response data:', data);
-    return data; // Return the server response directly
+    return data;
   } catch (error) {
     log('Login error:', error);
     return { success: false, message: error.message };

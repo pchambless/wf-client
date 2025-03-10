@@ -34,15 +34,16 @@ const setVars = (vars) => {
   store.dispatch({ type: 'SET_VARS', payload: vars });
   
   const updatedState = store.getState();
-//  console.log('New state after setVars:', updatedState);
   
   // Log the differences
   Object.keys(vars).forEach(key => {
     const newValue = updatedState[key];
     if (prevState[key] !== newValue) {
-      console.log(`Variable ${key} changed from ${prevState[key]} to ${newValue}`);
- //   } else {
- //     console.log(`Variable ${key} did not change. Still ${newValue}`);
+      if (Array.isArray(newValue)) {
+        console.log(`Variable ${key} changed from ${prevState[key] ? prevState[key].length : 'undefined'} items to ${newValue.length} items`);
+      } else {
+        console.log(`Variable ${key} changed from ${prevState[key]} to ${newValue}`);
+      }
     }
   });
 };
@@ -67,9 +68,12 @@ const getVars = (vars) => {
 const getVar = (variableName) => {
   logCaller();
   const state = store.getState();
-//  console.log(`getVar called for ${variableName}`);
   const value = state.hasOwnProperty(variableName) ? state[variableName] : null;
-  console.log(`getVar result for ${variableName}:`, value);
+  if (Array.isArray(value)) {
+    console.log(`getVar result for ${variableName}: ${value.length} items`);
+  } else {
+    console.log(`getVar result for ${variableName}:`, value);
+  }
   return value;
 };
 

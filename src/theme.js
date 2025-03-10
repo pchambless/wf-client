@@ -1,6 +1,6 @@
-import { createTheme, ThemeOptions } from '@mui/material/styles';
+import { createTheme } from '@mui/material/styles';
 
-export const themeOptions: ThemeOptions = {
+export const themeOptions = {
   palette: {
     mode: 'light',
     primary: {
@@ -98,6 +98,45 @@ export const themeOptions: ThemeOptions = {
   },
   direction: 'rtl',
   spacing: 8,
+  components: {
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          backgroundColor: 'white',
+          borderRadius: '8px',
+          '& .MuiInputBase-root': {
+            height: '40px',
+            padding: '10px',
+          },
+          '& .MuiInputBase-multiline': {
+            height: 'auto',
+            minHeight: '80px',
+          },
+          '& .MuiInputBase-root[aria-label="Description"], & .MuiInputBase-root[aria-label="Comments"]': {
+            height: 'auto',
+            minHeight: '80px',
+          },
+        },
+      },
+    },
+    MuiAutocomplete: {
+      styleOverrides: {
+        root: {
+          '& .MuiInputBase-root': {
+            height: '40px',
+            padding: '10px',
+          },
+        },
+      },
+    },
+    MuiFormControl: {
+      styleOverrides: {
+        root: {
+          height: '40px',
+        },
+      },
+    },
+  },
 };
 
 const theme = createTheme(themeOptions);

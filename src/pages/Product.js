@@ -2,8 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Tabs, Tab } from '@mui/material';
 import CrudTemplate from '../components/crud/CrudTemplate';
 import Container from './Container'; // Import Container
-import useLogger from '../hooks/useLogger'; // Import useLogger
+import createLogger from '../utils/logger'; // Import createLogger
 import { getVar } from '../utils/externalStore'; // Import getVar
+
+const log = createLogger('Product');
 
 const defaultTabConfigs = [
   {
@@ -27,11 +29,11 @@ const defaultTabConfigs = [
 ];
 
 const Product = ({ tabConfigs = defaultTabConfigs }) => {
-  const log = useLogger('Product'); // Initialize logger
   const [selectedRows, setSelectedRows] = useState([null, null, null]); // State to store selected rows
   const [tabIndex, setTabIndex] = useState(0); // State to manage the active tab
   const [tabConfig, setTabConfig] = useState([]);
   const [tabLabels, setTabLabels] = useState(['Product Types', 'Products', 'Batches']); // State to manage tab labels
+  const [visibleTabs, setVisibleTabs] = useState([true, false, false]); // State to manage tab visibility
 
   const tabsConfig = useMemo(() => [
     {
@@ -66,7 +68,7 @@ const Product = ({ tabConfigs = defaultTabConfigs }) => {
       }
       return prevConfig;
     });
-  }, [tabConfigs, log]); // Ensure the dependency array is correct
+  }, [tabConfigs]); // Ensure the dependency array is correct
 
   const handleRowClick = (row, level) => {
     log('Row clicked:', row, 'Level:', level);
@@ -82,12 +84,17 @@ const Product = ({ tabConfigs = defaultTabConfigs }) => {
       // Reset to initial tab state when tab 0 is selected
       setSelectedRows([null, null, null]);
       setTabLabels(['Product Types', 'Products', 'Batches']);
+      setVisibleTabs([true, false, false]);
     }
     setTabIndex(newValue);
   };
 
   const handleRowSelection = (level) => {
     log('Row selected at level:', level);
+    log('Before update - selectedRows:', selectedRows);
+    log('Before update - visibleTabs:', visibleTabs);
+    log('Before update - tabIndex:', tabIndex);
+
     const newSelectedRows = [...selectedRows];
     newSelectedRows[level] = true;
     setSelectedRows(newSelectedRows);
@@ -100,6 +107,7 @@ const Product = ({ tabConfigs = defaultTabConfigs }) => {
         `Products: ${prodTypeName}`,
         prevLabels[2]
       ]);
+      setVisibleTabs([true, true, false]);
     }
 
     if (level === 1) {
@@ -110,7 +118,12 @@ const Product = ({ tabConfigs = defaultTabConfigs }) => {
         prevLabels[1],
         `Batches: ${prodName}`
       ]);
+      setVisibleTabs([true, true, true]);
     }
+
+    log('After update - selectedRows:', newSelectedRows);
+    log('After update - visibleTabs:', visibleTabs);
+    log('After update - tabIndex:', tabIndex);
   };
 
   const TabPanel = ({ children, value, index, ...other }) => {
@@ -144,7 +157,7 @@ const Product = ({ tabConfigs = defaultTabConfigs }) => {
             <Tab 
               key={index} 
               label={tabLabels[index]} 
-              disabled={index > 0 && !selectedRows[index - 1]} // Disable tabs 1 and 2 based on selectedRows
+              disabled={!visibleTabs[index]} // Disable tabs based on visibleTabs
             />
           ))}
         </Tabs>

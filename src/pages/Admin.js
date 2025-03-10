@@ -2,7 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Tabs, Tab } from '@mui/material';
 import CrudTemplate from '../components/crud/CrudTemplate';
 import Container from './Container'; // Import Container
-import useLogger from '../hooks/useLogger'; // Import useLogger
+import createLogger from '../utils/logger'; // Import createLogger
+
+const log = createLogger('Admin');
 
 const defaultTabConfigs = [
   {
@@ -32,7 +34,6 @@ const defaultTabConfigs = [
 ];
 
 const Admin = ({ tabConfigs = defaultTabConfigs }) => {
-  const log = useLogger('Admin'); // Initialize logger
   const [tabIndex, setTabIndex] = useState(0); // State to manage the active tab
   const [tabConfig, setTabConfig] = useState([]);
 
@@ -75,7 +76,7 @@ const Admin = ({ tabConfigs = defaultTabConfigs }) => {
       }
       return prevConfig;
     });
-  }, [tabConfigs, log]); // Ensure the dependency array is correct
+  }, [tabConfigs]); // Ensure the dependency array is correct
 
   const handleTabChange = (event, newValue) => {
     log('Tab changed:', newValue);

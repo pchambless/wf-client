@@ -2,10 +2,11 @@ import React from 'react';
 import MessageModal from './MessageModal';
 import TableModal from './TableModal';
 import ErrorModal from './ErrorModal'; // Import ErrorModal
-import useLogger from '../../hooks/useLogger';
+import createLogger from '../../utils/logger';
+
+const log = createLogger('Modal');
 
 const Modal = ({ isOpen, onRequestClose, content, onRowClick }) => {
-  const log = useLogger('Modal');
   log('Rendering Modal', { isOpen, contentType: content?.type });
 
   if (!isOpen || !content) {

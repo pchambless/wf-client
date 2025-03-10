@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { execEventType } from '../api/api';
-import useLogger from '../hooks/useLogger';
+import createLogger from '../utils/logger';
 import { getVar } from '../utils/externalStore';
 import { useGlobalContext } from '../context/GlobalContext'; 
 
@@ -10,7 +10,7 @@ export const useEventTypeContext = () => useContext(EventTypeContext);
 
 export const EventTypeProvider = ({ children }) => {
   const fileName = 'EventTypeContext';
-  const log = useLogger(fileName);
+  const log = createLogger(fileName);
   const { getEventType } = useGlobalContext(); // Use getEventType from GlobalContext
   const [error] = useState(null);
 
@@ -39,7 +39,7 @@ export const EventTypeProvider = ({ children }) => {
 
     try {
       const response = await execEventType(eventType, resolvedParams);
-      log('Event type executed successfully:', response);
+      log('Event type: ', eventType, ' executed successfully:');
       return response;
     } catch (error) {
       console.error(log(`Error executing event type ${eventType}:`, error));

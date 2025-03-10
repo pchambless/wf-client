@@ -5,13 +5,17 @@ import { getVar } from '../../utils/externalStore'; // Import getVar
 import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 import logo from '../../assets/wf-icon.png'; // Import the logo
 import LogoutIcon from '@mui/icons-material/Logout'; // Import the logout icon
+import { fetchAcctLists } from '../../utils/acctLists'; // Import fetchAcctLists
+import { useEventTypeContext } from '../../context/EventTypeContext'; // Import useEventTypeContext
 
 const PageHeader = () => {
   const { userAcctList, selectedAccount, setAccount, pageTitle, logout } = useGlobalContext();
+  const { execEvent } = useEventTypeContext(); // Get execEvent from EventTypeContext
   const navigate = useNavigate(); // Initialize useNavigate
 
-  const handleAccountChange = (event) => {
+  const handleAccountChange = async (event) => {
     setAccount(event.target.value);
+    await fetchAcctLists(execEvent); // Fetch and cache account-specific lists when account changes
     navigate('/welcome'); // Redirect to Welcome page
   };
 
@@ -37,7 +41,7 @@ const PageHeader = () => {
             inputProps={{ 'aria-label': 'Select Account' }}
             sx={{ marginRight: '16px' }} // Add some margin to the right
           >
-            {userAcctList.map((account) => (
+            {userAcctList && userAcctList.map((account) => (
               <MenuItem key={account.acctID} value={account.acctID}>
                 {account.acctName}
               </MenuItem>

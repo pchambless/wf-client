@@ -8,6 +8,7 @@ import store from './utils/externalStore';
 import { GlobalProvider, useGlobalContext } from './context/GlobalContext';
 import { EventTypeProvider } from './context/EventTypeContext';
 import { ModalProvider } from './context/ModalContext';
+import { AccountProvider } from './context/AccountContext'; // Import AccountProvider
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login'; // Import Login
 import Welcome from './pages/Welcome'; // Import Welcome
@@ -54,14 +55,16 @@ const App = () => {
       <Router>
         <GlobalProvider>
           <EventTypeProvider>
-            <ModalProvider>
-              <ThemeProvider theme={theme}>
-                <CssBaseline />
-                <ErrorBoundary>
-                  <AppContent />
-                </ErrorBoundary>
-              </ThemeProvider>
-            </ModalProvider>
+            <AccountProvider> {/* Wrap with AccountProvider */}
+              <ModalProvider>
+                <ThemeProvider theme={theme}>
+                  <CssBaseline />
+                  <ErrorBoundary>
+                    <AppContent />
+                  </ErrorBoundary>
+                </ThemeProvider>
+              </ModalProvider>
+            </AccountProvider>
           </EventTypeProvider>
         </GlobalProvider>
       </Router>

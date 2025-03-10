@@ -1,33 +1,59 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalContext } from '../context/GlobalContext';
 import { useEventTypeContext } from '../context/EventTypeContext';
+import { useAccountContext } from '../context/AccountContext';
 import logo from '../assets/wf-icon.png';
-import useLogger from '../hooks/useLogger';
+import createLogger from '../utils/logger';
 import { fetchEventList, fetchPageConfigs } from '../api/api';
 import { setVars } from '../utils/externalStore';
+import { fetchLoginLists, fetchAcctLists } from '../utils/acctLists';
 import { Box, Button, Container, TextField, Typography, Avatar, CssBaseline, CircularProgress } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
+const log = createLogger('Login');
+
 const Login = () => {
-  const log = useLogger('Login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(true);
-  const { setEventTypes, setPageConfigs, setUserAcctList, setAccount, setIsAuthenticated } = useGlobalContext();
-  const { execEvent, eventTypeLookup } = useEventTypeContext();
+  const { setEventTypes, setPageConfigs, setIsAuthenticated, setMeasList, setUserAcctList } = useGlobalContext();
+  const { setAccount } = useAccountContext();
+  const { execEvent } = useEventTypeContext();
   const navigate = useNavigate();
+  const effectRan = useRef({ eventTypes: false, measList: false }); // Track if the effects have run
 
   useEffect(() => {
+    if (effectRan.current.eventTypes) return; // Prevent running the effect again
+
     const loadEventTypes = async () => {
       log('Loading EventTypes');
       await fetchEventList(setEventTypes);
       log('Loaded EventTypes');
-      setLoading(false);
+      effectRan.current.eventTypes = true; // Mark the effect as run
     };
 
     loadEventTypes();
-  }, [setEventTypes, log]);
+  }, [setEventTypes]); // Only include setEventTypes as a dependency
+
+  useEffect(() => {
+    const loadMeasList = async () => {
+      log('Fetching measList');
+      const measListResult = await execEvent('measList');
+      setMeasList(measListResult);
+      log('Fetched measList');
+      setLoading(false);
+    };
+
+    if (effectRan.current.eventTypes && !effectRan.current.measList) {
+      if (execEvent) {
+        loadMeasList();
+        effectRan.current.measList = true; // Mark the effect as run
+      } else {
+        log('No event type found for measList');
+      }
+    }
+  }, [execEvent, setMeasList]); // Only include execEvent and setMeasList as dependencies
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -47,7 +73,6 @@ const Login = () => {
       const response = await execEvent('userLogin', { ':userEmail': email, ':enteredPassword': password });
 
       log('received request...');
-      log('Response:', response);
 
       if (!Array.isArray(response) || response.length === 0) {
         log('Response validation failed');
@@ -62,7 +87,7 @@ const Login = () => {
       log('set constants from request...');
 
       setVars({ ':userID': userID, ':roleID': roleID, ':userEmail': userEmail });
-      setVars({ ':acctID': dfltAcctID, ':isAuth': "1" });
+      setVars({ ':acctID': dfltAcctID, ':lastName': lastName, ':firstName': firstName, ':isAuth': "1" });
 
       setAccount(dfltAcctID); // Set the selectedAccount state
 
@@ -70,14 +95,15 @@ const Login = () => {
       await fetchPageConfigs(setPageConfigs);
       log('Loaded pageConfigs');
 
-      log('Fetching userAcctList');
-      if (eventTypeLookup('userAcctList')) {
-        const userAcctList = await execEvent('userAcctList');
-        await setUserAcctList(userAcctList);
-        log('Fetched userAcctList');
-      } else {
-        throw new Error('No event type found for userAcctList');
-      }
+      log('Fetching login-specific lists');
+      const { userAcctList, measList } = await fetchLoginLists(execEvent);
+      setUserAcctList(userAcctList); // Cache userAcctList
+      setMeasList(measList); // Cache measList
+      log('Fetched login-specific lists');
+
+      log('Fetching account-specific lists');
+      await fetchAcctLists(execEvent);
+      log('Fetched account-specific lists');
 
       setIsAuthenticated(true); // Set isAuthenticated to true
 
