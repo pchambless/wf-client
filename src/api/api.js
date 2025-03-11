@@ -6,7 +6,7 @@ const log = createLogger('API');
 
 export const execEventType = async (eventType, params) => {
   try {
-    log(`Executing event type: ${eventType}`, { params });
+    log(`Executing event type: \n ${eventType} ${params}`);
     const response = await fetch(`${API_BASE_URL}/api/execEventType`, {
       method: 'POST',
       headers: {

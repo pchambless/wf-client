@@ -1,81 +1,126 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Typography, Button, Box, IconButton } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import createLogger from '../../utils/logger'; // Import the createLogger function
-import { useEventTypeContext } from '../../context/EventTypeContext';
+import createLogger from '../../utils/logger';
 import { setVars } from '../../utils/externalStore';
-import crudDML from '../../utils/crudDML'; // Import the crudDML utility
+import crudDML from '../../utils/crudDML';
+import { useEventTypeContext } from '../../context/EventTypeContext';
+import { createForm } from '../../utils/formStore';
 
-const log = createLogger('CrudTable'); // Create a logger for the CrudTable component
+const log = createLogger('CrudTable');
 
-const CrudTable = ({ columnMap, listEvent, keyField, setFormData, setFormMode, onRowSelection }) => {
+const CrudTable = ({ columnMap, listEvent, keyField, pageName, setFormData, setFormMode, onRowSelection }) => {
+  // Create a form store for this page
+  const form = createForm(pageName);
+
+  // Use the custom hook to get execEvent
   const { execEvent } = useEventTypeContext();
+  
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
 
-  const fetchData = useCallback(async () => {
-    if (!listEvent) {
-      log('No listEvent provided, skipping data fetch');
-      return;
-    }
+  // Add this logging at the beginning of the component:
+  useEffect(() => {
+    log('CrudTable mounted with pageName:', { pageName });
+    return () => log('CrudTable unmounting:', { pageName });
+  }, [pageName]);
+
+  // Fetch data whenever listEvent changes
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listEvent]);
+
+  // Separate function to fetch data that can be called after operations
+  const fetchData = async () => {
     try {
-      log('Fetching data...');
+      log('Fetching data with listEvent:', listEvent);
       setLoading(true);
+      
+      // Make sure we have a valid listEvent
+      if (!listEvent) {
+        setError('No list event provided');
+        setLoading(false);
+        return;
+      }
+
+      // Use execEvent from context to execute the listEvent
       const result = await execEvent(listEvent);
-      log('Data fetched:', result);
-      setData(Array.isArray(result) ? result : []);
+      log('Data fetched successfully:', { count: result.length });
+      
+      setData(result || []);
+      setError(null);
     } catch (err) {
-      log('Error fetching data:', err);
-      setError(err.message);
+      log.error('Error fetching data:', err);
+      setError(`Error fetching data: ${err.message}`);
+      setData([]);
     } finally {
       setLoading(false);
     }
-  }, [listEvent, execEvent]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  };
 
   const handleRowClick = (row) => {
-    // Set selected row
+    log('Row clicked:', row);
     setSelectedRow(row);
     
-    // Important: Set form mode to 'edit' first
-    setFormMode('edit');
+    // Update form state in external store
+    form.setMode('edit');
+    form.setData(row);
     
-    // Then set the form data
-    setFormData(row);
+    // For backward compatibility
+    if (typeof setFormMode === 'function') {
+      setFormMode('edit');
+    }
     
-    // Set any variables in the external store
+    if (typeof setFormData === 'function') {
+      setFormData(row);
+    }
+    
+    // Additional external variables if needed
     columnMap.forEach(column => {
       if (column.setVar) {
         setVars({ [column.setVar]: row[column.field] });
       }
     });
     
-    // Log the action to verify it's happening
-    log('Row selected, changing to edit mode', { 
-      row,
-      formMode: 'edit',
-      keyValue: row[keyField]
-    });
-    
-    // Call onRowSelection if provided
+    // Call parent handler if provided
     if (typeof onRowSelection === 'function') {
       onRowSelection(row);
     }
   };
 
+  // Update handleAddNewClick to use the FormStore:
+
   const handleAddNewClick = () => {
-    setFormData({});
-    setFormMode('add');
+    // Clear selection
     setSelectedRow(null);
+    
+    // Set mode and data using the FormStore
+    form.setMode('add');
+    form.setData({});
+    
+    // For backward compatibility
+    if (typeof setFormMode === 'function') {
+      setFormMode('add');
+    }
+    
+    if (typeof setFormData === 'function') {
+      setFormData({});
+    }
+    
+    // Reset external variables
     columnMap.forEach(column => {
       if (column.setVar) {
         setVars({ [column.setVar]: '' });
       }
+    });
+    
+    // Log to confirm the action
+    log('Add New clicked - reset form state', {
+      formName: pageName,
+      newMode: 'add'
     });
   };
 
@@ -129,18 +174,20 @@ const CrudTable = ({ columnMap, listEvent, keyField, setFormData, setFormMode, o
           <TableBody> 
             {data.map((row, index) => (
               <TableRow
-                key={index}
+                key={row[keyField] || index}
                 onClick={() => handleRowClick(row)}
                 selected={selectedRow && selectedRow[keyField] === row[keyField]}
                 hover
                 sx={{ 
                   cursor: 'pointer',
-                  backgroundColor: selectedRow && selectedRow[keyField] === row[keyField] ? 
-                    'rgba(25, 118, 210, 0.12)' : 'inherit',
-                  '&:hover': {
-                    backgroundColor: selectedRow && selectedRow[keyField] === row[keyField] ?
-                      'rgba(25, 118, 210, 0.18)' : 'rgba(0, 0, 0, 0.04)'
-                  }
+                  ...(selectedRow && selectedRow[keyField] === row[keyField] ? {
+                    backgroundColor: 'primary.light !important',
+                    borderLeft: '4px solid',
+                    borderColor: 'primary.main',
+                    '&:hover': {
+                      backgroundColor: 'primary.light !important',
+                    }
+                  } : {})
                 }}
               >
                 <TableCell style={{ width: '48px' }}>

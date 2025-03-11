@@ -1,5 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { useSyncExternalStore } from 'react';
+import createLogger from './logger';
+
+// Create a logger instance for externalStore
+const log = createLogger('ExternalStore');
 
 // Initial state
 const initialState = {};
@@ -19,41 +23,55 @@ const store = configureStore({
   reducer: reducer
 });
 
-const logCaller = () => {
-  const error = new Error();
-  const stack = error.stack.split('\n');
-  const caller = stack[3].trim();
-  console.log(`Called from: ${caller}`);
-};
-
 const setVars = (vars) => {
-  logCaller();
-  console.log('setVars called with:', vars);
+  // Log only in development mode and only when meaningful changes occur
   const prevState = store.getState();
-  
   store.dispatch({ type: 'SET_VARS', payload: vars });
-  
   const updatedState = store.getState();
   
-  // Log the differences
-  Object.keys(vars).forEach(key => {
-    const newValue = updatedState[key];
-    if (prevState[key] !== newValue) {
-      if (Array.isArray(newValue)) {
-        console.log(`Variable ${key} changed from ${prevState[key] ? prevState[key].length : 'undefined'} items to ${newValue.length} items`);
-      } else {
-        console.log(`Variable ${key} changed from ${prevState[key]} to ${newValue}`);
+  // Log only important state changes
+  if (process.env.NODE_ENV === 'development') {
+    Object.keys(vars).forEach(key => {
+      const newValue = updatedState[key];
+      const oldValue = prevState[key];
+      
+      if (oldValue !== newValue) {
+        if (key.toLowerCase().includes('mode')) {
+          // Always log mode changes as they're important for debugging
+          log(`Mode changed: ${key}`, {
+            newValue,
+            previousValue: oldValue || 'undefined'
+          });
+        } else if (Array.isArray(newValue)) {
+          // For arrays, just log length changes to reduce noise
+          const oldLength = oldValue ? oldValue.length : 0;
+          const newLength = newValue.length;
+          if (oldLength !== newLength) {
+            log(`Array changed: ${key}`, { 
+              previousLength: oldLength, 
+              newLength 
+            });
+          }
+        } else if (key === 'formMode') {
+          // Always show formMode changes prominently
+          log(`Form mode changed`, {
+            newValue,
+            previousValue: oldValue || 'undefined'
+          });
+        } else {
+          // For other values, show concise changes
+          log(`Variable set: ${key}`, { value: newValue });
+        }
       }
-    }
-  });
+    });
+  }
 };
 
 const getVars = (vars) => {
-  logCaller();
   const state = store.getState();
   
   if (!Array.isArray(vars)) {
-    console.error('getVars expects an array of variable names');
+    log.error('getVars expects an array of variable names');
     return {};
   }
 
@@ -66,19 +84,11 @@ const getVars = (vars) => {
 };
 
 const getVar = (variableName) => {
-  logCaller();
   const state = store.getState();
-  const value = state.hasOwnProperty(variableName) ? state[variableName] : null;
-  if (Array.isArray(value)) {
-    console.log(`getVar result for ${variableName}: ${value.length} items`);
-  } else {
-    console.log(`getVar result for ${variableName}:`, value);
-  }
-  return value;
+  return state.hasOwnProperty(variableName) ? state[variableName] : null;
 };
 
 const setVar = (key, value) => {
-  logCaller();
   setVars({ [key]: value });
   return getVar(key);
 };
@@ -86,26 +96,36 @@ const setVar = (key, value) => {
 const subscribe = (listener) => store.subscribe(listener);
 
 const listVars = () => {
-  logCaller();
   const state = store.getState();
-  console.log('Current state:', state);
+  
+  // Format arrays and objects for cleaner output
+  const formattedState = Object.entries(state).reduce((acc, [key, value]) => {
+    if (Array.isArray(value)) {
+      acc[key] = `[Array with ${value.length} items]`;
+    } else if (typeof value === 'object' && value !== null) {
+      acc[key] = '{Object}';
+    } else {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+  
+  log('Current state variables', formattedState);
   return state;
 };
 
 const useExternalStore = () => {
-  logCaller();
   return useSyncExternalStore(
     subscribe, 
     () => store.getState(), 
-    () => store.getState()  // This function provides the server snapshot, can be adjusted as needed
+    () => store.getState()  // This function provides the server snapshot
   );
 };
 
 // Debug function to clear all variables
 const clearAllVars = () => {
-  logCaller();
   store.dispatch({ type: 'SET_VARS', payload: {} });
-  console.log('All variables cleared. New state:', store.getState());
+  log('All variables cleared');
 };
 
 export { 

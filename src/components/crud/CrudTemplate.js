@@ -5,6 +5,7 @@ import { useGlobalContext } from '../../context/GlobalContext';
 import CrudTable from './CrudTable'; // Import CrudTable
 import CrudForm from './CrudForm'; // Import CrudForm
 import Modal from '../modal/Modal'; // Import Modal
+import { getVar, setVars } from '../../utils/externalStore'; // Import external store functions
 
 const log = createLogger('CrudTemplate'); // Create a logger for the CrudTemplate component
 
@@ -12,11 +13,19 @@ const CrudTemplate = React.memo(({ pageName, tabIndex, setTabIndex, onRowSelecti
   const { updatePageTitle, getPageConfig } = useGlobalContext();
   const [modalContent, setModalContent] = useState(null); // State to manage modal content
   const [formData, setFormData] = useState({});
-  const [formMode, setFormMode] = useState('add');
+  // Remove the local formMode state since we'll use external store
+  // const [formMode, setFormMode] = useState('add');
 
   // Component lifecycle logging
   useEffect(() => {
     log('Component mounted', { pageName, tabIndex });
+    
+    // Initialize formMode in external store if not already set
+    if (!getVar(':formMode')) {
+      setVars({ ':formMode': 'add' });
+      log('Initialized :formMode in external store to "add"');
+    }
+    
     return () => log('Component unmounting', { pageName });
   }, [pageName, tabIndex]);
 
@@ -49,16 +58,18 @@ const CrudTemplate = React.memo(({ pageName, tabIndex, setTabIndex, onRowSelecti
     setModalContent(null);
   };
 
+  // Modify the handleFormSubmit to use external store
   const handleFormSubmit = async (formData) => {
     const endTimer = log.startPerformanceTimer('formSubmission');
+    const formMode = getVar(':formMode') || 'add'; // Get from external store
+    
     try {
       log('Submitting form', { 
         mode: formMode, 
         keyField: formData[keyField],
         formFields: Object.keys(formData)
       });
-      // Add your form submission logic here
-      // For example, you can call an API to save the form data
+      // Your form submission logic here
       endTimer();
     } catch (error) {
       log('Form submission failed', { 
@@ -97,12 +108,24 @@ const CrudTemplate = React.memo(({ pageName, tabIndex, setTabIndex, onRowSelecti
           <>
             <Grid item xs={12} md={6}>
               <Box p={2} borderRadius={2} bgcolor="background.paper" boxShadow={3} height="100%">
-                <CrudTable columnMap={columnMap} listEvent={listEvent} keyField={keyField} setFormData={setFormData} setFormMode={setFormMode} onRowSelection={handleRowSelection} />
+                {/* Remove setFormMode since we're using external store */}
+                <CrudTable 
+                  columnMap={columnMap} 
+                  listEvent={listEvent} 
+                  keyField={keyField} 
+                  setFormData={setFormData} 
+                  onRowSelection={handleRowSelection} 
+                />
               </Box>
             </Grid>
             <Grid item xs={12} md={6}>
               <Box p={2} borderRadius={2} bgcolor="background.paper" boxShadow={3} height="100%">
-                <CrudForm pageConfig={columnMap} formData={formData} formMode={formMode} onSubmit={handleFormSubmit} />
+                <CrudForm 
+                  pageConfig={columnMap} 
+                  formData={formData} 
+                  onSubmit={handleFormSubmit} 
+                  setFormData={setFormData}
+                />
               </Box>
             </Grid>
           </>
