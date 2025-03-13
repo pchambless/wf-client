@@ -1,5 +1,5 @@
-import { getVar, setVars, subscribe } from './externalStore';
-import createLogger from './logger';
+import { getVar, setVars, subscribe } from '../utils/externalStore';
+import createLogger from '../utils/logger';
 
 const log = createLogger('FormStore');
 

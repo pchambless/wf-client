@@ -1,137 +1,148 @@
 import createLogger from '../utils/logger';
+import { useCallback } from 'react';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const log = createLogger('API');
 
-export const execEventType = async (eventType, params) => {
+const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
+
+const callApi = async (endpoint, options = {}) => {
   try {
-    log(`Executing event type: \n ${eventType} ${params}`);
-    const response = await fetch(`${API_BASE_URL}/api/execEventType`, {
-      method: 'POST',
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ eventType, params }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to execute event type: ${eventType}`);
-    }
-
-    const result = await response.json();
-    log(`Event type ${eventType} executed successfully:`, result);
-    return result;
-  } catch (error) {
-    log('Error executing event type:', error);
-    throw error;
-  }
-};
-
-export const fetchEventList = async (setEventList) => {
-  const fileName = 'api.fetchEventList';
-  const log = createLogger(fileName);
-  try {
-    const response = await execEventType('apiEventList', {});
-    log('Fetched from fetchEventList:', response); // Log the fetched API event list
-
-    if (!Array.isArray(response)) {
-      throw new Error('Expected an array but received a different type.');
-    }
-
-    const eventTypes = response.map(event => {
-      try {
-        return {
-          eventID: event.eventID,
-          eventType: event.eventType,
-          method: event.method,
-          params: event.params ? JSON.parse(event.params) : [],
-          purpose: event.purpose
-        };
-      } catch (error) {
-        log('Error parsing event:', error);
-        throw error;
+        ...(options.headers || {})
       }
     });
 
-    log('Parsed apiEventList:', eventTypes);
-    setEventList(eventTypes);
-    return eventTypes;
-  } catch (error) {
-    log('Error fetching apiEventList:', error);
-    throw error;
-  }
-};
-
-export const fetchPageConfigs = async (setPageConfigs) => {
-  const fileName = 'api.fetchPageConfigs';
-  const log = createLogger(fileName);
-  try {
-    const response = await execEventType('apiPageConfigList', {});
-    log('Fetched from fetchPageConfigs:', response); // Log the fetched page configs
-
-    if (!Array.isArray(response)) {
-      throw new Error('Expected an array but received a different type.');
-    }
-
-    const pageConfigs = response.map(config => {
-      try {
-        log('Parsing columnMap for config:', config.pageName);
-        const columnMap = typeof config.columnMap === 'string' ? JSON.parse(config.columnMap) : config.columnMap;
-        return {
-          pageID: config.pageID,
-          menu: config.menu,
-          pageName: config.pageName,
-          pageTitle: config.pageTitle,
-          dbTable: config.dbTable,
-          listEvent: config.listEvent,
-          appLayout: config.appLayout,
-          keyField: config.keyField,
-          columnMap: columnMap.map(col => ({
-            ...col,
-            colVal: '' // Add colVal attribute
-          }))
-        };
-      } catch (error) {
-        log('Error parsing pageConfig for config:', config.pageName);
-        log('Error:', error.message);
-        log('Stack:', error.stack);
-        throw error;
-      }
-    });
-
-    setPageConfigs(pageConfigs);
-    return pageConfigs;
-  } catch (error) {
-    log('Error fetching pageConfigs:', error.message);
-    log('Stack:', error.stack);
-    throw error;
-  }
-};
-
-export const login = async (email, password) => {
-  const fileName = 'api.login';
-  const log = createLogger(fileName);
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ userEmail: email, password })
-    });
-
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    log('Login response data:', data);
+    log(`API call to ${endpoint} successful`);
     return data;
   } catch (error) {
-    log('Login error:', error);
-    return { success: false, message: error.message };
+    log.error(`API Error calling ${endpoint}:`, error);
+    throw error;
   }
+};
+
+// Keep this function as is - it's the low-level API call
+export const execEventType = async (eventType, params = {}) => {
+  try {
+    log(`Executing event type: ${eventType}`, params);
+    
+    // Use the correct endpoint /api/execEventType and request body format
+    const response = await callApi('/api/execEventType', {
+      method: 'POST',
+      body: JSON.stringify({
+        eventType,
+        params
+      })
+    });
+    
+    log(`Event type ${eventType} executed successfully:`, response);
+    return response;
+  } catch (error) {
+    log.error(`Error executing event type ${eventType}:`, error);
+    throw error;
+  }
+};
+
+export const fetchEventList = async () => {
+  try {
+    log('Fetching event list...');
+    
+    const response = await callApi('/api/util/fetchEventTypes', {
+      method: 'GET'
+    });
+    
+    log('Fetched from fetchEventList:', response);
+    
+    // Check for the specific response format with success and data fields
+    if (response && response.success && Array.isArray(response.data)) {
+      // Extract the data array with event types
+      const eventData = response.data;
+      
+      // Map the response to the expected format
+      const eventTypes = eventData.map(event => ({
+        eventID: event.eventID,
+        eventType: event.eventType,
+        method: event.method,
+        params: JSON.parse(event.params || '[]'),
+        purpose: event.purpose
+      }));
+      
+      log('Parsed apiEventList:', eventTypes);
+      return eventTypes;
+    } else {
+      // If response doesn't match the expected format
+      log.error('Unexpected response format from fetchEventTypes:', response);
+      throw new Error('Unexpected response format from API');
+    }
+  } catch (error) {
+    log.error('Error fetching apiEventList:', error);
+    throw error;
+  }
+};
+
+export const fetchPageConfigs = async () => {
+  try {
+    log('Fetching page configs...');
+    const response = await execEventType('apiPageConfig');
+    
+    const pageConfigs = response.map(item => {
+      try {
+        const fields = JSON.parse(item.fields || '[]');
+        return {
+          pageName: item.pageName,
+          pageTitle: item.pageTitle,
+          pageType: item.pageType,
+          keyField: item.keyField,
+          listEvent: item.listEvent,
+          insertEvent: item.insertEvent, 
+          updateEvent: item.updateEvent,
+          deleteEvent: item.deleteEvent,
+          fields
+        };
+      } catch (err) {
+        log.error(`Error parsing page config for ${item.pageName}:`, err);
+        return {
+          pageName: item.pageName,
+          fields: []
+        };
+      }
+    });
+    
+    log('Page configs fetched successfully');
+    return pageConfigs;
+  } catch (error) {
+    log.error('Error fetching page configs:', error);
+    throw error;
+  }
+};
+
+// Update the useApi hook to avoid naming conflicts
+export const useApi = () => {
+  // Rename this to apiExecEvent to avoid confusion with the main execEvent
+  const apiExecEvent = useCallback(async (eventType, additionalParams = {}) => {
+    const params = { ...additionalParams };
+
+    try {
+      return await execEventType(eventType, params);
+    } catch (error) {
+      log.error(`Error executing event type ${eventType}:`, error);
+      throw error;
+    }
+  }, []);
+
+  return {
+    execEvent: apiExecEvent, // Keep the external interface the same
+    fetchEventList,
+    fetchPageConfigs
+  };
 };
 
 

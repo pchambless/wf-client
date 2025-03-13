@@ -5,7 +5,7 @@ import createLogger from '../../utils/logger';
 import { setVars } from '../../utils/externalStore';
 import crudDML from '../../utils/crudDML';
 import { useEventTypeContext } from '../../context/EventTypeContext';
-import { createForm } from '../../utils/formStore';
+import { createForm } from '../../stores/formStore';
 
 const log = createLogger('CrudTable');
 

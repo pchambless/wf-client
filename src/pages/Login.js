@@ -1,15 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGlobalContext } from '../context/GlobalContext';
-import { useEventTypeContext } from '../context/EventTypeContext';
-import { useAccountContext } from '../context/AccountContext';
 import logo from '../assets/wf-icon.png';
 import createLogger from '../utils/logger';
-import { fetchEventList, fetchPageConfigs } from '../api/api';
 import { setVars } from '../utils/externalStore';
-import { fetchLoginLists, fetchAcctLists } from '../utils/acctLists';
 import { Box, Button, Container, TextField, Typography, Avatar, CssBaseline, CircularProgress } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+
+// Import only what we need from stores
+import { 
+  execEvent,
+  initEventTypeService,
+  setCurrentAccount,
+  setUserSession,
+  initSessionStore,
+  initConfigStore,
+  initAccountStore
+} from '../stores';
 
 const log = createLogger('Login');
 
@@ -17,43 +23,37 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(true);
-  const { setEventTypes, setPageConfigs, setIsAuthenticated, setMeasList, setUserAcctList } = useGlobalContext();
-  const { setAccount } = useAccountContext();
-  const { execEvent } = useEventTypeContext();
+  const [initError, setInitError] = useState(false);
   const navigate = useNavigate();
-  const effectRan = useRef({ eventTypes: false, measList: false }); // Track if the effects have run
+  const initAttempted = useRef(false);
 
+  // Initialize event types ONLY
   useEffect(() => {
-    if (effectRan.current.eventTypes) return; // Prevent running the effect again
+    if (initAttempted.current) return;
+    initAttempted.current = true;
 
-    const loadEventTypes = async () => {
-      log('Loading EventTypes');
-      await fetchEventList(setEventTypes);
-      log('Loaded EventTypes');
-      effectRan.current.eventTypes = true; // Mark the effect as run
-    };
-
-    loadEventTypes();
-  }, [setEventTypes]); // Only include setEventTypes as a dependency
-
-  useEffect(() => {
-    const loadMeasList = async () => {
-      log('Fetching measList');
-      const measListResult = await execEvent('measList');
-      setMeasList(measListResult);
-      log('Fetched measList');
-      setLoading(false);
-    };
-
-    if (effectRan.current.eventTypes && !effectRan.current.measList) {
-      if (execEvent) {
-        loadMeasList();
-        effectRan.current.measList = true; // Mark the effect as run
-      } else {
-        log('No event type found for measList');
+    const initializeEventTypes = async () => {
+      try {
+        log('Initializing event types');
+        const success = await initEventTypeService();
+        
+        if (!success) {
+          log.error('Failed to initialize event types');
+          setInitError(true);
+        } else {
+          log('Event types initialized successfully');
+          // No need to load measurement list here - it will be loaded after login
+        }
+      } catch (error) {
+        log.error('Error initializing event types:', error);
+        setInitError(true);
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [execEvent, setMeasList]); // Only include execEvent and setMeasList as dependencies
+    };
+
+    initializeEventTypes();
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -72,69 +72,147 @@ const Login = () => {
       log('Sending login request...');
       const response = await execEvent('userLogin', { ':userEmail': email, ':enteredPassword': password });
 
-      log('received request...');
+      log('Received login response');
 
-      if (!Array.isArray(response) || response.length === 0) {
-        log('Response validation failed');
-        throw new Error('Login failed after response');
+      let user;
+      if (Array.isArray(response) && response.length > 0) {
+        user = response[0];
+      } else if (response && typeof response === 'object') {
+        user = response;
+      } else {
+        throw new Error('Invalid login response format');
       }
 
-      log('Extracting user from response...');
-      const user = response[0];
-      log('User:', user);
-
       const { userID, lastName, firstName, roleID, userEmail, dfltAcctID } = user;
-      log('set constants from request...');
+      
+      // 1. Initialize user session
+      setUserSession({
+        userID,
+        roleID,
+        userEmail,
+        lastName,
+        firstName,
+        isAuthenticated: true
+      });
 
-      setVars({ ':userID': userID, ':roleID': roleID, ':userEmail': userEmail });
-      setVars({ ':acctID': dfltAcctID, ':lastName': lastName, ':firstName': firstName, ':isAuth': "1" });
+      // 2. Set variables for backward compatibility
+      setVars({ 
+        ':userID': userID, 
+        ':roleID': roleID, 
+        ':userEmail': userEmail,
+        ':lastName': lastName, 
+        ':firstName': firstName, 
+        ':isAuth': "1" 
+      });
 
-      setAccount(dfltAcctID); // Set the selectedAccount state
+      log('User session established');
+      
+      // 3. Initialize stores in sequence
+      try {
+        // Initialize session-level data
+        log('Initializing session data');
+        await initSessionStore();
+        
+        // Initialize configuration data (measurement list, page configs)
+        log('Initializing configuration data');
+        await initConfigStore();
+        
+        // Set current account and initialize account-specific data
+        log('Setting current account:', dfltAcctID);
+        setCurrentAccount(dfltAcctID);
+        setVars({ ':acctID': dfltAcctID });
+        
+        // Initialize account-specific data
+        log('Initializing account data');
+        await initAccountStore(dfltAcctID);
+        
+        log('All application data initialized successfully');
+      } catch (initError) {
+        // Non-fatal errors - we can still proceed to dashboard
+        log.warn('Some initialization steps failed:', initError);
+        // Consider showing a warning to the user that some features might be limited
+      }
 
-      log('Loading pageConfigs');
-      await fetchPageConfigs(setPageConfigs);
-      log('Loaded pageConfigs');
-
-      log('Fetching login-specific lists');
-      const { userAcctList, measList } = await fetchLoginLists(execEvent);
-      setUserAcctList(userAcctList); // Cache userAcctList
-      setMeasList(measList); // Cache measList
-      log('Fetched login-specific lists');
-
-      log('Fetching account-specific lists');
-      await fetchAcctLists(execEvent);
-      log('Fetched account-specific lists');
-
-      setIsAuthenticated(true); // Set isAuthenticated to true
-
-      log('User logged in successfully');
-      log('Navigating to /welcome');
+      // Navigate to welcome page
+      log('Login successful, navigating to welcome page');
       navigate('/welcome');
     } catch (error) {
-      log(`Login failed at the end: ${error.message}`);
-      alert(`Login failed. Please try again.`);
+      // Handle login errors
+      if (error.message && error.message.includes('not initialized')) {
+        log.error('EventTypeService not initialized, attempting to initialize...');
+        
+        try {
+          // Try to initialize event types and retry login
+          await initEventTypeService();
+          log('EventTypeService initialized, retrying login...');
+          
+          // Call handleLogin again to retry the whole process
+          handleLogin(e);
+        } catch (initError) {
+          log.error('Failed to initialize EventTypeService:', initError);
+          alert('The application is not ready yet. Please wait a moment and try again.');
+        }
+      } else {
+        // Regular login error
+        log.error(`Login failed: ${error.message}`, error);
+        alert(`Login failed. Please check your credentials and try again.`);
+      }
     }
   };
+
+  // Display screens for different states
+  if (initError) {
+    return (
+      <Container component="main" maxWidth="xs">
+        <Box sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}>
+          <Avatar sx={{ m: 1, bgcolor: 'error.main' }}>
+            <LockOutlinedIcon />
+          </Avatar>
+          <Typography component="h1" variant="h5" color="error">
+            Initialization Error
+          </Typography>
+          <Typography variant="body1" sx={{ mt: 2, textAlign: 'center' }}>
+            Failed to initialize the application. Please check your connection and refresh the page.
+          </Typography>
+          <Button
+            fullWidth
+            variant="contained"
+            color="primary"
+            sx={{ mt: 3, mb: 2 }}
+            onClick={() => window.location.reload()}
+          >
+            Reload Page
+          </Button>
+        </Box>
+      </Container>
+    );
+  }
 
   if (loading) {
     return (
       <Container component="main" maxWidth="xs">
-        <CssBaseline />
-        <Box
-          sx={{
-            marginTop: 8,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
+        <Box sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}>
           <CircularProgress />
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Initializing application...
+          </Typography>
         </Box>
       </Container>
     );
   }
 
   return (
+    // Login form JSX stays the same...
     <Container component="main" maxWidth="xs">
       <CssBaseline />
       <Box

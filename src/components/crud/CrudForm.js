@@ -4,7 +4,7 @@ import { getVar, setVars } from '../../utils/externalStore';
 import createLogger from '../../utils/logger';
 import crudDML from '../../utils/crudDML';
 import FormFieldRenderer from './FormFieldRenderer';
-import { useForm } from '../../utils/formStore';
+import { useForm } from '../../stores/formStore';
 
 const log = createLogger('CrudForm');
 
@@ -14,7 +14,7 @@ const CrudForm = ({ pageConfig, pageName, formData: propFormData, formMode: prop
   useEffect(() => {
     log('CrudForm mounted with pageName:', { pageName });
     if (!pageName) {
-      log.warn('No pageName provided to CrudForm - form state may not be properly shared');
+      log('No pageName provided to CrudForm - form state may not be properly shared');
     }
     return () => log('CrudForm unmounting:', { pageName });
   }, [pageName]);
@@ -71,7 +71,7 @@ const CrudForm = ({ pageConfig, pageName, formData: propFormData, formMode: prop
         hasExternalValues: Object.keys(initialData).some(key => getVar(key) !== undefined)
       });
     } catch (err) {
-      log.error('Form initialization failed', {
+      log('Form initialization failed', {
         error: err.message,
         mode
       });
@@ -83,7 +83,7 @@ const CrudForm = ({ pageConfig, pageName, formData: propFormData, formMode: prop
 
   const visibleFields = useMemo(() => {
     if (!pageConfig) {
-      log.warn('No page configuration provided');
+      log('No page configuration provided');
       return [];
     }
     
@@ -173,7 +173,7 @@ const CrudForm = ({ pageConfig, pageName, formData: propFormData, formMode: prop
 
       return requestStructure;
     } catch (err) {
-      log.error('Failed to construct DML request', {
+      log('Failed to construct DML request', {
         error: err.message,
         formMode: mode,
         hasPageConfig: !!pageConfig
@@ -197,7 +197,7 @@ const CrudForm = ({ pageConfig, pageName, formData: propFormData, formMode: prop
       // Construct and log the DML request structure
       const dmlRequest = constructDmlRequest(localFormData);
       if (dmlRequest) {
-        log.info('DML request prepared', {
+        log('DML request prepared', {
           method: dmlRequest.method,
           table: dmlRequest.dbTable,
           affectedFields: dmlRequest.data.map(d => d.field)
