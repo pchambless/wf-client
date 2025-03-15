@@ -1,47 +1,109 @@
 import React, { useEffect } from 'react';
 import { AppBar, Toolbar, Typography, Select, MenuItem, Button, Box, Breadcrumbs as MuiBreadcrumbs, Link } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { getVar } from '../../utils/externalStore';
+import { getVar, setVars } from '../../utils/externalStore';
 import logo from '../../assets/wf-icon.png';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { fetchAcctLists } from '../../utils/acctLists';
 import HomeIcon from '@mui/icons-material/Home';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import createLogger from '../../utils/logger';
 
-// Import from stores instead of context
+// Import from stores
 import { 
   useAccountStore, 
   useSessionStore,
   usePageStore,
-  execEvent 
+  initAccountStore
 } from '../../stores';
 
-// Remove the unused log import and variable
+const log = createLogger('PageHeader');
 
 const PageHeader = () => {
-  // Use stores instead of context
-  const { accountList, currentAccount, setCurrentAccount } = useAccountStore();
-  const { logout } = useSessionStore();
+  const navigate = useNavigate();
+  
+  // Use hooks from stores
+  const { currentAccount, setCurrentAccount } = useAccountStore();
+  const { user, accountList, endUserSession } = useSessionStore();
   const { pageTitle, breadcrumbs } = usePageStore();
   
-  const navigate = useNavigate();
+  // Debug logging
+  useEffect(() => {
+    log('PageHeader rendering with:', { 
+      currentAccount, 
+      accountList: accountList || [],
+      accountCount: accountList?.length || 0,
+      user
+    });
+  }, [currentAccount, accountList, user]);
+  
+  // Add an explicit logging effect for the account list
+  useEffect(() => {
+    console.log('DEBUGGING PageHeader - accountList changed:', {
+      accountList,
+      length: accountList?.length,
+      isArray: Array.isArray(accountList),
+      firstItem: accountList?.[0]
+    });
+    
+    console.log('DEBUGGING PageHeader - currentAccount:', currentAccount);
+  }, [accountList, currentAccount]);
 
+  // Add this useEffect in PageHeader.js
+  useEffect(() => {
+    log('Breadcrumbs state:', {
+      breadcrumbs,
+      exists: !!breadcrumbs,
+      length: breadcrumbs?.length || 0,
+      condition: breadcrumbs && breadcrumbs.length > 1,
+      sample: breadcrumbs?.[0]
+    });
+  }, [breadcrumbs]);
+  
+  // Handle account switching
   const handleAccountChange = async (event) => {
-    const newAccountId = event.target.value;
-    setCurrentAccount(newAccountId);
-    await fetchAcctLists(execEvent); // Fetch and cache account-specific lists
-    navigate('/welcome');
+    const newAccountId = parseInt(event.target.value, 10);
+    log(`Switching to account: ${newAccountId}`);
+    
+    try {
+      // Update the current account in the store
+      setCurrentAccount(newAccountId);
+      
+      // Update the external store variable
+      setVars({ ':acctID': newAccountId });
+      
+      // Initialize data for the new account
+      await initAccountStore(newAccountId);
+      
+      log(`Successfully switched to account: ${newAccountId}`);
+      navigate('/welcome');
+    } catch (error) {
+      log.error(`Error switching to account ${newAccountId}:`, error);
+    }
+  };
+  
+  // Handle logout
+  const handleLogout = () => {
+    log('Logging out user');
+    endUserSession();
+    navigate('/login');
   };
 
+  // Initialize account if needed
   useEffect(() => {
-    const defaultAccountID = getVar(':acctID');
+    // If we have accounts but no current account set, initialize with default
     if (accountList.length > 0 && !currentAccount) {
-      setCurrentAccount(defaultAccountID || accountList[0].acctID);
+      const defaultAccountID = getVar(':acctID');
+      const accountToUse = defaultAccountID || accountList[0].acctID;
+      
+      log(`Setting initial account: ${accountToUse}`);
+      setCurrentAccount(accountToUse);
+      setVars({ ':acctID': accountToUse });
     }
   }, [accountList, currentAccount, setCurrentAccount]);
 
+  
   return (
-    <AppBar position="static" sx={{ bgcolor: 'background.paper' }}>
+    <AppBar position="static" sx={{ bgcolor: 'background.paper', color: 'text.primary' }}>
       <Toolbar sx={{ flexDirection: 'column', alignItems: 'stretch', py: 1 }}>
         {/* Top row with logo, title, account selector, and logout */}
         <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 1 }}>
@@ -58,26 +120,38 @@ const PageHeader = () => {
             {pageTitle}
           </Typography>
           
-          <Select
-            value={currentAccount || ''}
-            onChange={handleAccountChange}
-            displayEmpty
-            size="small"
-            inputProps={{ 'aria-label': 'Select Account' }}
-            sx={{ mx: 2, minWidth: 150 }}
-          >
-            {accountList && accountList.map((account) => (
-              <MenuItem key={account.acctID} value={account.acctID}>
-                {account.acctName}
-              </MenuItem>
-            ))}
-          </Select>
+          {/* Show account selector if there are any accounts (for debugging) */}
+          {accountList && accountList.length > 0 && (
+            <Box sx={{ mx: 2 }}>
+              <Typography variant="caption" display="block" sx={{ fontSize: '10px', color: 'gray' }}>
+                Account Selection ({accountList.length} accounts)
+              </Typography>
+              <Select
+                value={currentAccount || ''}
+                onChange={handleAccountChange}
+                displayEmpty
+                size="small"
+                sx={{ minWidth: 150 }}
+              >
+                {/* Map accounts, handling different property name possibilities */}
+                {accountList.map((account) => {
+                  const id = account.acctID || account.accountID || account.id;
+                  const name = account.acctName || account.accountName || account.name || `Account ${id}`;
+                  return (
+                    <MenuItem key={id} value={id}>
+                      {name}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </Box>
+          )}
           
           <Button
             variant="contained"
             color="error"
             startIcon={<LogoutIcon />}
-            onClick={logout}
+            onClick={handleLogout}
             sx={{ color: 'white' }}
             size="small"
           >
@@ -85,9 +159,9 @@ const PageHeader = () => {
           </Button>
         </Box>
         
-        {/* Bottom row with breadcrumbs */}
-        {breadcrumbs && breadcrumbs.length > 1 && (
-          <Box sx={{ pb: 1 }}>
+        {/* Bottom row with breadcrumbs - with improved debugging */}
+        <Box sx={{ pb: 1 }}>
+          {breadcrumbs && Array.isArray(breadcrumbs) && breadcrumbs.length > 0 ? (
             <MuiBreadcrumbs 
               separator={<NavigateNextIcon fontSize="small" />}
               aria-label="breadcrumb"
@@ -109,11 +183,12 @@ const PageHeader = () => {
                 Home
               </Link>
               
-              {breadcrumbs.slice(1, -1).map((crumb, index) => (
+              {/* Map through all but last breadcrumb */}
+              {breadcrumbs.slice(0, -1).map((crumb, index) => (
                 <Link
-                  key={index}
+                  key={`crumb-${index}-${crumb.path}`}
                   component={RouterLink}
-                  to={crumb.path}
+                  to={crumb.path || '#'}
                   underline="hover"
                   color="inherit"
                   sx={{
@@ -122,19 +197,24 @@ const PageHeader = () => {
                     }
                   }}
                 >
-                  {crumb.label}
+                  {crumb.label || `Breadcrumb ${index + 1}`}
                 </Link>
               ))}
               
-              {/* Current page (last breadcrumb) is not a link */}
-              {breadcrumbs.length > 1 && (
+              {/* Current page (last breadcrumb) */}
+              {breadcrumbs.length > 0 && (
                 <Typography color="text.primary">
-                  {breadcrumbs[breadcrumbs.length - 1].label}
+                  {breadcrumbs[breadcrumbs.length - 1].label || 'Current Page'}
                 </Typography>
               )}
             </MuiBreadcrumbs>
-          </Box>
-        )}
+          ) : (
+            // Debug placeholder when no breadcrumbs
+            <Typography variant="caption" color="text.secondary">
+              No breadcrumbs available
+            </Typography>
+          )}
+        </Box>
       </Toolbar>
     </AppBar>
   );

@@ -30,6 +30,7 @@ const defaultTabConfigs = [
 const Account = ({ tabConfigs = defaultTabConfigs }) => {
   const [tabIndex, setTabIndex] = useState(0); // State to manage the active tab
   const [tabConfig, setTabConfig] = useState([]);
+  const [selectedRows, setSelectedRows] = useState([]);
 
   const tabsConfig = useMemo(() => [
     {
@@ -71,6 +72,13 @@ const Account = ({ tabConfigs = defaultTabConfigs }) => {
     setTabIndex(newValue);
   };
 
+  const handleRowSelection = (level) => {
+    log('Row selected at level:', level);
+    const newSelectedRows = [...selectedRows];
+    newSelectedRows[level] = true;
+    setSelectedRows(newSelectedRows);
+  };
+
   const TabPanel = ({ children, value, index, ...other }) => {
     log('Rendering TabPanel:', { value, index });
     return (
@@ -104,11 +112,14 @@ const Account = ({ tabConfigs = defaultTabConfigs }) => {
             />
           ))}
         </Tabs>
-        {tabConfig.length > 0 && tabConfig.map((config, index) => (
-          <TabPanel value={tabIndex} index={config.tab} key={config.tab}>
+        {tabConfig.length > 0 && tabConfig.map((config, _index) => (
+          <TabPanel value={tabIndex} index={_index} key={config.pageName}>
             <CrudTemplate
               pageName={config.pageName}
               tabIndex={tabIndex}
+              onRowSelection={() => handleRowSelection(_index)}
+              listEvent={config.listEvent}
+              keyField={config.keyField}
             />
           </TabPanel>
         ))}

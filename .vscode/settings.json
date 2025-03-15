@@ -1,3 +1,9 @@
 {
-  "tabnine.cloudHost": "cloud.tabnine.com"
+  "tabnine.cloudHost": "cloud.tabnine.com",
+  "jest.autoRun": {
+    "watch": false,
+    "onSave": "none"
+  },
+  "jest.showCoverageOnLoad": false,
+  "jest.coverageFormatter": "none"
 }

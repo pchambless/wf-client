@@ -24,12 +24,10 @@ const store = configureStore({
 });
 
 const setVars = (vars) => {
-  // Log only in development mode and only when meaningful changes occur
   const prevState = store.getState();
   store.dispatch({ type: 'SET_VARS', payload: vars });
   const updatedState = store.getState();
   
-  // Log only important state changes
   if (process.env.NODE_ENV === 'development') {
     Object.keys(vars).forEach(key => {
       const newValue = updatedState[key];
@@ -37,30 +35,26 @@ const setVars = (vars) => {
       
       if (oldValue !== newValue) {
         if (key.toLowerCase().includes('mode')) {
-          // Always log mode changes as they're important for debugging
-          log(`Mode changed: ${key}`, {
+          log.info(`Mode changed: ${key}`, {
             newValue,
             previousValue: oldValue || 'undefined'
           });
         } else if (Array.isArray(newValue)) {
-          // For arrays, just log length changes to reduce noise
           const oldLength = oldValue ? oldValue.length : 0;
           const newLength = newValue.length;
           if (oldLength !== newLength) {
-            log(`Array changed: ${key}`, { 
+            log.info(`Array changed: ${key}`, { 
               previousLength: oldLength, 
               newLength 
             });
           }
         } else if (key === 'formMode') {
-          // Always show formMode changes prominently
-          log(`Form mode changed`, {
+          log.info(`Form mode changed`, {
             newValue,
             previousValue: oldValue || 'undefined'
           });
         } else {
-          // For other values, show concise changes
-          log(`Variable set: ${key}`, { value: newValue });
+          log.info(`Variable set: ${key}`, { value: newValue });
         }
       }
     });
@@ -98,7 +92,6 @@ const subscribe = (listener) => store.subscribe(listener);
 const listVars = () => {
   const state = store.getState();
   
-  // Format arrays and objects for cleaner output
   const formattedState = Object.entries(state).reduce((acc, [key, value]) => {
     if (Array.isArray(value)) {
       acc[key] = `[Array with ${value.length} items]`;
@@ -110,7 +103,7 @@ const listVars = () => {
     return acc;
   }, {});
   
-  log('Current state variables', formattedState);
+  log.info('Current state variables', formattedState);
   return state;
 };
 
@@ -125,7 +118,7 @@ const useExternalStore = () => {
 // Debug function to clear all variables
 const clearAllVars = () => {
   store.dispatch({ type: 'SET_VARS', payload: {} });
-  log('All variables cleared');
+  log.info('All variables cleared');
 };
 
 export { 

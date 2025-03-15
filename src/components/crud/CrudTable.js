@@ -4,17 +4,19 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import createLogger from '../../utils/logger';
 import { setVars } from '../../utils/externalStore';
 import crudDML from '../../utils/crudDML';
-import { useEventTypeContext } from '../../context/EventTypeContext';
+
+// Import eventStore instead
+import { execEvent } from '../../stores/eventStore';
 import { createForm } from '../../stores/formStore';
 
 const log = createLogger('CrudTable');
 
 const CrudTable = ({ columnMap, listEvent, keyField, pageName, setFormData, setFormMode, onRowSelection }) => {
   // Create a form store for this page
-  const form = createForm(pageName);
-
-  // Use the custom hook to get execEvent
-  const { execEvent } = useEventTypeContext();
+  const form = createForm(`crud.${pageName || 'default'}`);
+  
+  // Remove this line that uses the context
+  // const { execEvent } = useEventTypeContext();
   
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,11 +48,11 @@ const CrudTable = ({ columnMap, listEvent, keyField, pageName, setFormData, setF
         return;
       }
 
-      // Use execEvent from context to execute the listEvent
+      // Use execEvent directly from the imported function instead of context
       const result = await execEvent(listEvent);
-      log('Data fetched successfully:', { count: result.length });
+      log('Data fetched successfully:', { count: result?.length || 0 });
       
-      setData(result || []);
+      setData(Array.isArray(result) ? result : []);
       setError(null);
     } catch (err) {
       log.error('Error fetching data:', err);
@@ -91,8 +93,6 @@ const CrudTable = ({ columnMap, listEvent, keyField, pageName, setFormData, setF
     }
   };
 
-  // Update handleAddNewClick to use the FormStore:
-
   const handleAddNewClick = () => {
     // Clear selection
     setSelectedRow(null);
@@ -125,19 +125,30 @@ const CrudTable = ({ columnMap, listEvent, keyField, pageName, setFormData, setF
   };
 
   const handleDelete = async (row) => {
-    const dmlRequest = {
-      method: 'DELETE',
-      dbTable: columnMap.find(field => field.dbTable)?.dbTable,
-      where: columnMap
-        .filter(field => field.group === -1)
-        .map(field => ({
-          column: field.dbColumn,
-          value: row[field.field],
-          field: field.field
-        }))
-    };
-    await crudDML(dmlRequest);
-    fetchData();
+    try {
+      log('Deleting row:', { keyField: row[keyField] });
+      
+      const dmlRequest = {
+        method: 'DELETE',
+        dbTable: columnMap.find(field => field.dbTable)?.dbTable,
+        where: columnMap
+          .filter(field => field.group === -1)
+          .map(field => ({
+            column: field.dbColumn,
+            value: row[field.field],
+            field: field.field
+          }))
+      };
+      
+      await crudDML(dmlRequest);
+      log('Row deleted successfully');
+      
+      // Refresh the data
+      await fetchData();
+    } catch (err) {
+      log.error('Error deleting row:', err);
+      // You could show an error modal here
+    }
   };
 
   // Filter visible columns for the table
@@ -191,7 +202,13 @@ const CrudTable = ({ columnMap, listEvent, keyField, pageName, setFormData, setF
                 }}
               >
                 <TableCell style={{ width: '48px' }}>
-                  <IconButton onClick={(e) => { e.stopPropagation(); handleDelete(row); }} size="small">
+                  <IconButton 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      handleDelete(row); 
+                    }} 
+                    size="small"
+                  >
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </TableCell>

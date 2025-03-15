@@ -1,89 +1,73 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Tabs, Tab } from '@mui/material';
 import CrudTemplate from '../components/crud/CrudTemplate';
-import Container from './Container'; // Import Container
-import createLogger from '../utils/logger'; // Import createLogger
-import { getVar } from '../utils/externalStore'; // Import getVar
+import Container from './Container';
+import createLogger from '../utils/logger';
+import { getVar } from '../utils/externalStore';
+import { setCurrentPage } from '../stores';
+import { 
+  getPageHierarchy, 
+  initPageWithHierarchy, 
+  updateBreadcrumbsFromHierarchy,
+  generateTabConfig
+} from '../stores/hierarchyStore';
 
 const log = createLogger('Product');
 
-const defaultTabConfigs = [
-  {
-    tab: 0,
-    pageName: 'ProdTypes',
-    tabTitle: 'Product Types',
-    appLayout: 'Crud'
-  },
-  {
-    tab: 1,
-    pageName: 'Products',
-    tabTitle: 'Products',
-    appLayout: 'Crud'
-  },
-  {
-    tab: 2,
-    pageName: 'ProdBatches',
-    tabTitle: 'Batches',
-    appLayout: 'Crud'
-  }
-];
-
-const Product = ({ tabConfigs = defaultTabConfigs }) => {
-  const [selectedRows, setSelectedRows] = useState([null, null, null]); // State to store selected rows
-  const [tabIndex, setTabIndex] = useState(0); // State to manage the active tab
+const Product = () => {
+  const [selectedRows, setSelectedRows] = useState([null, null, null]);
+  const [tabIndex, setTabIndex] = useState(0);
   const [tabConfig, setTabConfig] = useState([]);
-  const [tabLabels, setTabLabels] = useState(['Product Types', 'Products', 'Batches']); // State to manage tab labels
-  const [visibleTabs, setVisibleTabs] = useState([true, false, false]); // State to manage tab visibility
+  const [tabLabels, setTabLabels] = useState(['Product Types', 'Products', 'Batches']);
+  const [visibleTabs, setVisibleTabs] = useState([true, false, false]);
 
-  const tabsConfig = useMemo(() => [
-    {
-      tab: 0,
-      pageName: 'ProdTypes',
-      tabTitle: 'Product Types',
-      appLayout: 'Crud'
-    },
-    {
-      tab: 1,
-      pageName: 'Products',
-      tabTitle: 'Products',
-      appLayout: 'Crud'
-    },
-    {
-      tab: 2,
-      pageName: 'ProdBatches',
-      tabTitle: 'Batches',
-      appLayout: 'Crud'
-    }
-  ], []);
-
+  // Initialize page with hierarchy
   useEffect(() => {
-    log('useEffect triggered');
-    log('tabConfigs:', tabConfigs);
-    const config = tabConfigs.filter(config => config.tab === 0 || config.tab === 1 || config.tab === 2);
-    log('Filtered config:', config);
-    setTabConfig(prevConfig => {
-      if (JSON.stringify(prevConfig) !== JSON.stringify(config)) {
-        log('tabConfig updated:', config);
-        return config;
-      }
-      return prevConfig;
-    });
-  }, [tabConfigs]); // Ensure the dependency array is correct
+    log('Initializing Product page');
+    // Set the current page
+    setCurrentPage('Product', { title: 'Products' });
+    
+    // Initialize hierarchy and get tab config
+    initPageWithHierarchy('Product');
+    const config = generateTabConfig('Product');
+    log('Generated tab config:', config);
+    
+    if (config.length === 0) {
+      log('WARNING: Empty tab configuration generated!');
+    } else {
+      log('Tab config pageName values:', config.map(c => c.pageName));
+      log('Tab config listEvent values:', config.map(c => c.listEvent));
+      log('Tab config keyField values:', config.map(c => c.keyField));
+    }
+    
+    setTabConfig(config);
+    
+    // Set initial labels based on hierarchy config
+    const hierarchy = getPageHierarchy('Product');
+    log('Hierarchy:', hierarchy);
+    
+    if (hierarchy && hierarchy.hierarchy) {
+      setTabLabels(hierarchy.hierarchy.map(level => level.label));
+    }
+  }, []);
 
-  const handleRowClick = (row, level) => {
-    log('Row clicked:', row, 'Level:', level);
-    const newSelectedRows = [...selectedRows];
-    newSelectedRows[level] = row;
-    setSelectedRows(newSelectedRows);
-    setTabIndex(level + 1);
-  };
+  // Update breadcrumbs when selections or tab change
+  useEffect(() => {
+    updateBreadcrumbsFromHierarchy('Product', selectedRows, tabIndex);
+  }, [selectedRows, tabIndex]);
 
   const handleTabChange = (event, newValue) => {
     log('Tab changed:', newValue);
     if (newValue === 0) {
       // Reset to initial tab state when tab 0 is selected
       setSelectedRows([null, null, null]);
-      setTabLabels(['Product Types', 'Products', 'Batches']);
+      
+      // Reset tab labels based on hierarchy config
+      const hierarchy = getPageHierarchy('Product');
+      if (hierarchy && hierarchy.hierarchy) {
+        setTabLabels(hierarchy.hierarchy.map(level => level.label));
+      }
+      
       setVisibleTabs([true, false, false]);
     }
     setTabIndex(newValue);
@@ -91,13 +75,14 @@ const Product = ({ tabConfigs = defaultTabConfigs }) => {
 
   const handleRowSelection = (level) => {
     log('Row selected at level:', level);
-    log('Before update - selectedRows:', selectedRows);
-    log('Before update - visibleTabs:', visibleTabs);
-    log('Before update - tabIndex:', tabIndex);
-
+    
     const newSelectedRows = [...selectedRows];
     newSelectedRows[level] = true;
     setSelectedRows(newSelectedRows);
+
+    // Get the hierarchy configuration
+    const hierarchy = getPageHierarchy('Product');
+    if (!hierarchy || !hierarchy.hierarchy) return;
 
     if (level === 0) {
       const prodTypeName = getVar(':prodTypeName');
@@ -127,7 +112,6 @@ const Product = ({ tabConfigs = defaultTabConfigs }) => {
   };
 
   const TabPanel = ({ children, value, index, ...other }) => {
-    log('Rendering TabPanel:', { value, index });
     return (
       <div
         role="tabpanel"
@@ -149,26 +133,27 @@ const Product = ({ tabConfigs = defaultTabConfigs }) => {
   log('tabIndex:', tabIndex);
   log('tabConfig:', tabConfig);
   log('tabLabels:', tabLabels);
+  
   return (
     <Container>
       <Box>
         <Tabs value={tabIndex} onChange={handleTabChange} aria-label="crud tabs">
-          {tabsConfig.map((tab, index) => (
+          {tabConfig.map((config, index) => (
             <Tab 
               key={index} 
               label={tabLabels[index]} 
-              disabled={!visibleTabs[index]} // Disable tabs based on visibleTabs
+              disabled={!visibleTabs[index]} 
             />
           ))}
         </Tabs>
         {tabConfig.length > 0 && tabConfig.map((config, index) => (
-          <TabPanel value={tabIndex} index={config.tab} key={config.tab}>
+          <TabPanel value={tabIndex} index={index} key={index}>
             <CrudTemplate
               pageName={config.pageName}
-              selectedRows={selectedRows}
-              handleRowClick={handleRowClick}
               tabIndex={tabIndex}
-              onRowSelection={() => handleRowSelection(config.tab)}
+              onRowSelection={() => handleRowSelection(index)}
+              listEvent={config.listEvent} // Updated from selList to listEvent
+              keyField={config.keyField}
             />
           </TabPanel>
         ))}

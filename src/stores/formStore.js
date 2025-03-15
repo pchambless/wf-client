@@ -102,6 +102,46 @@ export const createForm = (formName, options = {}) => {
     });
   };
   
+  // Get field options for select lists
+  const getFieldOptions = (field) => {
+    if (!field.listName && !field.selList) return [];
+    
+    try {
+      // Use accountStore's getRefDataByName function directly
+      const { getRefDataByName } = require('./accountStore');
+      return getRefDataByName(field.listName || field.selList) || [];
+    } catch (error) {
+      log.error(`Error getting options for field ${field.field}:`, error);
+      return [];
+    }
+  };
+  
+  // Utility function to guess ID and name fields based on common patterns
+  const guessIdAndNameFields = (options) => {
+    if (!Array.isArray(options) || options.length === 0) return { idField: 'id', nameField: 'name' };
+    
+    const firstItem = options[0];
+    const keys = Object.keys(firstItem);
+    
+    // Find ID field - look for patterns like id, ID, [name]ID, [name]Id
+    const idField = keys.find(k => 
+      k === 'id' || 
+      k === 'ID' || 
+      k.endsWith('ID') || 
+      k.endsWith('Id')
+    ) || 'id';
+    
+    // Find name field - look for patterns like name, NAME, [name]Name, [name]NAME
+    const nameField = keys.find(k => 
+      k === 'name' || 
+      k === 'NAME' || 
+      k.endsWith('Name') || 
+      k.endsWith('NAME')
+    ) || 'name';
+    
+    return { idField, nameField };
+  };
+  
   // Initialize on creation
   initialize();
   
@@ -112,7 +152,9 @@ export const createForm = (formName, options = {}) => {
     setData,
     updateData,
     reset,
-    watch
+    watch,
+    getFieldOptions,
+    guessIdAndNameFields
   };
 };
 
@@ -144,10 +186,61 @@ export const useForm = (formName, options = {}) => {
     
     return unsubscribe;
     // formName is included as a dependency but form is stable through useRef
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [formName]);
   
   const form = formRef.current;
+  
+  /**
+   * Render a form field with a reference list
+   * @param {object} field - Field configuration
+   * @param {function} handleChange - Function to handle value changes
+   * @returns {React.Element} Rendered form field
+   */
+  const renderSelectField = (field, handleChange) => {
+    // Import React components for form fields
+    const { FormControl, InputLabel, Select, MenuItem } = require('@mui/material');
+    
+    // Get options for this field
+    const options = form.getFieldOptions(field);
+    
+    // Determine ID and name fields based on the options
+    const { idField, nameField } = form.guessIdAndNameFields(options);
+    
+    return (
+      <FormControl fullWidth margin="dense" key={field.field}>
+        <InputLabel>{field.label}</InputLabel>
+        <Select
+          value={state.data[field.field] || ''}
+          onChange={(e) => handleChange(field.field, e.target.value)}
+          label={field.label}
+        >
+          <MenuItem value="">
+            <em>None</em>
+          </MenuItem>
+          {options.map((option) => (
+            <MenuItem 
+              key={option[idField]} 
+              value={option[idField]}
+            >
+              {option[nameField]}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    );
+  };
+  
+  /**
+   * Handle form field change
+   * @param {string} field - Field name
+   * @param {any} value - New field value
+   */
+  const handleChange = (field, value) => {
+    form.updateData({
+      [field]: value
+    });
+  };
   
   return {
     mode: state.mode,
@@ -155,7 +248,9 @@ export const useForm = (formName, options = {}) => {
     setMode: form.setMode,
     setData: form.setData,
     updateData: form.updateData,
-    reset: form.reset
+    reset: form.reset,
+    renderSelectField,
+    handleChange
   };
 };
 
@@ -175,4 +270,33 @@ export const createFormGroup = (prefix, formNames, defaultOptions = {}) => {
   });
   
   return forms;
+};
+
+/**
+ * Set reference data for forms
+ * @param {string} listName - Name of the reference list
+ * @param {Array} data - Reference data
+ */
+export const setReferenceData = (listName, data) => {
+  const { setRefDataByName } = require('./accountStore');
+  setRefDataByName(listName, data);
+};
+
+/**
+ * Get reference data for forms
+ * @param {string} listName - Name of the reference list
+ * @returns {Array} Reference data
+ */
+export const getReferenceData = (listName) => {
+  const { getRefDataByName } = require('./accountStore');
+  return getRefDataByName(listName);
+};
+
+/**
+ * Initialize form store with reference data
+ * @returns {Promise<void>}
+ */
+export const initFormStore = async () => {
+  const { initAccountStore } = require('./accountStore');
+  await initAccountStore();
 };

@@ -1,283 +1,117 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { Box, Button, Typography, CircularProgress } from '@mui/material';
-import { getVar, setVars } from '../../utils/externalStore';
+import React, { useEffect } from 'react';
+import { Box, Button, Typography } from '@mui/material'; // Removed Grid import
 import createLogger from '../../utils/logger';
-import crudDML from '../../utils/crudDML';
+import { useForm } from '../../stores';
 import FormFieldRenderer from './FormFieldRenderer';
-import { useForm } from '../../stores/formStore';
 
 const log = createLogger('CrudForm');
 
-const CrudForm = ({ pageConfig, pageName, formData: propFormData, formMode: propFormMode, onSubmit }) => {
-  // Add this logging at the beginning of the component:
-
-  useEffect(() => {
-    log('CrudForm mounted with pageName:', { pageName });
-    if (!pageName) {
-      log('No pageName provided to CrudForm - form state may not be properly shared');
-    }
-    return () => log('CrudForm unmounting:', { pageName });
-  }, [pageName]);
-
-  // Use the hook for React integration with fallback to props
-  const { mode, data, updateData } = useForm(pageName, {
-    initialMode: propFormMode || 'add',
-    initialData: propFormData || {}
+const CrudForm = ({ pageConfig, formData, setFormData, onSubmit }) => {
+  // Use form store for all state management
+  const form = useForm(`crud.${pageConfig?.[0]?.dbTable || 'default'}`, {
+    initialData: formData || {}
   });
-  
-  // Use mode and data from the form store
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [localFormData, setLocalFormData] = useState({});
-
-  // Component lifecycle logging
+  // Debug the pageConfig
   useEffect(() => {
-    log('CrudForm component mounted', { 
-      mode,
-      hasInitialData: Object.keys(data || {}).length > 0 
-    });
-    return () => log('CrudForm component unmounting');
-  }, [mode, data]);
-
-  // Add logging to check formMode:
-  // At the top of the component, add log to see when formMode changes
-  useEffect(() => {
-    log('Form mode changed', { mode });
-  }, [mode]);
-
-  // Initialize form data
-  useEffect(() => {
-    log('Initializing form data', {
-      mode,
-      fields: Object.keys(data || {})
-    });
-
-    try {
-      const initialData = { ...data };
-      // Initialize values from external store if setVar is defined
-      pageConfig?.forEach(field => {
-        if (field.setVar) {
-          const storedValue = getVar(field.setVar);
-          if (storedValue !== undefined) {
-            initialData[field.field] = storedValue;
+    if (pageConfig) {
+      log('Page config:', { 
+        fieldCount: pageConfig.length,
+        visibleFields: pageConfig.filter(f => f.group > 0).length,
+        fieldGroups: pageConfig.reduce((acc, f) => {
+          if (f.group > 0) {
+            acc[f.group] = (acc[f.group] || 0) + 1;
           }
-        }
+          return acc;
+        }, {})
       });
-
-      setLocalFormData(initialData || {});
-      log('Form data initialized', {
-        fieldCount: Object.keys(initialData).length,
-        hasExternalValues: Object.keys(initialData).some(key => getVar(key) !== undefined)
-      });
-    } catch (err) {
-      log('Form initialization failed', {
-        error: err.message,
-        mode
-      });
-      setError(err.message);
     }
-  }, [data, mode, pageConfig]);
-
-  // Update the visibleFields useMemo calculation:
-
-  const visibleFields = useMemo(() => {
-    if (!pageConfig) {
-      log('No page configuration provided');
-      return [];
-    }
-    
-    // Only show fields with group > 0 (exclude -1 and 0 groups)
-    const fields = pageConfig
-      .filter(field => field.group > 0)
-      .sort((a, b) => a.group - b.group); // Simple sort by group number
-    
-    log('Visible form fields calculated', { 
-      totalFields: fields.length,
-      fieldsByGroup: fields.reduce((acc, field) => {
-        if (!acc[field.group]) acc[field.group] = [];
-        acc[field.group].push(field.field);
-        return acc;
-      }, {})
-    });
-    
-    return fields;
   }, [pageConfig]);
 
-  const handleInputChange = (field, value, fieldConfig) => {
-    log('Form field changed', {
-      field,
-      value,
-      previousValue: localFormData[field],
-      fieldType: fieldConfig?.dataType || 'text'
+  // Initial setup and sync with external props
+  useEffect(() => {
+    if (formData && Object.keys(formData).length > 0) {
+      log('Setting form data from props', { 
+        fields: Object.keys(formData)
+      });
+      form.setData({...formData});
+    }
+  }, [formData, form]);
+  
+  // Log the current form data
+  useEffect(() => {
+    log('Form data updated:', { 
+      fields: Object.keys(form.data),
+      hasData: Object.keys(form.data).length > 0
     });
-
-    // Update external store if setVar is defined
-    if (fieldConfig?.setVar) {
-      setVars({ [fieldConfig.setVar]: value });
-    }
-
-    // Update local state
-    setLocalFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-
-    // Fix: Pass an object to updateData with field/value pair
-    updateData({ [field]: value });
-  };
-
-  // Helper function to construct DML request structure
-  const constructDmlRequest = (formData) => {
-    if (!pageConfig) return null;
-
-    try {
-      // Determine the operation type based on formMode
-      const method = mode === 'add' ? 'INSERT' : mode === 'edit' ? 'UPDATE' : 'DELETE';
-      
-      // Find the table configuration
-      const dbTable = pageConfig.find(field => field.dbTable)?.dbTable;
-      
-      // Get where clause fields (group === -1)
-      const whereFields = pageConfig
-        .filter(field => field.group === -1)
-        .map(field => ({
-          column: field.dbColumn,
-          value: getVar(field.getVar),
-          field: field.field
-        }));
-
-      // Get data fields (excluding where clause fields)
-      const dataFields = pageConfig
-        .filter(field => field.group !== -1 && field.dbColumn)
-        .map(field => ({
-          column: field.dbColumn,
-          value: formData[field.field],
-          field: field.field
-        }));
-
-      const requestStructure = {
-        method,
-        dbTable,
-        data: dataFields,
-        where: whereFields
-      };
-
-      log('Constructed DML request structure', {
-        method,
-        dbTable,
-        dataFieldCount: dataFields.length,
-        whereFieldCount: whereFields.length,
-        structure: requestStructure
-      });
-
-      return requestStructure;
-    } catch (err) {
-      log('Failed to construct DML request', {
-        error: err.message,
-        formMode: mode,
-        hasPageConfig: !!pageConfig
-      });
-      return null;
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  }, [form.data]);
+  
+  const handleChange = (field, value) => {
+    log('Field changed', { field, value, prevValue: form.data[field] });
+    form.updateData({ [field]: value });
     
-    log('Form submission started', {
-      mode,
-      fields: Object.keys(localFormData)
-    });
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Construct and log the DML request structure
-      const dmlRequest = constructDmlRequest(localFormData);
-      if (dmlRequest) {
-        log('DML request prepared', {
-          method: dmlRequest.method,
-          table: dmlRequest.dbTable,
-          affectedFields: dmlRequest.data.map(d => d.field)
-        });
-        await crudDML(dmlRequest);
-      }
-
-      await onSubmit(localFormData);
-      log('Form submission successful', { mode });
-    } catch (err) {
-      log('Form submission failed', {
-        error: err.message,
-        mode,
-        formData: localFormData
-      });
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    // Propagate changes to parent if needed
+    if (setFormData) {
+      setFormData({...form.data, [field]: value});
     }
   };
+  
+  const handleSubmit = (values, _fieldConfig) => {
+    // Handle form submission
+    onSubmit(values);
+  };
 
-  if (!pageConfig) {
-    log('Rendering empty state - no page configuration');
+  // Ensure we have page config
+  if (!pageConfig || !Array.isArray(pageConfig)) {
+    log.warn('No pageConfig provided to CrudForm');
     return null;
   }
-
-  const firstFieldValue = localFormData[visibleFields[0]?.field] || '';
-
-  // Also log the formMode right before rendering to verify what's being used
+  
+  // Filter fields to display in form (group > 0)
+  const visibleFields = pageConfig.filter(field => field.group > 0) || [];
+  
+  // Sort fields by group and order
+  const sortedFields = [...visibleFields].sort((a, b) => {
+    if (a.group !== b.group) {
+      return a.group - b.group;
+    }
+    return (a.order || 0) - (b.order || 0);
+  });
+  
+  // Group fields into sections by group
+  const fieldGroups = {};
+  sortedFields.forEach(field => {
+    const group = field.group.toString();
+    if (!fieldGroups[group]) {
+      fieldGroups[group] = [];
+    }
+    fieldGroups[group].push(field);
+  });
+  
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-      {log('Rendering form with mode', { 
-        formMode: mode, 
-        isAdd: mode === 'add',
-        isEdit: mode === 'edit',
-        buttonText: mode === 'add' ? 'Add' : mode === 'edit' ? 'Update' : 'Delete'
-      })}
-      <Typography variant="h6" gutterBottom>
-        {mode === 'add' ? 'Add New Record' : mode === 'edit' ? `Edit ${firstFieldValue || 'Record'}` : `Delete ${firstFieldValue || 'Record'}`}
-      </Typography>
-
-      {error && (
-        <Typography color="error" sx={{ mb: 2 }}>
-          {error}
-        </Typography>
-      )}
-
-      {/* Log the fields being passed to FormFieldRenderer */}
-      {log('Passing fields to FormFieldRenderer', {
-        count: visibleFields.length,
-        fields: visibleFields.map(field => ({
-          field: field.field,
-          label: field.label, 
-          dataType: field.dataType,
-          fieldType: field.fieldType,
-          hasValue: field.field in localFormData
-        }))
-      })}
-
-      <FormFieldRenderer 
-        visibleFields={visibleFields}
-        formData={localFormData}
-        handleInputChange={handleInputChange}
-        loading={loading}
-        error={error}
-      />
-
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          disabled={loading}
-          sx={{ mt: 2 }}
-        >
-          {loading ? (
-            <CircularProgress size={24} />
-          ) : (
-            mode === 'add' ? 'Add' : mode === 'edit' ? 'Update' : 'Delete'
+    <Box component="form" onSubmit={handleSubmit} noValidate>
+      {Object.entries(fieldGroups).map(([group, fields]) => (
+        <Box key={group} mb={3}>
+          {/* Only show group label if it has one and group isn't 0 */}
+          {fields[0]?.groupLabel && group !== '0' && (
+            <Typography variant="h6" gutterBottom>
+              {fields[0].groupLabel}
+            </Typography>
           )}
+          
+          <FormFieldRenderer
+            visibleFields={fields}
+            formData={form.data}
+            handleInputChange={handleChange}
+            loading={false}
+            error={null}
+          />
+        </Box>
+      ))}
+      
+      <Box mt={3}>
+        <Button type="submit" variant="contained" color="primary">
+          Save
         </Button>
       </Box>
     </Box>

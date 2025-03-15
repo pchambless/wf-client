@@ -6,11 +6,11 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import { Provider } from 'react-redux';
 import store from './utils/externalStore'; 
 import ErrorBoundary from './components/ErrorBoundary';
-import Modal from './components/modal/Modal'; // Update the path to your Modal component
+import Modal from './components/modal/Modal';
 import { useModalStore } from './stores/modalStore';
 import { useSessionStore } from './stores/sessionStore';
 
-// Import pages
+// Import pages without extensions
 import Login from './pages/Login';
 import Welcome from './pages/Welcome';
 import Ingredient from './pages/Ingredient';

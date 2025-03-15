@@ -1,20 +1,23 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Grid } from '@mui/material';
-import createLogger from '../../utils/logger'; // Import the createLogger function
-import { useGlobalContext } from '../../context/GlobalContext';
-import CrudTable from './CrudTable'; // Import CrudTable
-import CrudForm from './CrudForm'; // Import CrudForm
-import Modal from '../modal/Modal'; // Import Modal
-import { getVar, setVars } from '../../utils/externalStore'; // Import external store functions
+import createLogger from '../../utils/logger';
+import CrudTable from './CrudTable';
+import CrudForm from './CrudForm';
+import Modal from '../modal/Modal';
+import { getVar, setVars } from '../../utils/externalStore';
 
-const log = createLogger('CrudTemplate'); // Create a logger for the CrudTemplate component
+// Import from stores instead of context
+import { usePageStore, useConfigStore } from '../../stores';
 
-const CrudTemplate = React.memo(({ pageName, tabIndex, setTabIndex, onRowSelection, children }) => {
-  const { updatePageTitle, getPageConfig } = useGlobalContext();
-  const [modalContent, setModalContent] = useState(null); // State to manage modal content
+const log = createLogger('CrudTemplate');
+
+const CrudTemplate = ({ pageName, tabIndex, _setTabIndex, onRowSelection, children }) => {
+  // Use our new stores instead of GlobalContext
+  const { setPageTitle } = usePageStore();
+  const { getPageConfig } = useConfigStore();
+  
+  const [modalContent, setModalContent] = useState(null);
   const [formData, setFormData] = useState({});
-  // Remove the local formMode state since we'll use external store
-  // const [formMode, setFormMode] = useState('add');
 
   // Component lifecycle logging
   useEffect(() => {
@@ -37,9 +40,9 @@ const CrudTemplate = React.memo(({ pageName, tabIndex, setTabIndex, onRowSelecti
   useEffect(() => {
     if (pageConfig?.pageTitle) {
       log('Updating page title', { title: pageConfig.pageTitle });
-      updatePageTitle(pageConfig.pageTitle);
+      setPageTitle(pageConfig.pageTitle);
     }
-  }, [pageConfig?.pageTitle, updatePageTitle]);
+  }, [pageConfig?.pageTitle, setPageTitle]);
 
   const {
     listEvent,
@@ -139,7 +142,7 @@ const CrudTemplate = React.memo(({ pageName, tabIndex, setTabIndex, onRowSelecti
       <Modal isOpen={!!modalContent} onRequestClose={handleModalClose} content={modalContent} />
     </Box>
   );
-});
+};
 
 CrudTemplate.displayName = 'CrudTemplate';
 

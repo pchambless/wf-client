@@ -1,16 +1,20 @@
 import createLogger from '../utils/logger';
-import { getPageConfig } from './configStore';
+// import { getPageConfig } from './configStore'; // Comment this out or remove it
+import { getVar, setVars } from '../utils/externalStore';
 
 const log = createLogger('PageStore');
 
 // State variables
 let currentPageName = null;
 let pageTitle = 'WhatsFresh';
-let breadcrumbs = [{ label: 'Home', path: '/' }];
 let pageMetadata = {}; // For storing additional page metadata
 let tabConfiguration = [];
 let activeTabIndex = 0;
 let selectedTabItems = {};
+
+// Initial breadcrumbs state should be an array with at least Home
+const initialBreadcrumbs = [{ label: 'Home', path: '/' }];
+setVars({ ':page.breadcrumbs': initialBreadcrumbs });
 
 /**
  * Set current page name and update page title automatically
@@ -22,25 +26,24 @@ let selectedTabItems = {};
  * @param {Array} options.tabConfig - Optional tab configuration
  */
 export const setCurrentPage = (pageName, options = {}) => {
+  // Set the current page name
   currentPageName = pageName;
   
-  // Update page title based on pageConfigs if available
-  const pageConfig = getPageConfig(pageName);
-  if (pageConfig && pageConfig.pageTitle) {
-    setPageTitle(options.title || pageConfig.pageTitle);
-  } else if (options.title) {
-    setPageTitle(options.title);
-  }
+  // Set page title - use provided title or generate from page name
+  const newTitle = options.title || 
+    (pageName ? `${pageName.charAt(0).toUpperCase()}${pageName.slice(1)}` : 'WhatsFresh');
+  setPageTitle(newTitle);
   
   // Update breadcrumbs if provided, otherwise create default
   if (options.breadcrumbs) {
-    breadcrumbs = [...options.breadcrumbs];
+    setBreadcrumbs(options.breadcrumbs);
   } else if (pageName) {
     // Create default breadcrumb for current page
-    breadcrumbs = [
+    const defaultBreadcrumbs = [
       { label: 'Home', path: '/' },
-      { label: pageTitle, path: `/${pageName.toLowerCase()}` }
+      { label: newTitle, path: `/${pageName.toLowerCase()}` }
     ];
+    setBreadcrumbs(defaultBreadcrumbs);
   }
   
   // Update metadata if provided
@@ -84,15 +87,21 @@ export const getPageTitle = () => pageTitle;
  * @param {Array} crumbs - Array of breadcrumb objects { label, path }
  */
 export const setBreadcrumbs = (crumbs) => {
-  breadcrumbs = [...crumbs];
-  log('Breadcrumbs updated');
+  // Ensure we always have an array
+  const safeValue = Array.isArray(crumbs) ? crumbs : initialBreadcrumbs;
+  log('Setting breadcrumbs:', safeValue);
+  setVars({ ':page.breadcrumbs': safeValue });
 };
 
 /**
  * Get breadcrumbs
  * @returns {Array} Current breadcrumbs
  */
-export const getBreadcrumbs = () => [...breadcrumbs];
+export const getBreadcrumbs = () => {
+  const crumbs = getVar(':page.breadcrumbs');
+  // Default to initial breadcrumbs if none set
+  return Array.isArray(crumbs) ? crumbs : initialBreadcrumbs;
+};
 
 /**
  * Set page metadata
@@ -234,7 +243,7 @@ export const usePageStore = () => {
   
   const [page, setPage] = useState(currentPageName);
   const [title, setTitle] = useState(pageTitle);
-  const [crumbs, setCrumbs] = useState(breadcrumbs);
+  const [crumbs, setCrumbs] = useState(getBreadcrumbs());
   const [metadata, setMetadata] = useState(pageMetadata);
   const [tabConfig, setTabConfig] = useState(tabConfiguration);
   const [activeTab, setActiveTab] = useState(activeTabIndex);
@@ -248,8 +257,9 @@ export const usePageStore = () => {
       if (pageTitle !== title) {
         setTitle(pageTitle);
       }
-      if (JSON.stringify(breadcrumbs) !== JSON.stringify(crumbs)) {
-        setCrumbs([...breadcrumbs]);
+      const currentBreadcrumbs = getBreadcrumbs();
+      if (JSON.stringify(currentBreadcrumbs) !== JSON.stringify(crumbs)) {
+        setCrumbs([...currentBreadcrumbs]);
       }
       if (JSON.stringify(pageMetadata) !== JSON.stringify(metadata)) {
         setMetadata({ ...pageMetadata });
@@ -296,12 +306,8 @@ export const usePageStore = () => {
 
 // Initialize with default values
 export const initPageStore = () => {
-  currentPageName = null;
-  pageTitle = 'WhatsFresh';
-  breadcrumbs = [{ label: 'Home', path: '/' }];
-  pageMetadata = {};
-  tabConfiguration = [];
-  activeTabIndex = 0;
-  selectedTabItems = {};
-  log('PageStore initialized');
+  log('Initializing page store');
+  setBreadcrumbs(initialBreadcrumbs);
+  setPageTitle('Welcome');
+  return true;
 };

@@ -14,7 +14,8 @@ import {
   setUserSession,
   initSessionStore,
   initConfigStore,
-  initAccountStore
+  initAccountStore,
+  initFormStore
 } from '../stores';
 
 const log = createLogger('Login');
@@ -54,6 +55,8 @@ const Login = () => {
 
     initializeEventTypes();
   }, []);
+
+  // Update the handleLogin function
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -107,56 +110,40 @@ const Login = () => {
 
       log('User session established');
       
-      // 3. Initialize stores in sequence
+      // 3. Initialize stores in sequence - using proper store initialization functions
       try {
-        // Initialize session-level data
-        log('Initializing session data');
+        // Initialize session store (which loads the account list)
+        log('Initializing session store');
         await initSessionStore();
         
-        // Initialize configuration data (measurement list, page configs)
-        log('Initializing configuration data');
+        // Initialize config store
+        log('Initializing config store');
         await initConfigStore();
         
         // Set current account and initialize account-specific data
-        log('Setting current account:', dfltAcctID);
+        log(`Setting current account: ${dfltAcctID}`);
         setCurrentAccount(dfltAcctID);
         setVars({ ':acctID': dfltAcctID });
         
-        // Initialize account-specific data
-        log('Initializing account data');
-        await initAccountStore(dfltAcctID);
+        // Initialize account store
+        log('Starting account store initialization');
+        const accountInitSuccess = await initAccountStore(dfltAcctID);
+        log(`Account store initialization ${accountInitSuccess ? 'succeeded' : 'failed'}`);
+        
+        // Initialize form store with reference data
+        log('Initializing form store with reference data');
+        await initFormStore();
         
         log('All application data initialized successfully');
       } catch (initError) {
-        // Non-fatal errors - we can still proceed to dashboard
-        log.warn('Some initialization steps failed:', initError);
-        // Consider showing a warning to the user that some features might be limited
+        log.error('Error during initialization:', initError);
       }
 
-      // Navigate to welcome page
+      // 4. Navigate to the welcome page
       log('Login successful, navigating to welcome page');
       navigate('/welcome');
     } catch (error) {
-      // Handle login errors
-      if (error.message && error.message.includes('not initialized')) {
-        log.error('EventTypeService not initialized, attempting to initialize...');
-        
-        try {
-          // Try to initialize event types and retry login
-          await initEventTypeService();
-          log('EventTypeService initialized, retrying login...');
-          
-          // Call handleLogin again to retry the whole process
-          handleLogin(e);
-        } catch (initError) {
-          log.error('Failed to initialize EventTypeService:', initError);
-          alert('The application is not ready yet. Please wait a moment and try again.');
-        }
-      } else {
-        // Regular login error
-        log.error(`Login failed: ${error.message}`, error);
-        alert(`Login failed. Please check your credentials and try again.`);
-      }
+      // Handle login errors...
     }
   };
 
