@@ -10,12 +10,9 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { 
   execEvent,
   initEventTypeService,
-  setCurrentAccount,
-  setUserSession,
   initSessionStore,
-  initConfigStore,
   initAccountStore,
-  initFormStore
+  setUserSession
 } from '../stores';
 
 const log = createLogger('Login');
@@ -35,14 +32,15 @@ const Login = () => {
 
     const initializeEventTypes = async () => {
       try {
-        log('Initializing event types');
+        log.info('Initializing event types');  // Changed from log() to log.info()
         const success = await initEventTypeService();
         
         if (!success) {
           log.error('Failed to initialize event types');
           setInitError(true);
         } else {
-          log('Event types initialized successfully');
+          log.info('Event types initialized successfully'); // Changed from log()
+          log.debug('Event types initialized');
           // No need to load measurement list here - it will be loaded after login
         }
       } catch (error) {
@@ -60,8 +58,8 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    log('Login attempt started');
-    log(`Email: ${email}`);
+    log.info('Login attempt started'); // Changed from log()
+    log.debug(`Email: ${email}`);     // Changed from log()
 
     if (!email || !password) {
       alert('Please fill in all fields.');
@@ -69,13 +67,13 @@ const Login = () => {
     }
 
     try {
-      log('Setting variables...');
+      log.debug('Setting variables...'); // Changed from log()
       setVars({ ':userEmail': email, ':enteredPassword': password });
 
-      log('Sending login request...');
+      log.info('Sending login request...'); // Changed from log()
       const response = await execEvent('userLogin', { ':userEmail': email, ':enteredPassword': password });
 
-      log('Received login response');
+      log.debug('Received login response'); // Changed from log()
 
       let user;
       if (Array.isArray(response) && response.length > 0) {
@@ -88,6 +86,35 @@ const Login = () => {
 
       const { userID, lastName, firstName, roleID, userEmail, dfltAcctID } = user;
       
+      // Set session and account data
+      setVars({ 
+        ':userID': userID, 
+        ':roleID': roleID, 
+        ':userEmail': userEmail,
+        ':lastName': lastName, 
+        ':firstName': firstName, 
+        ':isAuth': "1",
+        ':acctID': dfltAcctID      // Set default account
+      });
+
+      // Get user's account list first
+      log.debug('Loading user account list');
+      const accounts = await execEvent('userAcctList');
+
+      log.debug('Account list received:', {
+        count: accounts.length,
+        accounts: accounts.map(a => ({ id: a.acctID, name: a.acctName }))
+      });
+
+      if (!Array.isArray(accounts) || accounts.length === 0) {
+        log.error('Invalid or empty account list received');
+        throw new Error('No accounts available');
+      }
+      log.debug('Account data stored', {
+        accountCount: accounts.length,
+        defaultAccount: dfltAcctID
+      });
+
       // 1. Initialize user session
       setUserSession({
         userID,
@@ -98,52 +125,44 @@ const Login = () => {
         isAuthenticated: true
       });
 
-      // 2. Set variables for backward compatibility
-      setVars({ 
-        ':userID': userID, 
-        ':roleID': roleID, 
-        ':userEmail': userEmail,
-        ':lastName': lastName, 
-        ':firstName': firstName, 
-        ':isAuth': "1" 
-      });
-
       log('User session established');
       
-      // 3. Initialize stores in sequence - using proper store initialization functions
+      // 2. Initialize stores in sequence - using proper store initialization functions
       try {
-        // Initialize session store (which loads the account list)
+        // Initialize session store first (which now includes measurement units)
         log('Initializing session store');
         await initSessionStore();
         
-        // Initialize config store
-        log('Initializing config store');
-        await initConfigStore();
-        
         // Set current account and initialize account-specific data
         log(`Setting current account: ${dfltAcctID}`);
-        setCurrentAccount(dfltAcctID);
+        // setCurrentAccount(dfltAcctID);
         setVars({ ':acctID': dfltAcctID });
         
-        // Initialize account store
+        // Initialize account store (now without measurement units)
         log('Starting account store initialization');
         const accountInitSuccess = await initAccountStore(dfltAcctID);
         log(`Account store initialization ${accountInitSuccess ? 'succeeded' : 'failed'}`);
-        
-        // Initialize form store with reference data
-        log('Initializing form store with reference data');
-        await initFormStore();
         
         log('All application data initialized successfully');
       } catch (initError) {
         log.error('Error during initialization:', initError);
       }
 
-      // 4. Navigate to the welcome page
+      // 3. Navigate to the welcome page
+      log.debug('Preparing to navigate', {
+        isAuthenticated: user.isAuthenticated,
+        hasNavigate: !!navigate,
+        destination: '/welcome'
+      });
+      
+      // Force state updates to complete before navigation
+      await Promise.resolve();
+      
       log('Login successful, navigating to welcome page');
-      navigate('/welcome');
+      navigate('/welcome', { replace: true });
+      
     } catch (error) {
-      // Handle login errors...
+      log.error('Login failed:', error);
     }
   };
 

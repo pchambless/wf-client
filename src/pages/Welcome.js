@@ -1,13 +1,26 @@
-import React from 'react';
-import Container from './Container'; // Import Container
+import React, { useState, Suspense } from 'react';
+import Container from './Container';
+import { Tabs, Tab, CircularProgress } from '@mui/material';
+import MetricsTable from '../components/logger/MetricsTable';
+import TrackerTable from '../components/logger/TrackerTable';
 
 const Welcome = () => {
+  const [activeTab, setActiveTab] = useState('metrics');
+
   return (
     <Container>
-      <h1>Welcome to Whatsfresh</h1>
-      <br></br>   
-      
-      <p>This is the welcome page.</p>
+      <Tabs value={activeTab} onChange={(e, tab) => setActiveTab(tab)}>
+        <Tab label="Metrics" value="metrics" />
+        <Tab label="Last Action" value="action" />
+      </Tabs>
+
+      <Suspense fallback={<CircularProgress />}>
+        {activeTab === 'metrics' ? (
+          <MetricsTable />
+        ) : (
+          <TrackerTable />
+        )}
+      </Suspense>
     </Container>
   );
 };

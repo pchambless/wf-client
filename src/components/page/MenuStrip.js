@@ -1,14 +1,29 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { getVar } from '../../utils/externalStore';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useSessionStore } from '../../stores/sessionStore';
+import createLogger from '../../utils/logger';
+
+const log = createLogger('MenuStrip');
 
 const MenuStrip = () => {
   const navigate = useNavigate();
-
-  const roleID = useMemo(() => getVar(':roleID'), []);
+  const location = useLocation();
+  const { authenticated, user } = useSessionStore();
 
   const handleMenuItemClick = (path) => {
+    log.debug('Menu click', { 
+      clickedPath: path,
+      currentPath: location.pathname,
+      authenticated,
+      hasUser: !!user
+    });
+
+    if (!authenticated || !user) {
+      log.warn('Not authenticated during navigation');
+      return;
+    }
+
     navigate(path);
   };
 
@@ -18,26 +33,39 @@ const MenuStrip = () => {
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Menu
         </Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'center', flexGrow: 1 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-            <Button color="inherit" onClick={() => handleMenuItemClick('/dashboard')}>
-              Dashboard
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button 
+            color="inherit" 
+            onClick={() => handleMenuItemClick('/welcome')}
+          >
+            Welcome
+          </Button>
+          <Button 
+            color="inherit" 
+            onClick={() => handleMenuItemClick('/ingredients')}
+          >
+            Ingredients
+          </Button>
+          <Button 
+            color="inherit" 
+            onClick={() => handleMenuItemClick('/products')}
+          >
+            Products
+          </Button>
+          <Button 
+            color="inherit" 
+            onClick={() => handleMenuItemClick('/account')}
+          >
+            Account
+          </Button>
+          {user?.roleId === 1 && (
+            <Button 
+              color="inherit" 
+              onClick={() => handleMenuItemClick('/admin')}
+            >
+              Admin
             </Button>
-            <Button color="inherit" onClick={() => handleMenuItemClick('/ingredient')}>
-              Ingredients
-            </Button>
-            <Button color="inherit" onClick={() => handleMenuItemClick('/product')}>
-              Products
-            </Button>
-            <Button color="inherit" onClick={() => handleMenuItemClick('/account')}>
-              Accounts
-            </Button>
-            {roleID === 1 && (
-              <Button color="inherit" onClick={() => handleMenuItemClick('/admin')}>
-                Admin
-              </Button>
-            )}
-          </Box>
+          )}
         </Box>
       </Toolbar>
     </AppBar>

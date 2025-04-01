@@ -1,4 +1,5 @@
-import { setVars, getVar, subscribe } from '../utils/externalStore';
+import { useState } from 'react';
+import { setVars, getVar, clearAllVars } from '../utils/externalStore';
 import createLogger from '../utils/logger';
 
 const log = createLogger('SessionStore');
@@ -6,26 +7,25 @@ const log = createLogger('SessionStore');
 // Private state
 let currentUser = null;
 let authenticated = false;
-let accountList = []; // Add account list
+let accountList = [];
 
 // Store keys
 const AUTH_USER = ':session.user';
 const AUTH_STATE = ':session.authenticated';
-const USER_ACCT_LIST = ':session.accountList'; // New key for account list
+const USER_ACCT_LIST = ':session.accountList';
 
 /**
  * Set user session data
  * @param {object} user - User data
  * @param {array} [userAccounts] - Optional list of accounts the user has access to
  */
-export const setUserSession = (user, userAccounts = []) => {
+export const setUserSession = async (user, userAccounts = []) => {
   log('Setting user session', { user, accountCount: userAccounts.length });
   
   // Update local state
   currentUser = user;
   authenticated = !!user && !!user.isAuthenticated;
   
-  // If accounts are provided, update the account list
   if (userAccounts && Array.isArray(userAccounts)) {
     accountList = userAccounts;
   }
@@ -36,6 +36,8 @@ export const setUserSession = (user, userAccounts = []) => {
     [AUTH_STATE]: authenticated ? "1" : "0",
     [USER_ACCT_LIST]: accountList
   });
+
+  // Don't initialize accountStore here - it will be done when needed
 };
 
 /**
@@ -72,33 +74,31 @@ export const setUserAccountList = (accounts) => {
 export const loadUserAccountList = async () => {
   try {
     const user = getCurrentUser();
-    console.log('DEBUGGING - loadUserAccountList called:', { user });
+    log('loadUserAccountList called:', { user });
     
     if (!user || !user.userID) {
       log.warn('Cannot load account list - no user logged in');
-      console.log('DEBUGGING - No user found in loadUserAccountList');
+      log('DEBUGGING - No user found in loadUserAccountList');
       return [];
     }
     
     log(`Loading account list for user ${user.userID}`);
-    console.log(`DEBUGGING - Loading accounts for user ${user.userID}`);
     
     // Use the eventStore directly
     const { execEvent } = require('./eventStore');
     
     // Make sure the event name is correct - it might be 'userAcctList' or something else
-    console.log('DEBUGGING - About to call execEvent for userAcctList');
+    log('Call execEvent for userAcctList');
     const accounts = await execEvent('userAcctList', { ':userID': user.userID });
-    console.log('DEBUGGING - execEvent response:', accounts);
+    log('execEvent response:', accounts);
     
     if (!Array.isArray(accounts)) {
       log.warn('Invalid account list response format:', accounts);
-      console.log('DEBUGGING - Invalid account response format:', accounts);
+      log('Invalid account response format:', accounts);
       return [];
     }
     
     log(`Loaded ${accounts.length} accounts for user ${user.userID}`);
-    console.log(`DEBUGGING - Loaded ${accounts.length} accounts:`, accounts);
     
     // Update the account list in the store
     setUserAccountList(accounts);
@@ -106,7 +106,6 @@ export const loadUserAccountList = async () => {
     return accounts;
   } catch (error) {
     log.error('Error loading user account list:', error);
-    console.error('DEBUGGING - Error in loadUserAccountList:', error);
     return [];
   }
 };
@@ -168,75 +167,36 @@ export const initSessionStore = async () => {
  * @returns {object} Session state and methods
  */
 export const useSessionStore = () => {
-  const { useState, useEffect } = require('react');
-  
-  // Initialize state from current values
-  const [authState, setAuthState] = useState({
-    user: currentUser,
-    isAuthenticated: authenticated,
-    accountList: accountList
-  });
-  
-  // Add debugging for initial state
-  console.log('DEBUGGING useSessionStore - Initial state:', {
-    user: currentUser,
-    authenticated,
-    accountList,
-    accountListLength: accountList?.length
-  });
-  
-  // Subscribe to changes
-  useEffect(() => {
-    const unsubscribe = subscribe(() => {
-      const newUser = getVar(AUTH_USER);
-      const newAuthState = getVar(AUTH_STATE) === "1";
-      const newAccountList = getVar(USER_ACCT_LIST) || [];
-      
-      console.log('DEBUGGING useSessionStore - Store updated:', {
-        newUser,
-        newAuthState,
-        newAccountList,
-        newAccountListLength: newAccountList?.length
-      });
-      
-      // Only update if something changed
-      if (JSON.stringify(newUser) !== JSON.stringify(authState.user) || 
-          newAuthState !== authState.isAuthenticated ||
-          JSON.stringify(newAccountList) !== JSON.stringify(authState.accountList)) {
-        setAuthState({
-          user: newUser,
-          isAuthenticated: newAuthState,
-          accountList: newAccountList
-        });
-      }
-    });
-    
-    return unsubscribe;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  
+  const [state] = useState(() => ({
+    user: getVar(AUTH_USER),
+    authenticated: getVar(AUTH_STATE) === "1",
+    accountList: getVar(USER_ACCT_LIST) || []
+  }));
+
+  const endUserSession = () => {
+    log.debug('Ending user session');
+    clearAllVars();  // Use clearAllVars instead of individual setVars
+  };
+
   return {
-    user: authState.user,
-    isAuthenticated: authState.isAuthenticated,
-    accountList: authState.accountList || [], // Ensure we always return an array
-    setUserSession,
-    setUserAccountList,
+    ...state,
     endUserSession
   };
 };
 
 // Initialize store
 (() => {
-  // Set initial values in external store if not already set
-  if (getVar(AUTH_USER) === undefined) {
+  const storedUser = getVar(AUTH_USER);
+  if (storedUser === undefined) {
+    log.debug('Initializing session store with default values');
     setVars({
       [AUTH_USER]: null,
       [AUTH_STATE]: "0",
       [USER_ACCT_LIST]: []
     });
   } else {
-    // Restore session from external store
-    currentUser = getVar(AUTH_USER);
+    log.debug('Restoring session from external store');
+    currentUser = storedUser;
     authenticated = getVar(AUTH_STATE) === "1";
     accountList = getVar(USER_ACCT_LIST) || [];
   }

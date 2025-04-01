@@ -1,7 +1,6 @@
 import createLogger from '../utils/logger';
 import { useCallback } from 'react';
 
-
 const log = createLogger('API');
 
 const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
@@ -17,36 +16,40 @@ const callApi = async (endpoint, options = {}) => {
     });
 
     if (!response.ok) {
+      log.error(`API Error: ${endpoint} - ${response.status} ${response.statusText}`);
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    log(`API call to ${endpoint} successful`);
+    // Only log successful calls at debug level
+    log.debug(`API call: ${endpoint}`);
     return data;
   } catch (error) {
-    log.error(`API Error calling ${endpoint}:`, error);
+    // Keep error logging but with better context
+    log.error(`API Error: ${endpoint}`, { error: error.message });
     throw error;
   }
 };
 
-// Keep this function as is - it's the low-level API call
 export const execEventType = async (eventType, params = {}) => {
   try {
-    log(`Executing event type: ${eventType}`, params);
+    // Single debug log with context
+    log.debug(`Execute: ${eventType}`, { params });
     
-    // Use the correct endpoint /api/execEventType and request body format
     const response = await callApi('/api/execEventType', {
       method: 'POST',
-      body: JSON.stringify({
-        eventType,
-        params
-      })
+      body: JSON.stringify({ eventType, params })
     });
     
-    log(`Event type ${eventType} executed successfully:`, response);
+    // Only log non-standard responses
+    if (!Array.isArray(response) && typeof response !== 'object') {
+      log.warn(`Unexpected response type from ${eventType}:`, typeof response);
+    }
+    
     return response;
   } catch (error) {
-    log.error(`Error executing event type ${eventType}:`, error);
+    // Keep error logging
+    log.error(`Error: ${eventType}`, { error: error.message });
     throw error;
   }
 };

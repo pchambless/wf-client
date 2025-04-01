@@ -3,6 +3,8 @@ import { fetchEventList, execEventType } from '../api/api';
 import { getVar } from '../utils/externalStore';
 
 const log = createLogger('EventStore');
+const executionCache = new Map();
+const DEBOUNCE_TIME = 300; // milliseconds
 
 // State
 let isInitialized = false;
@@ -29,87 +31,84 @@ export const getEventTypeConfig = (eventType) => {
 };
 
 // Execute event with parameter resolution
-export const execEvent = async (eventType, customParams = {}) => {
-  if (!isInitialized) {
-    log.error('EventTypeService not initialized and no initialization in progress');
-    throw new Error('EventTypeService not initialized');
+export const execEvent = async (eventConfig, params = {}) => {
+  const cacheKey = JSON.stringify({ event: eventConfig, params });
+  
+  // Check cache first
+  if (executionCache.has(cacheKey)) {
+    log.debug('Using cached execution:', eventConfig);
+    return executionCache.get(cacheKey);
   }
 
-  try {
-    // Get the event type configuration
-    const config = getEventTypeConfig(eventType);
-    
-    // Get the required parameters from the event configuration
-    let requiredParams = [];
+  // Create promise for this execution
+  const executionPromise = new Promise(async (resolve, reject) => {
     try {
-      if (typeof config.params === 'string') {
-        requiredParams = JSON.parse(config.params || '[]');
-      } else if (Array.isArray(config.params)) {
-        requiredParams = config.params;
+      // Get event config and validate
+      const config = getEventTypeConfig(eventConfig);
+      if (!config) {
+        log.error('Invalid event type:', eventConfig);
+        throw new Error(`Invalid event type: ${eventConfig}`);
       }
-    } catch (error) {
-      log.error(`Error parsing params for event type ${eventType}:`, error);
-      requiredParams = [];
-    }
-    
-    // Resolve parameters - combine custom params with resolved required params
-    const resolvedParams = {};
-    
-    // First, add any custom params provided
-    Object.keys(customParams).forEach(key => {
-      resolvedParams[key] = customParams[key];
-    });
-    
-    // Then, for each required param that doesn't have a custom value,
-    // try to get it from externalStore
-    requiredParams.forEach(param => {
-      if (param in resolvedParams) return;
+
+      // Resolve parameters once with full context
+      const requiredParams = config.params || [];
+      const resolvedParams = {};
       
-      const value = getVar(param);
-      if (value !== undefined) {
+      for (const param of requiredParams) {
+        const value = getVar(param);
+        if (value === undefined) {
+          log.error('Missing parameter:', { event: eventConfig, param });
+          throw new Error(`Missing required parameter: ${param}`);
+        }
         resolvedParams[param] = value;
-      } else {
-        resolvedParams[param] = param;
       }
-    });
-    
-    log(`Executing event: ${eventType}`, {
-      eventConfig: config,
-      resolvedParams
-    });
-    
-    // Use the existing execEventType function from api.js
-    const response = await execEventType(eventType, resolvedParams);
-    
-    log.debug(`Response from ${eventType}:`, response);
-    
-    return response;
-  } catch (error) {
-    log.error(`Error executing event ${eventType}:`, error);
-    throw error;
-  }
+
+      // Single debug log with full execution context
+      log.debug('Execute event:', { 
+        type: eventConfig,
+        params: resolvedParams,
+        config: config.name
+      });
+      
+      const response = await execEventType(eventConfig, resolvedParams);
+      
+      // Clear cache after debounce
+      setTimeout(() => {
+        executionCache.delete(cacheKey);
+      }, DEBOUNCE_TIME);
+      
+      resolve(response);
+    } catch (error) {
+      executionCache.delete(cacheKey);
+      reject(error);
+    }
+  });
+
+  // Store in cache and return
+  executionCache.set(cacheKey, executionPromise);
+  return executionPromise;
 };
 
 // Initialize event type service
 export const initEventTypeService = async () => {
   // If already initialized, return immediately
   if (isInitialized) {
-    log('EventTypeService already initialized');
+    log.info('EventTypeService already initialized');
     return true;
   }
   
   // If initialization is already in progress, return the existing promise
   if (initPromise) {
-    log('EventTypeService initialization already in progress');
+    log.info('EventTypeService initialization already in progress');
     return initPromise;
   }
   
   // Create a new initialization promise
-  log('Initializing EventTypeService...');
+  log.info('Init EventTypeService...');
   initPromise = (async () => {
     try {
       // Fetch event types
-      log('Fetching event types...');
+      log.info('Fetching event types...');
       const fetchedEventTypes = await fetchEventList();
       
       if (!fetchedEventTypes || fetchedEventTypes.length === 0) {
@@ -121,7 +120,7 @@ export const initEventTypeService = async () => {
       // Store event types
       eventTypes = fetchedEventTypes;
       isInitialized = true;
-      log('EventTypeService initialized successfully', { count: eventTypes.length });
+      log.info('EventTypeService initialized successfully', { count: eventTypes.length });
       return true;
     } catch (error) {
       log.error('Failed to initialize EventTypeService:', error);
@@ -144,5 +143,5 @@ export const resetEventTypeService = () => {
   isInitialized = false;
   eventTypes = [];
   initPromise = null;
-  log('EventTypeService reset');
+  log.info('EventTypeService reset');
 };

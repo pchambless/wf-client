@@ -102,22 +102,44 @@ export const themeOptions = {
     MuiTextField: {
       styleOverrides: {
         root: {
-          backgroundColor: 'white',
-          borderRadius: '8px',
+          marginBottom: '4px', // Reduce vertical spacing
           '& .MuiInputBase-root': {
+            backgroundColor: '#f5f5f5',
             height: '40px',
-            padding: '10px',
+            padding: '4px 8px'
           },
-          '& .MuiInputBase-multiline': {
-            height: 'auto',
-            minHeight: '80px',
+          // Multiline field styling
+          '&.multiline-field': {
+            width: '100%',
+            '& .MuiInputBase-root': {
+              height: 'auto',
+              minHeight: '100px',
+              backgroundColor: '#f5f5f5'
+            },
+            '& .MuiInputBase-inputMultiline': {
+              position: 'static',
+              padding: '8px',
+              minHeight: '80px'
+            },
+            '& .MuiInputLabel-root': {
+              transform: 'translate(14px, -6px) scale(0.75)',
+              backgroundColor: '#f5f5f5',
+              padding: '0 4px'
+            }
           },
-          '& .MuiInputBase-root[aria-label="Description"], & .MuiInputBase-root[aria-label="Comments"]': {
-            height: 'auto',
-            minHeight: '80px',
-          },
-        },
+          // Label styling
+          '& .MuiInputLabel-root': {
+            backgroundColor: '#f5f5f5',
+            padding: '0 4px',
+            marginLeft: '-4px'
+          }
+        }
       },
+      defaultProps: {
+        variant: 'outlined',
+        size: 'small',
+        margin: 'dense'
+      }
     },
     MuiAutocomplete: {
       styleOverrides: {
@@ -132,10 +154,71 @@ export const themeOptions = {
     MuiFormControl: {
       styleOverrides: {
         root: {
-          height: '40px',
-        },
+          marginBottom: '8px',
+          '&.form-field-container': {
+            height: 'auto',
+            minHeight: '40px'
+          }
+        }
       },
     },
+    MuiDataGrid: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#dcfce7',  // Using theme.palette.background.paper
+          '& .MuiDataGrid-row': {
+            maxHeight: '32px',
+            minHeight: '32px',
+            '&.Mui-selected': {
+              backgroundColor: '#c1e6c9',
+              '&:hover': {
+                backgroundColor: '#b1d6b9',
+              },
+            },
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            backgroundColor: '#bae6c3',  // Darker green for headers
+            minHeight: '40px',
+            '& .MuiDataGrid-columnHeaderTitle': {
+              fontWeight: 700,           // Bold header text
+              color: '#1a3e1c',          // Darker text for contrast
+            },
+          },
+          '& .MuiDataGrid-virtualScroller': {
+            minHeight: '300px',
+            maxHeight: '400px',
+          },
+          '& .MuiDataGrid-footerContainer': {
+            display: 'none',  // Hide pagination
+          },
+        },
+      },
+      defaultProps: {
+        density: 'compact',
+        disableColumnFilter: true,
+        disableColumnMenu: true,
+        disableSelectionOnClick: true,
+        autoHeight: false,
+      },
+    },
+    MuiBox: {
+      variants: [
+        {
+          props: { className: 'form-container' },
+          style: {
+            backgroundColor: '#dcfce7',  // Same as DataGrid
+            padding: '16px',
+            borderRadius: '4px',
+            border: '1px solid rgba(0, 0, 0, 0.12)',
+            minHeight: '100%',
+            '& .MuiFormControl-root': {
+              backgroundColor: '#fff',
+              marginBottom: '8px'
+            }
+          }
+        }
+      ]
+    }
   },
 };
 

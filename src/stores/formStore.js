@@ -13,7 +13,8 @@ export const createForm = (formName, options = {}) => {
   const {
     initialMode = 'add',
     initialData = {},
-    prefix = ':form.'
+    prefix = ':form.',
+    columnConfig = null  // Add this line
   } = options;
   
   // Keys for accessing form state in external store
@@ -102,17 +103,70 @@ export const createForm = (formName, options = {}) => {
     });
   };
   
+  const findFieldsByConfig = (options, columnConfig) => {
+    if (!Array.isArray(options) || options.length === 0) {
+      log.warn('No options provided for field detection');
+      return { idField: 'id', nameField: 'name' };
+    }
+
+    if (!Array.isArray(columnConfig)) {
+      log.warn('No column configuration provided');
+      return guessIdAndNameFields(options); // fallback to existing method
+    }
+
+    // Find ID field from where=1 or group=-1
+    const idColumn = columnConfig.find(col => 
+      col.where === 1 || col.group === -1
+    );
+    
+    // Find display field (usually the first visible field with width > 0)
+    const displayColumn = columnConfig.find(col => 
+      col.width > 0 && !col.selList && col.group >= 1
+    );
+
+    if (!idColumn) {
+      log.warn('No ID column found in configuration, falling back to pattern matching');
+      return guessIdAndNameFields(options);
+    }
+
+    return {
+      idField: idColumn.field,
+      nameField: displayColumn?.field || 'name'
+    };
+  };
+
   // Get field options for select lists
-  const getFieldOptions = (field) => {
-    if (!field.listName && !field.selList) return [];
+  const getFieldOptions = (field, columnConfig) => {
+    if (!field.listName && !field.selList) {
+      log.debug('No list specified for field:', field);
+      return [];
+    }
     
     try {
-      // Use accountStore's getRefDataByName function directly
       const { getRefDataByName } = require('./accountStore');
-      return getRefDataByName(field.listName || field.selList) || [];
+      const options = getRefDataByName(field.listName || field.selList) || [];
+      
+      // Use column config if available, otherwise fall back to guessing
+      const { idField, nameField } = columnConfig ? 
+        findFieldsByConfig(options, columnConfig) : 
+        guessIdAndNameFields(options);
+
+      log.debug('Field options resolved:', {
+        field: field.field,
+        listName: field.listName || field.selList,
+        idField,
+        nameField,
+        count: options.length
+      });
+
+      return {
+        options,
+        idField,
+        nameField
+      };
     } catch (error) {
       log.error(`Error getting options for field ${field.field}:`, error);
-      return [];
+      return { options: [], idField: 'id', nameField: 'name' };
     }
   };
   
@@ -153,8 +207,8 @@ export const createForm = (formName, options = {}) => {
     updateData,
     reset,
     watch,
-    getFieldOptions,
-    guessIdAndNameFields
+    getFieldOptions: (field) => getFieldOptions(field, columnConfig),
+    findFieldsByConfig: (options) => findFieldsByConfig(options, columnConfig)
   };
 };
 
@@ -202,10 +256,7 @@ export const useForm = (formName, options = {}) => {
     const { FormControl, InputLabel, Select, MenuItem } = require('@mui/material');
     
     // Get options for this field
-    const options = form.getFieldOptions(field);
-    
-    // Determine ID and name fields based on the options
-    const { idField, nameField } = form.guessIdAndNameFields(options);
+    const { options, idField, nameField } = form.getFieldOptions(field);
     
     return (
       <FormControl fullWidth margin="dense" key={field.field}>
@@ -292,11 +343,20 @@ export const getReferenceData = (listName) => {
   return getRefDataByName(listName);
 };
 
+let storeInitialized = false;
+
 /**
- * Initialize form store with reference data
- * @returns {Promise<void>}
+ * Initialize form store
+ * @returns {void}
  */
-export const initFormStore = async () => {
-  const { initAccountStore } = require('./accountStore');
-  await initAccountStore();
+export const initFormStore = () => {
+  if (storeInitialized) {
+    log.debug('Form store already initialized');
+    return;
+  }
+
+  log.debug('Initializing form store');
+  
+  // Just track initialization state
+  storeInitialized = true;
 };

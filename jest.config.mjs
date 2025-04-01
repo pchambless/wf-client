@@ -10,7 +10,9 @@ export default {
     '^@/(.*)$': '<rootDir>/src/$1'
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
-  coverageReporters: ['text', 'text-summary'],
+  // Disable coverage reporting
+  collectCoverage: false,
+  coverageReporters: [],
   reporters: ['default'],
   testMatch: [
     '**/tests/**/*.test.js',

@@ -6,6 +6,12 @@ module.exports = {
   plugins: [
     'unused-imports'
   ],
+  ignorePatterns: [
+    'build/*',
+    'node_modules/*',
+    'coverage/*',
+    'public/*'
+  ],
   rules: {
     'unused-imports/no-unused-imports': 'error',
     'unused-imports/no-unused-vars': [

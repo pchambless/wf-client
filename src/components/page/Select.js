@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { FormControl } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
-import TextField from '@mui/material/TextField'; // Use the default TextField component
+import TextField from '@mui/material/TextField';
+import createLogger from '../../utils/logger';
 
 const Select = ({ placeholder, onChange, value, options, sx }) => {
+  const log = createLogger('Select');
   const [selectedValue, setSelectedValue] = useState(value || '');
   const [valueKey, setValueKey] = useState('');
   const [labelKey, setLabelKey] = useState('');
@@ -13,8 +15,18 @@ const Select = ({ placeholder, onChange, value, options, sx }) => {
       const keys = Object.keys(options[0]);
       setValueKey(keys[0]);
       setLabelKey(keys[1]);
+      
+      log.debug('Select options loaded:', {
+        placeholder,
+        optionCount: options.length,
+        valueKey: keys[0],
+        labelKey: keys[1],
+        firstOption: options[0]
+      });
+    } else {
+      log.debug('No options available for:', { placeholder });
     }
-  }, [options]);
+  }, [options, placeholder, log]);
 
   useEffect(() => {
     setSelectedValue(value || '');

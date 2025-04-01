@@ -73,7 +73,8 @@ const RAW_RUNTIME_STATE =
           ["typescript", "patch:typescript@npm%3A5.8.2#optional!builtin<compat/typescript>::version=5.8.2&hash=5786d5"],\
           ["wait-on", "npm:6.0.1"],\
           ["web-vitals", "npm:4.2.4"],\
-          ["wf-jspdf", "npm:1.2.0"]\
+          ["wf-jspdf", "npm:1.2.0"],\
+          ["zustand", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:5.0.3"]\
         ],\
         "linkType": "SOFT"\
       }]\
@@ -21254,7 +21255,8 @@ const RAW_RUNTIME_STATE =
           ["typescript", "patch:typescript@npm%3A5.8.2#optional!builtin<compat/typescript>::version=5.8.2&hash=5786d5"],\
           ["wait-on", "npm:6.0.1"],\
           ["web-vitals", "npm:4.2.4"],\
-          ["wf-jspdf", "npm:1.2.0"]\
+          ["wf-jspdf", "npm:1.2.0"],\
+          ["zustand", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:5.0.3"]\
         ],\
         "linkType": "SOFT"\
       }]\
@@ -21918,6 +21920,36 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "../../../AppData/Local/Yarn/Berry/cache/yocto-queue-npm-0.1.0-c6c9a7db29-10c0.zip/node_modules/yocto-queue/",\
         "packageDependencies": [\
           ["yocto-queue", "npm:0.1.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["zustand", [\
+      ["npm:5.0.3", {\
+        "packageLocation": "../../../AppData/Local/Yarn/Berry/cache/zustand-npm-5.0.3-6b60927ae4-10c0.zip/node_modules/zustand/",\
+        "packageDependencies": [\
+          ["zustand", "npm:5.0.3"]\
+        ],\
+        "linkType": "SOFT"\
+      }],\
+      ["virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:5.0.3", {\
+        "packageLocation": "./.yarn/__virtual__/zustand-virtual-08bc88735b/4/AppData/Local/Yarn/Berry/cache/zustand-npm-5.0.3-6b60927ae4-10c0.zip/node_modules/zustand/",\
+        "packageDependencies": [\
+          ["zustand", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:5.0.3"],\
+          ["@types/immer", null],\
+          ["@types/react", null],\
+          ["@types/use-sync-external-store", null],\
+          ["immer", null],\
+          ["react", "npm:18.3.1"],\
+          ["use-sync-external-store", null]\
+        ],\
+        "packagePeers": [\
+          "@types/immer",\
+          "@types/react",\
+          "@types/use-sync-external-store",\
+          "immer",\
+          "react",\
+          "use-sync-external-store"\
         ],\
         "linkType": "HARD"\
       }]\

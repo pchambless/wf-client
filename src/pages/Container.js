@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container as MuiContainer, Box } from '@mui/material'; // Import Material-UI components
-import PageHeader from '../components/page/PageHeader';
+import PageHeader from './PageHeader';
 import MenuStrip from '../components/page/MenuStrip'; // Import MenuStrip
 
 const Container = ({ children }) => {
