@@ -10,6 +10,7 @@ export const MeasUnits = {
       label: "",
       width: 0,
       dataType: "INT",
+      value: "",
       setVar: ":measID",
     },
     {
@@ -20,7 +21,8 @@ export const MeasUnits = {
       label: "Name",
       width: 200,
       dataType: "STRING",
-      required: 1,
+      required: true,
+      value: "",
       setVar: ":name",
     },
     {
@@ -31,7 +33,8 @@ export const MeasUnits = {
       label: "Abbrev",
       width: 150,
       dataType: "STRING",
-      required: 1,
+      required: true,
+      value: "",
       setVar: ":abbrev",
     }
   ]

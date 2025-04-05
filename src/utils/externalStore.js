@@ -1,14 +1,12 @@
+import { useState, useEffect } from 'react';  // Remove 'React' since no JSX
 import { configureStore } from '@reduxjs/toolkit';
-import { useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import createLogger from './logger';
 
-// Create a logger instance for externalStore
 const log = createLogger('ExternalStore');
 
-// Initial state
 const initialState = {};
 
-// Reducer
 const reducer = (state = initialState, action) => {
   switch (action.type) {
     case 'SET_VARS':
@@ -18,7 +16,6 @@ const reducer = (state = initialState, action) => {
   }
 };
 
-// Create store using configureStore
 const store = configureStore({
   reducer: reducer
 });
@@ -87,7 +84,44 @@ const setVar = (key, value) => {
   return getVar(key);
 };
 
-const subscribe = (listener) => store.subscribe(listener);
+// Subscribers map for managing subscriptions
+const subscribers = {};
+
+// Updated subscribe function for better error handling
+const subscribe = (key, listener) => {
+  // Validate listener is a function
+  if (typeof listener !== 'function') {
+    console.error('Subscribe requires a function listener', { key, listener });
+    return () => {}; // Return no-op unsubscribe function
+  }
+  
+  // Create a unique ID for this subscription
+  const subscriptionId = `${key}_${Date.now()}_${Math.random()}`;
+  
+  // Store both the listener and subscription ID
+  const subscription = {
+    listener,
+    id: subscriptionId
+  };
+  
+  // Add to subscribers
+  if (!subscribers[key]) {
+    subscribers[key] = new Map();
+  }
+  subscribers[key].set(subscriptionId, subscription);
+  
+  // Return unsubscribe function with better cleanup
+  return () => {
+    if (subscribers[key]) {
+      subscribers[key].delete(subscriptionId);
+      
+      // Clean up empty maps
+      if (subscribers[key].size === 0) {
+        delete subscribers[key];
+      }
+    }
+  };
+};
 
 const listVars = () => {
   const state = store.getState();
@@ -109,16 +143,91 @@ const listVars = () => {
 
 const useExternalStore = () => {
   return useSyncExternalStore(
-    subscribe, 
-    () => store.getState(), 
-    () => store.getState()  // This function provides the server snapshot
+    () => store.subscribe(() => {}),
+    () => store.getState(),
+    () => store.getState()
   );
 };
 
-// Debug function to clear all variables
 const clearAllVars = () => {
+  // Dispatch clear action directly without trying to notify listeners
+  // Redux's built-in subscribe will handle notification
   store.dispatch({ type: 'SET_VARS', payload: {} });
   log.info('All variables cleared');
+};
+
+// Rename to follow React hook naming convention
+const usePollVar = (varName, defaultValue = null, interval = 100, debug = false) => {
+  const [value, valueue] = useState(() => {
+    const initialValue = getVar(varName);
+    return initialValue !== null ? initialValue : defaultValue;
+  });
+  
+  useEffect(() => {
+    // Only log when debug is enabled
+    if (debug) {
+      log.debug(`Started polling: ${varName}`, { 
+        initialValue: value,
+        interval
+      });
+    }
+    
+    const intervalId = setInterval(() => {
+      const currentValue = getVar(varName);
+      
+      valueue(prevValue => {
+        if (currentValue !== prevValue) {
+          if (debug) {
+            log.debug(`${varName} changed via polling`, {
+              from: prevValue,
+              to: currentValue
+            });
+          }
+          return currentValue !== null ? currentValue : defaultValue;
+        }
+        return prevValue;
+      });
+    }, interval);
+    
+    return () => {
+      if (debug) {
+        log.debug(`Stopped polling: ${varName}`);
+      }
+      clearInterval(intervalId);
+    };
+  }, [varName, interval, defaultValue, debug, value]); // Added 'value' to dependencies
+  
+  return value;
+};
+
+const triggerAction = (actionName, payload = Date.now()) => {
+  setVar(`%${actionName}`, payload);
+};
+
+const useActionTrigger = (actionName, defaultValue = null) => {
+  return usePollVar(`%${actionName}`, defaultValue);
+};
+
+const getActionValue = (actionName) => {
+  return getVar(`%${actionName}`);
+};
+
+// Add a new function that combines subscription with effect
+const useActionEffect = (actionName, effect, dependencies = []) => {
+  useEffect(() => {
+    // Create the subscription
+    const unsubscribe = subscribe(`%${actionName}`, (payload) => {
+      effect(payload);
+    });
+    
+    // Clean up on unmount
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, dependencies);
 };
 
 export { 
@@ -129,7 +238,12 @@ export {
   useExternalStore, 
   subscribe, 
   getVars,
-  clearAllVars 
+  clearAllVars,
+  usePollVar,
+  triggerAction,
+  useActionTrigger,
+  getActionValue,
+  useActionEffect
 };
 
 export default store;

@@ -10,6 +10,7 @@ export const IngrBatches = {
       label: "",
       width: 0,
       dataType: "INT",
+      value: "",
       setVar: ":btchID"
     },
     {
@@ -20,6 +21,7 @@ export const IngrBatches = {
       label: "Batch Number",
       width: 150,
       dataType: "STRING",
+      value: "",
       setVar: ":btchNbr"
     },
     {
@@ -30,8 +32,9 @@ export const IngrBatches = {
       label: "Vendor",
       width: 150,
       dataType: "INT",
-      required: 1,
+      required: true,
       setVar: ":vndrID",
+      value: "",
       selList: "vndrList"
     },
     {
@@ -42,6 +45,7 @@ export const IngrBatches = {
       label: "Brand",
       width: 150,
       dataType: "INT",
+      value: "",
       setVar: ":brndID",
       selList: "brndList"
     },
@@ -53,6 +57,7 @@ export const IngrBatches = {
       label: "Purch Date",
       width: 120,
       dataType: "DATE",
+      value: "",
       setVar: ":purchDate"
     },
     {
@@ -63,7 +68,8 @@ export const IngrBatches = {
       label: "Unit Qty",
       width: 100,
       dataType: "INT",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":unitQty"
     },
     {
@@ -74,7 +80,8 @@ export const IngrBatches = {
       label: "Unit Price",
       width: 100,
       dataType: "STRING",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":unitPrice"
     },
     {
@@ -85,7 +92,8 @@ export const IngrBatches = {
       label: "Purch Qty",
       width: 100,
       dataType: "INT",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":purchQty"
     },
     {
@@ -96,6 +104,7 @@ export const IngrBatches = {
       label: "Measure",
       width: 120,
       dataType: "INT",
+      value: "",
       setVar: ":measID",
       selList: "measList"
     },
@@ -107,7 +116,8 @@ export const IngrBatches = {
       label: "Lot Number",
       width: 150,
       dataType: "STRING",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":lotNbr"
     },
     {
@@ -118,6 +128,7 @@ export const IngrBatches = {
       label: "Best By",
       width: 120,
       dataType: "DATE",
+      value: "",
       setVar: ":bestByDate"
     },
     {
@@ -129,7 +140,8 @@ export const IngrBatches = {
       width: 300,
       multiline: true,
       dataType: "STRING",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":comments"
     },
     {
@@ -140,7 +152,8 @@ export const IngrBatches = {
       label: "",
       width: 0,
       dataType: "INT",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":ingrID"
     }
   ]

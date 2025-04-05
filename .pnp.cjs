@@ -71,6 +71,7 @@ const RAW_RUNTIME_STATE =
           ["redux", "npm:5.0.1"],\
           ["tailwindcss", "npm:3.4.17"],\
           ["typescript", "patch:typescript@npm%3A5.8.2#optional!builtin<compat/typescript>::version=5.8.2&hash=5786d5"],\
+          ["use-sync-external-store", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:1.5.0"],\
           ["wait-on", "npm:6.0.1"],\
           ["web-vitals", "npm:4.2.4"],\
           ["wf-jspdf", "npm:1.2.0"],\
@@ -20778,6 +20779,26 @@ const RAW_RUNTIME_STATE =
         ],\
         "linkType": "SOFT"\
       }],\
+      ["npm:1.5.0", {\
+        "packageLocation": "../../../AppData/Local/Yarn/Berry/cache/use-sync-external-store-npm-1.5.0-556c6970f1-10c0.zip/node_modules/use-sync-external-store/",\
+        "packageDependencies": [\
+          ["use-sync-external-store", "npm:1.5.0"]\
+        ],\
+        "linkType": "SOFT"\
+      }],\
+      ["virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:1.5.0", {\
+        "packageLocation": "./.yarn/__virtual__/use-sync-external-store-virtual-9adb17be92/4/AppData/Local/Yarn/Berry/cache/use-sync-external-store-npm-1.5.0-556c6970f1-10c0.zip/node_modules/use-sync-external-store/",\
+        "packageDependencies": [\
+          ["use-sync-external-store", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:1.5.0"],\
+          ["@types/react", null],\
+          ["react", "npm:18.3.1"]\
+        ],\
+        "packagePeers": [\
+          "@types/react",\
+          "react"\
+        ],\
+        "linkType": "HARD"\
+      }],\
       ["virtual:d1f293411e684c5a90df6a969b4b0fbec71305442944cf1ae8393278d88ec8064493f40abcc21f3d79b4a57b68a98fc8f08234902afe24110600d1764f215d96#npm:1.4.0", {\
         "packageLocation": "./.yarn/__virtual__/use-sync-external-store-virtual-2484af0613/4/AppData/Local/Yarn/Berry/cache/use-sync-external-store-npm-1.4.0-176448bea1-10c0.zip/node_modules/use-sync-external-store/",\
         "packageDependencies": [\
@@ -21253,6 +21274,7 @@ const RAW_RUNTIME_STATE =
           ["redux", "npm:5.0.1"],\
           ["tailwindcss", "npm:3.4.17"],\
           ["typescript", "patch:typescript@npm%3A5.8.2#optional!builtin<compat/typescript>::version=5.8.2&hash=5786d5"],\
+          ["use-sync-external-store", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:1.5.0"],\
           ["wait-on", "npm:6.0.1"],\
           ["web-vitals", "npm:4.2.4"],\
           ["wf-jspdf", "npm:1.2.0"],\
@@ -21941,7 +21963,7 @@ const RAW_RUNTIME_STATE =
           ["@types/use-sync-external-store", null],\
           ["immer", null],\
           ["react", "npm:18.3.1"],\
-          ["use-sync-external-store", null]\
+          ["use-sync-external-store", "virtual:34c9dc1f0539e53b7165cb3129d53be0c2ecce4d8c946ebaac7dd6132a316c3642864d7ee0adf5f2adea4b1733921425b1a3fcf382d858f5198d34b52a09731a#npm:1.5.0"]\
         ],\
         "packagePeers": [\
           "@types/immer",\

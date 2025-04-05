@@ -10,6 +10,7 @@ export const Vendors = {
       label: "",
       width: 0,
       dataType: "INT",
+      value: "",
       setVar: ":vndrID"
     },
     {
@@ -20,7 +21,8 @@ export const Vendors = {
       label: "Vendor Name",
       width: 200,
       dataType: "STRING",
-      required: 1,
+      required: true,
+      value: "",
       setVar: ":vndrName"
     },
     {
@@ -31,7 +33,7 @@ export const Vendors = {
       label: "Contact",
       width: 150,
       dataType: "STRING",
-      required: 0,
+      value: "",
       setVar: ":vndrContactName"
     },
     {
@@ -42,7 +44,7 @@ export const Vendors = {
       label: "Contact Phone",
       width: 150,
       dataType: "STRING",
-      required: 0,
+      value: "",
       setVar: ":vndrContactPhone"
     },
     {
@@ -53,7 +55,7 @@ export const Vendors = {
       label: "Contact Email",
       width: 200,
       dataType: "STRING",
-      required: 0,
+      value: "",
       setVar: ":vndrContactEmail"
     },
     {
@@ -65,7 +67,7 @@ export const Vendors = {
       width: 300,
       multiline: true,
       dataType: "STRING",
-      required: 0,
+      value: "",
       setVar: ":vndrComments"
     },
     {
@@ -76,6 +78,7 @@ export const Vendors = {
       label: "",
       width: 0,
       dataType: "INT",
+      value: "",
       setVar: ":acctID"
     }
   ]

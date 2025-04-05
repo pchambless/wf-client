@@ -1,29 +1,17 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useSessionStore } from '../../stores/sessionStore';
+import { useNavigate } from 'react-router-dom';
 import createLogger from '../../utils/logger';
-
-const log = createLogger('MenuStrip');
 
 const MenuStrip = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { authenticated, user } = useSessionStore();
+  const log = createLogger('MenuStrip');
 
   const handleMenuItemClick = (path) => {
-    log.debug('Menu click', { 
-      clickedPath: path,
-      currentPath: location.pathname,
-      authenticated,
-      hasUser: !!user
-    });
-
-    if (!authenticated || !user) {
-      log.warn('Not authenticated during navigation');
-      return;
-    }
-
+    log.debug('Menu click', { path });
+    
+    // Use React Router navigation instead of direct URL change
+    // This preserves app state between pages
     navigate(path);
   };
 
@@ -58,14 +46,6 @@ const MenuStrip = () => {
           >
             Account
           </Button>
-          {user?.roleId === 1 && (
-            <Button 
-              color="inherit" 
-              onClick={() => handleMenuItemClick('/admin')}
-            >
-              Admin
-            </Button>
-          )}
         </Box>
       </Toolbar>
     </AppBar>

@@ -112,7 +112,7 @@ export const initEventTypeService = async () => {
       const fetchedEventTypes = await fetchEventList();
       
       if (!fetchedEventTypes || fetchedEventTypes.length === 0) {
-        log.error('Failed to initialize EventTypeService: No event types fetched');
+        log.error('Failed to load EventTypes: None fetched');
         isInitialized = false;
         return false;
       }
@@ -120,10 +120,10 @@ export const initEventTypeService = async () => {
       // Store event types
       eventTypes = fetchedEventTypes;
       isInitialized = true;
-      log.info('EventTypeService initialized successfully', { count: eventTypes.length });
+      log.info('EventTypes loaded', { count: eventTypes.length });
       return true;
     } catch (error) {
-      log.error('Failed to initialize EventTypeService:', error);
+      log.error('Failed to load EventTypes:', error);
       isInitialized = false;
       // Rethrow to signal initialization failure
       throw error;

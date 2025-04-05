@@ -1,54 +1,116 @@
-import React, { forwardRef, useImperativeHandle, useState, useCallback, useMemo, useEffect } from 'react';
+import React, { forwardRef, useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Button } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import SaveIcon from '@mui/icons-material/Save';
 import { FormFieldRenderer } from '../FormField';
 import { FormPresenter } from './Presenter';
-import { ACTION_TYPES, startUserAction } from '../../../utils/logger/actions';
 import createLogger from '../../../utils/logger';
+import { useActionTrigger } from '../../../utils/externalStore';
+import { SELECTION } from '../../../actions/actionStore';
 
-const Form = forwardRef(({ columnMap, onSubmit, formMode }, ref) => {
+const log = createLogger('Form');
+
+const Form = forwardRef(({ columnMap, onSubmit, formMode: propFormMode }, ref) => {
   const theme = useTheme();
-  const log = createLogger('Form');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [formData, setFormData] = useState({});
   const [fields, setFields] = useState([]);
-
-  const presenter = useMemo(() => new FormPresenter(columnMap), [columnMap]);
-
-  const refresh = useCallback(async () => {
-    log.debug('Refreshing form data');
-    try {
-      const newData = await presenter.getFormData();
-      log.debug('Form refreshed with data:', newData);
-      setFormData(newData);
-
-      const visibleFields = await presenter.getFields();
-      setFields(visibleFields);
-    } catch (error) {
-      log.error('Error refreshing form:', error);
+  const [formData, setFormData] = useState({});
+  
+  // Create presenter once
+  const presenterRef = useRef(null);
+  if (!presenterRef.current) {
+    presenterRef.current = new FormPresenter(columnMap);
+  }
+  const presenter = presenterRef.current;
+  
+  // Update presenter's columnMap if it changes
+  useEffect(() => {
+    presenter.columnMap = columnMap;
+  }, [presenter, columnMap]);
+  
+  // INITIALIZATION - Run this once
+  const initialized = useRef(false);
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+    
+    async function initializeForm() {
+      setLoading(true);
+      try {
+        // Use presenter to get fields
+        const formFields = presenter.getFields();
+        setFields(formFields);
+        
+        log.debug('Form initialized with fields:', formFields.length);
+      } catch (error) {
+        log.error('Error initializing form:', error);
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [presenter, log]);
+    
+    initializeForm();
+  }, [presenter]); 
+  
+  // ROW SELECTION - Listen for table row clicks
+  const rowSelectAction = useActionTrigger(SELECTION.ROW_SELECT);
 
-  const handleInputChange = useCallback((field, value) => {
-    log.debug('Field changed:', { field, value });
-    setFormData(prev => ({ ...prev, [field]: value }));
-    presenter.updateField(field, value);
-  }, [presenter, log]);
+  useEffect(() => {
+    // Early bail-out if we don't have an action
+    if (!rowSelectAction) {
+      return;
+    }
+    
+    log.debug('Row selection action received:', rowSelectAction);
+    
+    // IMPORTANT: In your case, rowSelectAction IS the payload
+    // Your action store is returning the payload directly, not {type, payload}
+    const actionData = rowSelectAction; 
+    
+    log.debug('Processing row data:', {
+      id: actionData.id,
+      rowData: actionData.row ? Object.keys(actionData.row) : 'none',
+      columnValues: actionData.columnValues ? Object.keys(actionData.columnValues) : 'none'
+    });
+    
+    // Process the row data with FormPresenter
+    const processedData = presenter.processRowData(actionData);
+    
+    // Log and update form state
+    log.debug('Form data processed:', {
+      fieldCount: Object.keys(processedData).length,
+      fields: Object.keys(processedData)
+    });
+    
+    setFormData(processedData);
+  }, [rowSelectAction, presenter]);
 
+  // Add this at the component level to see what's going on
+  useEffect(() => {
+    if (rowSelectAction) {
+      log.debug('Row action structure:', {
+        hasPayload: Boolean(rowSelectAction?.payload),
+        isDirectData: Boolean(rowSelectAction?.id || rowSelectAction?.row),
+        keys: Object.keys(rowSelectAction)
+      });
+    }
+  }, [rowSelectAction]);
+  
+  // FORM SUBMISSION
   const handleSubmit = useCallback(async () => {
-    startUserAction(ACTION_TYPES.SUBMIT);
-    log.info('Form submission started');
     setLoading(true);
     setError(null);
+    
     try {
-      const result = await presenter.handleSubmit(formData);
+      // Use presenter to submit form
+      const result = await presenter.submitForm(formData);
       if (result) {
         log.info('Form submitted successfully');
         onSubmit?.();
         return true;
       }
+      return false;
     } catch (err) {
       log.error('Form submission failed:', err);
       setError(err.message);
@@ -56,45 +118,29 @@ const Form = forwardRef(({ columnMap, onSubmit, formMode }, ref) => {
     } finally {
       setLoading(false);
     }
-  }, [presenter, formData, onSubmit, log]);
-
-  useImperativeHandle(ref, () => ({
-    refresh: async () => await refresh(),
+  }, [presenter, formData, onSubmit]);
+  
+  // INPUT CHANGES
+  const handleInputChange = useCallback((field, value) => {
+    setFormData(prev => ({...prev, [field]: value}));
+  }, []);
+  
+  // Expose methods to parent components via ref
+  React.useImperativeHandle(ref, () => ({
+    getFormData: () => formData,
+    setFormData: (data) => setFormData(prev => ({...prev, ...data})),
     handleSubmit
-  }), [refresh, handleSubmit]);
-
-  const isSubmitDisabled = formMode === 'view' || loading;
-
-  useEffect(() => {
-    const loadFields = async () => {
-      setLoading(true);
-      try {
-        const visibleFields = await presenter.getFields();
-        setFields(visibleFields);
-      } catch (error) {
-        console.error('Error loading form fields:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadFields();
-  }, [presenter]);
-
+  }), [formData, handleSubmit]);
+  
+  // RENDER THE FORM
   return (
     <Box 
-      className="form-container"
+      className="form-container" 
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: theme.spacing(2),
-        backgroundColor: theme.palette.background.paper,
         padding: theme.spacing(2),
+        backgroundColor: theme.palette.background.paper,
         borderRadius: theme.shape.borderRadius,
-        border: `1px solid ${theme.palette.divider}`,
-        minHeight: '100%',
-        '& .MuiFormControl-root': {
-          backgroundColor: theme.palette.background.default
-        }
+        boxShadow: theme.shadows[1],
       }}
     >
       <FormFieldRenderer 
@@ -104,17 +150,20 @@ const Form = forwardRef(({ columnMap, onSubmit, formMode }, ref) => {
         loading={loading}
         error={error}
       />
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Button
-          onClick={handleSubmit}
-          disabled={isSubmitDisabled}
-          variant="contained"
-          color="primary"
-          startIcon={<SaveIcon />}
-        >
-          {loading ? 'Saving...' : 'Save'}
-        </Button>
-      </Box>
+      
+      {propFormMode !== 'view' && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            variant="contained"
+            color="primary"
+            startIcon={<SaveIcon />}
+          >
+            {loading ? 'Saving...' : 'Save'}
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 });

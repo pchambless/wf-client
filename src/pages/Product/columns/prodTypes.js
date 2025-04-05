@@ -10,6 +10,7 @@ export const ProdTypes = {
       label: "",
       width: 0,
       dataType: "INT",
+      value: "",
       setVar: ":prodTypeID"
     },
     {
@@ -20,7 +21,8 @@ export const ProdTypes = {
       label: "",
       width: 0,
       dataType: "INT",
-      required: 1
+      value: "",
+      required: true
     },
     {
       group: 1,
@@ -30,7 +32,8 @@ export const ProdTypes = {
       label: "Name",
       width: 200,
       dataType: "STRING",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":prodTypeName"
     }
   ]

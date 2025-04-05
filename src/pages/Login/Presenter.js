@@ -4,8 +4,6 @@ import {
   execEvent,
   initEventTypeService,
   setCurrentAccount,
-  setUserSession,
-  initSessionStore,
   initConfigStore,
   initAccountStore,
   initFormStore
@@ -37,9 +35,18 @@ export class LoginPresenter {
     const { userID, lastName, firstName, roleID, userEmail, dfltAcctID } = user;
 
     try {
-      // Initialize session store first
-      await initSessionStore();
-      
+      // Set page title as part of application initialization
+      setVars({
+        ':pageTitle': "WhatsFresh",
+        ':userID': userID,
+        ':lastName': lastName,
+        ':firstName': firstName,
+        ':roleID': roleID,
+        ':userEmail': userEmail,
+        ':acctID': dfltAcctID,
+        ':isAuth': '1'
+      });
+   
       // Initialize config store
       await initConfigStore();
       

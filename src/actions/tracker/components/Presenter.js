@@ -1,4 +1,7 @@
-import { getLoggerTableData } from '../../utils/logger';
+import createLogger from '../../../utils/logger';
+import { getVar } from '../../../utils/externalStore';
+
+const log = createLogger('ActionTracker'); // Create but use sparingly
 
 export class Presenter {
   static instance = null;
@@ -12,8 +15,16 @@ export class Presenter {
     return this.instance;
   }
 
+  // Fix the undefined getLoggerTableData function
   getMetricsData() {
-    return getLoggerTableData();
+    // Replace with direct implementation instead of calling undefined function
+    return this.getAllSequences().map(sequence => ({
+      id: `seq_${sequence.startTime}`,
+      actionName: sequence.actionName,
+      startTime: sequence.startTime,
+      steps: sequence.sequence.length,
+      page: getVar(':pageTitle') || 'unknown'
+    }));
   }
 
   startUserAction(actionType) {
@@ -22,6 +33,9 @@ export class Presenter {
       startTime: new Date().toLocaleTimeString(),
       sequence: []
     };
+    
+    // Add minimal logging here
+    log.debug(`User action started: ${actionType}`);
     
     // Maintain limited history
     if (Presenter.ACTION_SEQUENCES.length >= Presenter.MAX_SEQUENCES) {

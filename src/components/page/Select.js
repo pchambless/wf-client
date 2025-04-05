@@ -1,57 +1,104 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useCallback, useRef } from 'react';
 import { FormControl } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import createLogger from '../../utils/logger';
+import { getVar } from '../../utils/externalStore';
 
-const Select = ({ placeholder, onChange, value, options, sx }) => {
+const Select = ({ 
+  placeholder, 
+  onChange, 
+  value, 
+  options: directOptions = [], 
+  listName = null,
+  sx 
+}) => {
   const log = createLogger('Select');
-  const [selectedValue, setSelectedValue] = useState(value || '');
-  const [valueKey, setValueKey] = useState('');
-  const [labelKey, setLabelKey] = useState('');
-
+  const renderCountRef = useRef(0);
+  
+  // Memoize options to prevent recreation on each render
+  const options = useMemo(() => {
+    return listName ? (getVar(`:${listName}`) || []) : directOptions;
+  }, [listName, directOptions]);
+  
+  // Don't use setState for selected value as it causes re-renders
+  const selectedValue = value || '';
+  
+  // Extract first option for dependency check
+  const firstOption = useMemo(() => options[0] || null, [options]);
+  const optionsLength = useMemo(() => options.length, [options]);
+  
+  // Only log once on mount or when critical deps change
   useEffect(() => {
-    if (options.length > 0) {
-      const keys = Object.keys(options[0]);
-      setValueKey(keys[0]);
-      setLabelKey(keys[1]);
-      
-      log.debug('Select options loaded:', {
-        placeholder,
-        optionCount: options.length,
-        valueKey: keys[0],
-        labelKey: keys[1],
-        firstOption: options[0]
-      });
-    } else {
-      log.debug('No options available for:', { placeholder });
+    log.debug(`Select options for ${listName || 'direct'}:`, {
+      count: optionsLength,
+      first: firstOption ? JSON.stringify(firstOption) : 'none',
+      currentValue: value,
+      renderCount: ++renderCountRef.current
+    });
+    
+    if (listName && optionsLength === 0) {
+      log.error(`No options found for list: ${listName}`);
     }
-  }, [options, placeholder, log]);
+  }, [optionsLength, listName, log, firstOption, value]);
 
-  useEffect(() => {
-    setSelectedValue(value || '');
-  }, [value]);
+  // Simple key detection - assumes consistent data structure
+  const valueKey = useMemo(() => {
+    if (optionsLength === 0) return 'id';
+    return firstOption && firstOption.id !== undefined ? 'id' : 
+           firstOption ? Object.keys(firstOption)[0] : 'id';
+  }, [optionsLength, firstOption]);
+  
+  const labelKey = useMemo(() => {
+    if (optionsLength === 0) return 'name';
+    return firstOption && firstOption.name !== undefined ? 'name' : 
+           firstOption ? (Object.keys(firstOption)[1] || Object.keys(firstOption)[0]) : 'name';
+  }, [optionsLength, firstOption]);
 
-  const handleChange = (event, value) => {
+  const handleChange = useCallback((event, value) => {
+    if (!onChange) return;
+    
     const selectedOption = options.find(option => option[labelKey] === value);
-    const selectedValue = selectedOption ? selectedOption[valueKey] : '';
-    setSelectedValue(selectedValue);
+    const newValue = selectedOption ? selectedOption[valueKey] : '';
+    onChange(newValue);
+  }, [options, labelKey, valueKey, onChange]);
 
-    if (onChange) onChange(selectedValue);
-  };
+  // Find the label for the current value with safeguards
+  const currentLabel = useMemo(() => {
+    const found = options.find(option => 
+      option && option[valueKey] !== undefined && 
+      String(option[valueKey]) === String(selectedValue)
+    );
+    return found ? found[labelKey] || '' : '';
+  }, [options, selectedValue, valueKey, labelKey]);
+
+  // Stable option array for Autocomplete
+  const autoCompleteOptions = useMemo(() => {
+    return optionsLength > 0 ? options.map(option => option[labelKey]) : [];
+  }, [options, labelKey, optionsLength]);
+
+  // Stable comparison function
+  const isOptionEqualToValue = useCallback((option, value) => {
+    if (!value || value === '') return true;
+    return option === value;
+  }, []);
 
   return (
     <FormControl fullWidth>
       <Autocomplete
-        options={options.map(option => option[labelKey])}
-        value={options.find(option => option[valueKey] === selectedValue)?.[labelKey] || ''}
+        disablePortal
+        options={autoCompleteOptions}
+        value={currentLabel}
         onChange={handleChange}
+        isOptionEqualToValue={isOptionEqualToValue}
         renderInput={(params) => (
           <TextField
             {...params}
             label={placeholder}
             variant="outlined"
             sx={sx}
+            error={listName && optionsLength === 0}
+            helperText={listName && optionsLength === 0 ? `No options for ${listName}` : ''}
           />
         )}
       />
@@ -59,4 +106,4 @@ const Select = ({ placeholder, onChange, value, options, sx }) => {
   );
 };
 
-export default Select;
+export default React.memo(Select);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/wf-icon.png';
 import createLogger from '../utils/logger';
@@ -10,9 +10,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { 
   execEvent,
   initEventTypeService,
-  initSessionStore,
-  initAccountStore,
-  setUserSession
+  initAccountStore  // Add this import
 } from '../stores';
 
 const log = createLogger('Login');
@@ -23,43 +21,31 @@ const Login = () => {
   const [loading, setLoading] = useState(true);
   const [initError, setInitError] = useState(false);
   const navigate = useNavigate();
-  const initAttempted = useRef(false);
 
-  // Initialize event types ONLY
+  // Single initialization useEffect
   useEffect(() => {
-    if (initAttempted.current) return;
-    initAttempted.current = true;
-
-    const initializeEventTypes = async () => {
+    const initializeApp = async () => {
       try {
-        log.info('Initializing event types');  // Changed from log() to log.info()
+        // Initialize EventStore first
         const success = await initEventTypeService();
-        
         if (!success) {
-          log.error('Failed to initialize event types');
-          setInitError(true);
-        } else {
-          log.info('Event types initialized successfully'); // Changed from log()
-          log.debug('Event types initialized');
-          // No need to load measurement list here - it will be loaded after login
+          throw new Error('Event type initialization failed');
         }
+        
+        setLoading(false);
       } catch (error) {
-        log.error('Error initializing event types:', error);
+        log.error('Application initialization failed:', error);
         setInitError(true);
-      } finally {
         setLoading(false);
       }
     };
 
-    initializeEventTypes();
+    initializeApp();
   }, []);
-
-  // Update the handleLogin function
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    log.info('Login attempt started'); // Changed from log()
-    log.debug(`Email: ${email}`);     // Changed from log()
+    log.info('Login attempt started');
 
     if (!email || !password) {
       alert('Please fill in all fields.');
@@ -67,13 +53,11 @@ const Login = () => {
     }
 
     try {
-      log.debug('Setting variables...'); // Changed from log()
+      log.debug('Setting variables...');
       setVars({ ':userEmail': email, ':enteredPassword': password });
 
-      log.info('Sending login request...'); // Changed from log()
-      const response = await execEvent('userLogin', { ':userEmail': email, ':enteredPassword': password });
-
-      log.debug('Received login response'); // Changed from log()
+      log.info('Sending login request...');
+      const response = await execEvent('userLogin');
 
       let user;
       if (Array.isArray(response) && response.length > 0) {
@@ -86,7 +70,7 @@ const Login = () => {
 
       const { userID, lastName, firstName, roleID, userEmail, dfltAcctID } = user;
       
-      // Set session and account data
+      // Set user data
       setVars({ 
         ':userID': userID, 
         ':roleID': roleID, 
@@ -94,75 +78,34 @@ const Login = () => {
         ':lastName': lastName, 
         ':firstName': firstName, 
         ':isAuth': "1",
-        ':acctID': dfltAcctID      // Set default account
+        ':acctID': dfltAcctID,
+        ':pageTitle': "WhatsFresh" // Set page title here
       });
 
-      // Get user's account list first
+      // Get user's account list
       log.debug('Loading user account list');
       const accounts = await execEvent('userAcctList');
-
-      log.debug('Account list received:', {
-        count: accounts.length,
-        accounts: accounts.map(a => ({ id: a.acctID, name: a.acctName }))
-      });
 
       if (!Array.isArray(accounts) || accounts.length === 0) {
         log.error('Invalid or empty account list received');
         throw new Error('No accounts available');
       }
-      log.debug('Account data stored', {
-        accountCount: accounts.length,
-        defaultAccount: dfltAcctID
-      });
 
-      // 1. Initialize user session
-      setUserSession({
-        userID,
-        roleID,
-        userEmail,
-        lastName,
-        firstName,
-        isAuthenticated: true
-      });
+      setVars({ ':userAcctList': accounts });
 
-      log('User session established');
-      
-      // 2. Initialize stores in sequence - using proper store initialization functions
-      try {
-        // Initialize session store first (which now includes measurement units)
-        log('Initializing session store');
-        await initSessionStore();
-        
-        // Set current account and initialize account-specific data
-        log(`Setting current account: ${dfltAcctID}`);
-        // setCurrentAccount(dfltAcctID);
-        setVars({ ':acctID': dfltAcctID });
-        
-        // Initialize account store (now without measurement units)
-        log('Starting account store initialization');
-        const accountInitSuccess = await initAccountStore(dfltAcctID);
-        log(`Account store initialization ${accountInitSuccess ? 'succeeded' : 'failed'}`);
-        
-        log('All application data initialized successfully');
-      } catch (initError) {
-        log.error('Error during initialization:', initError);
+      // Load all reference lists
+      log.info('Loading reference data lists...');
+      const listsLoaded = await initAccountStore();
+      if (!listsLoaded) {
+        log.warn('Some reference lists failed to load');
       }
 
-      // 3. Navigate to the welcome page
-      log.debug('Preparing to navigate', {
-        isAuthenticated: user.isAuthenticated,
-        hasNavigate: !!navigate,
-        destination: '/welcome'
-      });
-      
-      // Force state updates to complete before navigation
-      await Promise.resolve();
-      
-      log('Login successful, navigating to welcome page');
+      log.info('Login successful, navigating to welcome page');
       navigate('/welcome', { replace: true });
       
     } catch (error) {
       log.error('Login failed:', error);
+      setVars({ ':isAuth': '0' });
     }
   };
 

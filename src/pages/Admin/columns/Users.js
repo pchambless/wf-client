@@ -10,6 +10,7 @@ export const Users = {
       label: "",
       width: 0,
       dataType: "INT",
+      value: "",
       setVar: ":userID"
     },
     {
@@ -20,7 +21,8 @@ export const Users = {
       label: "Last Name",
       width: 200,
       dataType: "STRING",
-      required: 1,
+      required: true,
+      value: "",
       setVar: ":lastName"
     },
     {
@@ -31,7 +33,8 @@ export const Users = {
       label: "First Name",
       width: 200,
       dataType: "STRING",
-      required: 1,
+      required: true,
+      value: "",
       setVar: ":firstName"
     },
     {
@@ -42,7 +45,8 @@ export const Users = {
       label: "Email",
       width: 250,
       dataType: "STRING",
-      required: 1,
+      required: true,
+      value: "",
       setVar: ":userEmail"
     },
     {
@@ -53,7 +57,8 @@ export const Users = {
       label: "Role ID",
       width: 150,
       dataType: "INT",
-      required: 1,
+      required: true,
+      value: "",
       setVar: ":roleID"
     },
     {
@@ -65,6 +70,7 @@ export const Users = {
       width: 150,
       dataType: "INT",
       setVar: ":acctID",
+      value: "",
       selList: "acctList"
     },
     {
@@ -75,7 +81,7 @@ export const Users = {
       label: "Last Login",
       width: 180,
       dataType: "STRING",
-      required: 0,
+      value: "",
       setVar: ""
     }
   ]

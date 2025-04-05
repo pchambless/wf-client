@@ -153,7 +153,10 @@ export const useModalStore = () => {
 
   // Subscribe to changes
   useEffect(() => {
-    const unsubscribe = subscribe(() => {
+    const unsubscribe = subscribe(MODAL_IS_OPEN, (value) => {
+      // Handle the subscription event
+      console.log('Modal state changed:', value);
+
       const newIsOpen = getVar(MODAL_IS_OPEN) || false;
       const newConfig = getVar(MODAL_CONFIG) || {};
 

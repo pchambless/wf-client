@@ -11,6 +11,7 @@ export const ProdTypeTasks = {
       label: "",
       width: 0,
       dataType: "INT",
+      value: "",
       setVar: ":taskID"
     },
     {
@@ -21,7 +22,8 @@ export const ProdTypeTasks = {
       label: "",
       width: 0,
       dataType: "INT",
-      required: 1
+      value: "",
+      required: true
     },
     {
       group: 1,
@@ -31,7 +33,8 @@ export const ProdTypeTasks = {
       label: "Task Name",
       width: 200,
       dataType: "STRING",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":taskName"
     },
     {
@@ -42,7 +45,8 @@ export const ProdTypeTasks = {
       label: "Task Order",
       width: 100,
       dataType: "INT",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":taskOrder"
     },
     {
@@ -54,6 +58,7 @@ export const ProdTypeTasks = {
       width: 300,
       multiline: true,
       dataType: "STRING",
+      value: "",
       setVar: ":taskDesc"
     }
   ]

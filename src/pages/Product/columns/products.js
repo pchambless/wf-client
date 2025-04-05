@@ -30,7 +30,7 @@ export const Products = {
       label: "Name",
       width: 200,
       dataType: "STRING",
-      required: 1,
+      required: true,
       setVar: ":prodName"
     },
     {
@@ -41,7 +41,8 @@ export const Products = {
       label: "Code",
       width: 120,
       dataType: "STRING",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":prodCode"
     },
     {
@@ -52,7 +53,8 @@ export const Products = {
       label: "Deflt Location",
       width: 150,
       dataType: "STRING",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":prodDfltLoc"
     },
     {
@@ -63,7 +65,8 @@ export const Products = {
       label: "Best By Days",
       width: 100,
       dataType: "INT",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":prodDfltBestBy"
     },
     {
@@ -74,6 +77,7 @@ export const Products = {
       label: "UPC Item Ref",
       width: 150,
       dataType: "STRING",
+      value: "",
       setVar: ":prodUpcItemRef"
     },
     {
@@ -84,6 +88,7 @@ export const Products = {
       label: "Check Digit",
       width: 100,
       dataType: "STRING",
+      value: "",
       setVar: ":prodUpcChkDgt"
     },
     {
@@ -95,6 +100,7 @@ export const Products = {
       width: 400,
       multiline: true,
       dataType: "STRING",
+      value: "",
       setVar: ":prodDesc"
     }
   ]

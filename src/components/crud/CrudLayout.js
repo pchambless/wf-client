@@ -1,86 +1,167 @@
-import React, { useRef, useCallback, useState, useEffect } from 'react';
-import { Box, Grid, Button } from '@mui/material';
+import React from 'react';
+import PropTypes from 'prop-types';
+import { Box, Grid, Button, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import Table from './Table';
 import Form from './Form';
 import createLogger from '../../utils/logger';
-import { setVar } from '../../utils/externalStore';
-import { ACTION_TYPES, startUserAction } from '../../utils/logger/actions';
+import MinViableProd from '../../utils/MinViableProd';
 
-const CrudLayout = ({ columnMap, listEvent, onRowSelection, pageTitle }) => {
-  const log = createLogger('CrudLayout');
-  const formRef = useRef();
-  const [formMode, setFormMode] = useState('view');
+class CrudLayoutPresenter extends MinViableProd {
+  constructor(props) {
+    super(props);
+    this.state = {
+      formMode: 'view',
+      selectedRow: null // Add this line
+    };
+    
+    this.formRef = React.createRef();
+    this.log = createLogger('CrudLayout');
+    
+    // Debug the props
+    this.log.debug('CrudLayout initialized with props:', {
+      hasColumnMap: !!props.columnMap,
+      columnCount: props.columnMap?.columns?.length,
+      listEvent: props.listEvent
+    });
+  }
 
-  useEffect(() => {
-    if (pageTitle) {
-      setVar(':pageTitle', pageTitle);
+  componentDidMount() {
+    super.componentDidMount();
+    this.mounted = true;
+  }
+
+  componentWillUnmount() {
+    super.componentWillUnmount();
+    this.mounted = false;
+  }
+
+  handleRowSelect = (row) => {
+    if (!row) {
+      this.log.warn('No row data provided');
+      return;
     }
-  }, [pageTitle]);
-
-  const clearFormFields = useCallback(() => {
-    log.debug('Clearing form fields');
-    columnMap?.columns?.forEach(col => {
-      if (col.setVar) {
-        setVar(col.setVar, '');
-        log.debug('Cleared var:', {
-          var: col.setVar,
-          value: ''
-        });
+    
+    this.log.debug('Processing UI updates for row selection');
+    
+    this.setState({
+      formMode: 'view',
+      selectedRow: row // Add this line
+    }, () => {
+      if (this.formRef.current) {
+        this.formRef.current.refresh();
+      }
+      
+      // Call the callback if provided (for backward compatibility)
+      if (this.props.onRowSelection) {
+        this.props.onRowSelection(row);
+      } else {
+        this.log.debug('No onRowSelection prop provided - using action system only');
+        // All row selection handling should now happen through action subscribers
       }
     });
-  }, [columnMap, log]);
-
-  const handleRowSelect = useCallback((row) => {
-    log.debug('Row selected in CrudLayout:', row);
-    onRowSelection?.(row);
-    
-    // Just refresh the form
-    if (formRef.current) {
-      formRef.current.refresh();
-    }
-  }, [onRowSelection, log]);
-
-  const handleAddNew = () => {
-    startUserAction(ACTION_TYPES.ADD_NEW);
-    log.debug('Add New clicked');
-    clearFormFields();
-    onRowSelection?.(null);
-    setFormMode('add');
-    formRef.current?.refresh('add');
   };
 
-  return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <Box display="flex" justifyContent="flex-end">
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={handleAddNew}
-        >
-          Add New
-        </Button>
-      </Box>
+  handleAddNew = () => {
+    this.log.debug('Add New clicked');
+    this.clearFormFields();
+    this.props.onRowSelection?.(null);
+    this.setState({ formMode: 'add' });
+    this.formRef.current?.refresh('add');
+  };
 
-      <Grid container spacing={2}>
-        <Grid item xs={7}>
-          <Table 
-            columnMap={columnMap}
-            listEvent={listEvent}
-            onRowSelect={handleRowSelect}
-          />
+  render() {
+    const { columnMap, listEvent } = this.props;
+    const { formMode, selectedRow } = this.state; // Add selectedRow here
+    const canAdd = true;
+    
+    // Debug what we're about to render
+    this.log.debug('Rendering CrudLayout:', {
+      hasColumnMap: !!columnMap,
+      listEvent,
+      formMode
+    });
+    
+    // Check if we have the minimum required props
+    if (!columnMap || !columnMap.columns || !listEvent) {
+      this.log.warn('Missing required props for render:', {
+        hasColumnMap: !!columnMap,
+        hasColumns: columnMap?.columns?.length > 0,
+        hasListEvent: !!listEvent
+      });
+      
+      return (
+        <Box p={2} border={1} borderColor="error.main">
+          <Typography color="error">
+            Missing configuration for current tab.
+            {!columnMap && ' No columnMap provided.'}
+            {columnMap && !columnMap.columns && ' No columns configured.'}
+            {!listEvent && ' No listEvent provided.'}
+          </Typography>
+        </Box>
+      );
+    }
+
+    return (
+      <Box display="flex" flexDirection="column" gap={2}>
+        <Grid container spacing={2}>
+          <Grid item xs={7}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>
+              {canAdd && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={this.handleAddNew}
+                >
+                  Add New
+                </Button>
+              )}
+            </Box>
+            
+            <Table 
+              columnMap={columnMap}
+              listEvent={listEvent}
+              onRowClick={this.handleRowSelect}
+              onRowSelect={columnMap.onRowSelect} // Add this line
+              selectedId={selectedRow?.id}
+            />
+          </Grid>
+          
+          <Grid item xs={5}>
+            <Form 
+              ref={this.formRef}
+              columnMap={columnMap}
+              formMode={formMode}
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={5}>
-          <Form 
-            ref={formRef}
-            columnMap={columnMap}
-            formMode={formMode}
-          />
-        </Grid>
-      </Grid>
-    </Box>
-  );
+      </Box>
+    );
+  }
+
+  static initialState = {
+    formMode: 'view',
+    selectedRow: null // Add this line
+  };
+
+  static trackedMethods = [
+    'handleRowSelect',
+    'handleAddNew',
+    'clearFormFields'
+  ];
+}
+
+CrudLayoutPresenter.propTypes = {
+  columnMap: PropTypes.object.isRequired,
+  listEvent: PropTypes.string.isRequired,
+  onRowSelection: PropTypes.func // Remove .isRequired to make it optional
+};
+
+// Change this wrapper function:
+const CrudLayout = (props) => {
+  // Remove the check for pageConfig since we don't pass it anymore
+  return <CrudLayoutPresenter {...props} />;
 };
 
 export default CrudLayout;

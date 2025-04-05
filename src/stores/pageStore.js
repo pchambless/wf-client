@@ -1,5 +1,4 @@
 import createLogger from '../utils/logger';
-// import { getPageConfig } from './configStore'; // Comment this out or remove it
 import { getVar, setVars } from '../utils/externalStore';
 
 const log = createLogger('PageStore');
@@ -70,10 +69,10 @@ export const getCurrentPage = () => currentPageName;
  * @param {string} title - Page title
  */
 export const setPageTitle = (title) => {
-  pageTitle = title;
-  // Update browser tab title
-  document.title = `WhatsFresh - ${title}`;
-  log(`Page title set to: ${title}`);
+  const newTitle = title || 'What\'s Fresh';
+  setVars({ ':pageTitle': newTitle });
+  document.title = `WhatsFresh - ${newTitle}`;
+  log.info(`Page title set: ${newTitle}`);
 };
 
 /**
@@ -306,8 +305,7 @@ export const usePageStore = () => {
 
 // Initialize with default values
 export const initPageStore = () => {
-  log('Initializing page store');
-  setBreadcrumbs(initialBreadcrumbs);
+  log.info('Initializing page store');
   setPageTitle('Welcome');
   return true;
 };

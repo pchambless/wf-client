@@ -1,8 +1,8 @@
 import React, { useState, Suspense } from 'react';
 import Container from './Container';
 import { Tabs, Tab, CircularProgress } from '@mui/material';
-import MetricsTable from '../components/logger/MetricsTable';
-import TrackerTable from '../components/logger/TrackerTable';
+import MetricsTable from '../actions/tracker/components/MetricsTable';
+import TrackerTable from '../actions/tracker/components/TrackerTable';
 
 const Welcome = () => {
   const [activeTab, setActiveTab] = useState('metrics');

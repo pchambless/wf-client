@@ -37,20 +37,6 @@ export {
   useAccountStore
 } from './accountStore';
 
-// From sessionStore
-export {
-  setUserSession,
-  getCurrentUser,
-  getUserAccountList, // Add this export
-  setUserAccountList, // Add this export
-  loadUserAccountList, // Add this export
-  
-  isAuthenticated,
-  endUserSession,
-  useSessionStore,
-  initSessionStore
-} from './sessionStore';
-
 // From modalStore
 export {
   openModal,

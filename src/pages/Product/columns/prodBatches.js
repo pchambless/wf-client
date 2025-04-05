@@ -11,6 +11,7 @@ export const ProdBatches = {
       label: "",
       width: 0,
       dataType: "INT",
+      value: "",
       setVar: ":prodBtchID"
     },
     {
@@ -21,7 +22,8 @@ export const ProdBatches = {
       label: "",
       width: 0,
       dataType: "INT",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":prodID"
     },
     {
@@ -32,7 +34,8 @@ export const ProdBatches = {
       label: "Batch Number",
       width: 150,
       dataType: "STRING",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":btchNbr"
     },
     {
@@ -43,7 +46,8 @@ export const ProdBatches = {
       label: "Batch Date",
       width: 120,
       dataType: "DATE",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":btchStart"
     },
     {
@@ -54,7 +58,8 @@ export const ProdBatches = {
       label: "Location",
       width: 150,
       dataType: "STRING",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":btchLoc"
     },
     {
@@ -65,6 +70,8 @@ export const ProdBatches = {
       label: "Batch Qty",
       width: 100,
       dataType: "STRING",
+      value: "",
+      required: true,
       setVar: ":btchQty"
     },
     {
@@ -75,8 +82,10 @@ export const ProdBatches = {
       label: "Measure",
       width: 120,
       dataType: "INT",
+      value: "",
       setVar: ":measID",
-      selList: "measList"
+      selList: "measList",
+      required: true
     },
     {
       group: 3,
@@ -86,7 +95,8 @@ export const ProdBatches = {
       label: "Best By Date",
       width: 120,
       dataType: "DATE",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":bestByDate"
     },
     {
@@ -98,6 +108,7 @@ export const ProdBatches = {
       width: 300,
       multiline: true,
       dataType: "STRING",
+      value: "",
       setVar: ":comments"
     }
   ]

@@ -27,3 +27,19 @@ export const pageConfig = {
         }
     ]
 };
+
+// Add console.log for debugging
+console.log('Ingredient pageConfig:', pageConfig);
+
+// Make sure each tab has required props
+pageConfig.tabConfiguration.forEach((tab, i) => {
+  // Check for missing columnMap or columns array
+  if (!tab.columnMap || !tab.columnMap.columns) {
+    console.error(`Tab ${i} (${tab.label}) is missing columnMap or columns array`);
+  }
+  
+  // Check for missing listEvent
+  if (!tab.listEvent) {
+    console.error(`Tab ${i} (${tab.label}) is missing listEvent`);
+  }
+});

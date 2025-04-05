@@ -10,6 +10,7 @@ export const Ingredients = {
       label: "",
       width: 0,
       dataType: "INT",
+      value: "",
       setVar: ":ingrID"
     },
     {
@@ -20,7 +21,8 @@ export const Ingredients = {
       label: "",
       width: 0,
       dataType: "INT",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":ingrTypeID"
     },
     {
@@ -31,7 +33,8 @@ export const Ingredients = {
       label: "Name",
       width: 150,
       dataType: "STRING",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":ingrName"
     },
     {
@@ -42,7 +45,8 @@ export const Ingredients = {
       label: "Code",
       width: 70,
       dataType: "STRING",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":ingrCode"
     },
     {
@@ -53,7 +57,8 @@ export const Ingredients = {
       label: "Default Loc.",
       width: 120,
       dataType: "STRING",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":ingrDfltLoc"
     },
     {
@@ -64,7 +69,8 @@ export const Ingredients = {
       label: "Best By Days",
       width: 70,
       dataType: "INT",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":ingrDfltBestBy"
     },
     {
@@ -76,6 +82,7 @@ export const Ingredients = {
       width: 300,
       multiline: true,
       dataType: "STRING",
+      value: "",
       setVar: ":ingrDesc"
     }
   ]

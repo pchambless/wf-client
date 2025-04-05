@@ -10,6 +10,7 @@ export const Recipes = {
       label: "",
       width: 0,
       dataType: "INT",
+      value: "",
       setVar: ":rcpeID"
     },
     {
@@ -19,7 +20,8 @@ export const Recipes = {
       dbCol: "product_id",
       label: "",
       width: 0,
-      dataType: "INT"
+      dataType: "INT",
+      value: "",
     },
     {
       group: 0,
@@ -29,7 +31,8 @@ export const Recipes = {
       label: "",
       width: 0,
       dataType: "INT",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":ingrID"
     },
     {
@@ -40,7 +43,8 @@ export const Recipes = {
       label: "",
       width: 0,
       dataType: "INT",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":measID"
     },
     {
@@ -51,7 +55,8 @@ export const Recipes = {
       label: "",
       width: 0,
       dataType: "INT",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":ingrOrdr"
     },
     {
@@ -62,7 +67,8 @@ export const Recipes = {
       label: "",
       width: 0,
       dataType: "STRING",
-      required: 1,
+      value: "",
+      required: true,
       setVar: ":ingrQty"
     },
     {
@@ -73,6 +79,7 @@ export const Recipes = {
       label: "Description",
       width: 300,
       dataType: "STRING",
+      value: "",
       setVar: ":rcpeComments"
     }
   ]

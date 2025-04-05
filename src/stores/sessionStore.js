@@ -62,7 +62,7 @@ export const setUserAccountList = (accounts) => {
     return;
   }
   
-  log(`Setting user account list: ${accounts.length} accounts`);
+  log(`load userAcctList: ${accounts.length} accounts`);
   accountList = accounts;
   setVars({ [USER_ACCT_LIST]: accounts });
 };
@@ -74,7 +74,7 @@ export const setUserAccountList = (accounts) => {
 export const loadUserAccountList = async () => {
   try {
     const user = getCurrentUser();
-    log('loadUserAccountList called:', { user });
+    log('load UserAcctList called:', { user });
     
     if (!user || !user.userID) {
       log.warn('Cannot load account list - no user logged in');
@@ -89,7 +89,7 @@ export const loadUserAccountList = async () => {
     
     // Make sure the event name is correct - it might be 'userAcctList' or something else
     log('Call execEvent for userAcctList');
-    const accounts = await execEvent('userAcctList', { ':userID': user.userID });
+    const accounts = await execEvent('userAcctList');
     log('execEvent response:', accounts);
     
     if (!Array.isArray(accounts)) {

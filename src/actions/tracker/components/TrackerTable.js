@@ -3,9 +3,11 @@ import {
   Table, TableBody, TableCell, TableContainer, 
   TableHead, TableRow, Paper, Typography 
 } from '@mui/material';
-import tracker from '../../logger/tracker';
-import { subscribe } from '../../utils/externalStore';
+import { subscribe } from '../../../utils/externalStore';
 import { ActionColumns } from './columns/actionsColumns';
+import { Presenter } from './Presenter';
+
+const tracker = Presenter.getInstance();
 
 const TrackerTable = () => {
   const [actions, setActions] = useState([]);

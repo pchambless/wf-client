@@ -1,50 +1,66 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, Select, MenuItem, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { getVar, setVars, clearAllVars, subscribe } from '../utils/externalStore';
+import { getVar, setVars, clearAllVars, usePollVar } from '../utils/externalStore';
 import logo from '../assets/wf-icon.png';
 import LogoutIcon from '@mui/icons-material/Logout';
 import createLogger from '../utils/logger';
+import { initAccountStore } from '../stores';
 
 const PageHeader = () => {
   const navigate = useNavigate();
   const log = useMemo(() => createLogger('PageHeader'), []);
   
-  // Memoize values to prevent re-renders
+  // Use usePollVar with a default value and reasonable interval
+  // This eliminates the need for manual polling and state management
+  const pageTitle = usePollVar(':pageTitle', "What's Fresh", 1000);
+  
+  // Set document title when page title changes
+  useEffect(() => {
+    document.title = `WhatsFresh - ${pageTitle || "What's Fresh"}`;
+  }, [pageTitle]);
+
   const accountList = useMemo(() => {
     const list = getVar(':userAcctList') || [];
-    log.debug('Account list loaded:', {
+    log.info('Account list loaded:', {
       count: list.length,
       accounts: list.map(a => ({ id: a.acctID, name: a.acctName }))
     });
     return list;
   }, [log]);
-  const currentAccount = useMemo(() => getVar(':acctID'), []);
-  
-  // Subscribe to page title changes
-  const [pageTitle, setPageTitle] = useState(getVar(':pageTitle') || 'What\'s Fresh');
-  
-  useEffect(() => {
-    const unsubscribe = subscribe(':pageTitle', () => {
-      setPageTitle(getVar(':pageTitle') || 'What\'s Fresh');
-    });
-    return () => unsubscribe();
-  }, []);
 
-  const handleAccountChange = (event) => {
+  const currentAccount = useMemo(() => getVar(':acctID'), []);
+
+  const handleAccountChange = async (event) => {
     const newAccountId = event.target.value;
-    log.debug('Switching account', { from: currentAccount, to: newAccountId });
-    setVars({ ':acctID': newAccountId });
-    navigate('/welcome', { replace: true });
+    log.info('Switch account', { from: currentAccount, to: newAccountId });
+
+    try {
+      setVars({ 
+        ':acctID': newAccountId,
+        ':pageTitle': 'What\'s Fresh'
+      });
+
+      log.info('Initializing data for new account');
+      const success = await initAccountStore();
+
+      if (!success) {
+        throw new Error('Failed to initialize account data');
+      }
+
+      log.info('Account switched successfully, navigating to welcome page');
+      navigate('/welcome', { replace: true });
+    } catch (error) {
+      log.error('Error switching accounts:', error);
+    }
   };
-  
+
   const handleLogout = () => {
-    log.debug('Logging out');
+    log.info('Logging out');
     clearAllVars();
     navigate('/login', { replace: true });
   };
 
-  // Simplify the rendering condition
   const showAccountSelector = accountList?.length > 0;
 
   return (
@@ -60,7 +76,7 @@ const PageHeader = () => {
           component="h1"
           sx={{ flexGrow: 1, color: '#cc0000' }}
         >
-          {pageTitle}
+          {pageTitle || "What's Fresh"}
         </Typography>
         
         {showAccountSelector && (

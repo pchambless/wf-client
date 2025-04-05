@@ -10,6 +10,7 @@ export const Accounts = {
       label: "",
       width: 0,
       dataType: "INT",
+      value: "",
       setVar: ":acctID",
     },
     {
@@ -20,7 +21,8 @@ export const Accounts = {
       label: "Account Name",
       width: 200,
       dataType: "STRING",
-      required: 1,
+      required: true,
+      value: "",
       setVar: ":acctName",
     },
     {
@@ -31,7 +33,8 @@ export const Accounts = {
       label: "Description",
       width: 300,
       dataType: "STRING",
-      required: 0,
+      required: true,
+      value: "",
       setVar: ":acctDesc",
     },
     {
@@ -42,7 +45,7 @@ export const Accounts = {
       label: "Address",
       width: 150,
       dataType: "STRING",
-      required: 0,
+      value: "",
       setVar: ":acctAddr",
     },
     {
@@ -53,7 +56,7 @@ export const Accounts = {
       label: "City",
       width: 150,
       dataType: "STRING",
-      required: 0,
+      value: "",
       setVar: ":acctCity",
     },
     {
@@ -64,6 +67,7 @@ export const Accounts = {
       label: "State",
       width: 120,
       dataType: "STRING",
+      value: "",
       setVar: ":acctState",
     },
     {
@@ -74,7 +78,8 @@ export const Accounts = {
       label: "Zip",
       width: 100,
       dataType: "STRING",
-      required: 1,
+      required: true,
+      value: "",
       setVar: ":acctZipCode",
     },
     {
@@ -85,7 +90,7 @@ export const Accounts = {
       label: "UPC Company Code",
       width: 150,
       dataType: "STRING",
-      required: 0,
+      value: "",
       setVar: ":acctCompCode",
     },
     {
@@ -96,7 +101,8 @@ export const Accounts = {
       label: "Make Location",
       width: 150,
       dataType: "STRING",
-      required: 1,
+      required: true,
+      value: "",
       setVar: ":acctDfltLoc",
     },
     {
@@ -107,7 +113,7 @@ export const Accounts = {
       label: "Website",
       width: 150,
       dataType: "STRING",
-      required: 0,
+      value: "",
       setVar: ":acctURL",
     },
     {
@@ -118,7 +124,7 @@ export const Accounts = {
       label: "Stripe: Pay Code",
       width: 150,
       dataType: "STRING",
-      required: 0,
+      value: "",
       setVar: ":acctPayCustCode",
     },
     {
@@ -129,7 +135,7 @@ export const Accounts = {
       label: "Stripe: Subscription Code",
       width: 150,
       dataType: "STRING",
-      required: 0,
+      value: "",
       setVar: ":acctSubsptnCode",
     }
   ]

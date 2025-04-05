@@ -3,8 +3,8 @@ import {
   Table, TableBody, TableCell, TableContainer, 
   TableHead, TableRow, Paper, Box, Button 
 } from '@mui/material';
-import tracker from '../../logger/tracker';
-import { subscribe } from '../../utils/externalStore';
+import tracker from '../../../tracker';
+import { subscribe } from '../../../utils/externalStore';
 import { MetricsColumns } from './columns/metricsColumns';
 
 const MetricsTable = () => {
@@ -52,19 +52,11 @@ const MetricsTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {metrics.map(metric => (
-              <TableRow key={`${metric.module}.${metric.function}`}>
-                {MetricsColumns.columns.map(col => (
-                  <TableCell 
-                    key={col.field}
-                    align={col.align}
-                  >
-                    {col.formatter 
-                      ? col.formatter(metric[col.field])
-                      : metric[col.field]
-                    }
-                  </TableCell>
-                ))}
+            {metrics.map((metric, index) => (
+              <TableRow key={metric.id || `metric-${index}`}>
+                <TableCell>{metric.name || 'Unknown'}</TableCell>
+                <TableCell>{new Date(metric.timestamp).toLocaleString() || 'Invalid Date'}</TableCell>
+                {/* Other cells */}
               </TableRow>
             ))}
           </TableBody>

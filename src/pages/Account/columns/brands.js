@@ -10,6 +10,7 @@ export const Brands = {
       label: "",
       width: 0,
       dataType: "INT",
+      value: "",
       setVar: ":brndID"
     },
     {
@@ -20,7 +21,8 @@ export const Brands = {
       label: "Brand Name",
       width: 200,
       dataType: "STRING",
-      required: 1,
+      required: true,
+      value: "",
       setVar: ":brndName"
     },
     {
@@ -32,7 +34,7 @@ export const Brands = {
       width: 300,
       multiline: true,
       dataType: "STRING",
-      required: 0,
+      value: "",
       setVar: ":brndComments"
     },
     {
@@ -43,7 +45,7 @@ export const Brands = {
       label: "Website",
       width: 150,
       dataType: "STRING",
-      required: 0,
+      value: "",
       setVar: ":brndURL"
     },
     {
@@ -54,6 +56,7 @@ export const Brands = {
       label: "",
       width: 0,
       dataType: "INT",
+      value: "",
       setVar: ""
     }
   ]

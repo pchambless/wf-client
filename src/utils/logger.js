@@ -1,4 +1,4 @@
-const LOG_LEVELS = {
+export const LOG_LEVELS = {
   NONE: 0,
   ERROR: 1,
   WARN: 2,
@@ -6,95 +6,77 @@ const LOG_LEVELS = {
   DEBUG: 4
 };
 
-// Simple metrics store
-const LOGGER_METRICS = new Map();
-
-// Core critical components that need DEBUG level
-const DEBUG_COMPONENTS = ['API', 'EventStore', 'ExternalStore'];
-
-const triggerLogUpdate = () => {
-  window.dispatchEvent(new Event('logUpdate'));
-};
-
-const createLogger = (componentName) => {
-  // Auto-register new components with smart defaults
-  if (!LOGGER_METRICS.has(componentName)) {
-    LOGGER_METRICS.set(componentName, {
-      created: new Date(),
-      lastCall: null,
-      calls: 0,
-      level: DEBUG_COMPONENTS.includes(componentName) ? LOG_LEVELS.DEBUG : LOG_LEVELS.INFO,
-      acctID: window.sessionStore?.getVar(':acctID') || null
-    });
-  }
-
-  const metrics = LOGGER_METRICS.get(componentName);
+/**
+ * Enhanced logger with different log levels and performance tracking
+ */
+const createLogger = (module) => {
+  const prefix = `[${module}]`;
   
-  const updateMetrics = () => {
-    metrics.calls++;
-    metrics.lastCall = new Date();
-    metrics.lastStack = new Error().stack?.split('\n')[3] || 'Unknown';
-    triggerLogUpdate();
-  };
-  
-  // Create base function that handles direct calls
-  const logger = (...args) => {
-    if (metrics.level >= LOG_LEVELS.INFO) {
-      updateMetrics();
-      console.info(`[${componentName}]`, ...args);
+  // Base log function that also returns the message for chaining
+  const logFn = (level, message, data) => {
+    // Future: This object will be used for persistent logging
+    // eslint-disable-next-line no-unused-vars
+    const _logObject = {
+      timestamp: new Date().toISOString(),
+      module,
+      level,
+      message,
+      ...(data ? { data } : {})
+    };
+    
+    // Different styling for different log levels
+    let consoleFn;
+    switch (level) {
+      case 'ERROR':
+        consoleFn = console.error;
+        break;
+      case 'WARN':
+        consoleFn = console.warn;
+        break;
+      case 'INFO':
+        consoleFn = console.info;
+        break;
+      case 'DEBUG':
+        consoleFn = console.debug;
+        break;
+      default:
+        consoleFn = console.log;
     }
+    
+    // Log to console with appropriate styling
+    consoleFn(`${prefix} ${level}: ${message}`, data || '');
+    
+    return message; // Return for chaining
   };
 
-  // Make the base function callable as log() and add methods
-  Object.assign(logger, {
-    info: (...args) => logger(...args),
-    debug: (...args) => {
-      if (metrics.level >= LOG_LEVELS.DEBUG) {
-        updateMetrics();
-        console.debug(`[${componentName}]`, ...args);
-      }
-    },
-    warn: (...args) => {
-      if (metrics.level >= LOG_LEVELS.WARN) {
-        updateMetrics();
-        console.warn(`[${componentName}]`, ...args);
-      }
-    },
-    error: (...args) => {
-      updateMetrics();
-      console.error(`[${componentName}]`, ...args);
-    }
-  });
+  // Timer functionality
+  const startPerformanceTimer = (label) => {
+    const startTime = performance.now();
+    return () => {
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      logFn('INFO', `Timer [${label}]: ${duration.toFixed(2)}ms`);
+      return duration;
+    };
+  };
+
+  // Create the logger object with different log levels
+  const logger = (message, data) => logFn('INFO', message, data);
+  
+  // Add specific log level methods
+  logger.error = (message, data) => logFn('ERROR', message, data);
+  logger.warn = (message, data) => logFn('WARN', message, data);
+  logger.info = (message, data) => logFn('INFO', message, data);
+  logger.debug = (message, data) => logFn('DEBUG', message, data);
+  
+  // Add the timer functionality
+  logger.startPerformanceTimer = startPerformanceTimer;
 
   return logger;
 };
 
-// Sort by calls descending, then by last call time
-export const getLoggerTableData = () => {
-  return Array.from(LOGGER_METRICS.entries())
-    .filter(([_, m]) => m.calls > 0)
-    .map(([name, m]) => {
-      const lastCallDate = m.lastCall ? new Date(m.lastCall) : null;
-      return {
-        component: name,
-        level: Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === m.level) || 'UNKNOWN',
-        calls: m.calls,
-        lastCallDate: lastCallDate, // Store full date for sorting
-        lastCall: lastCallDate 
-          ? `${lastCallDate.toISOString().split('T')[0]} ${lastCallDate.toLocaleTimeString()}`
-          : 'Never',
-        created: m.created ? new Date(m.created).toISOString().split('T')[0] : 'N/A',
-        acctID: window.sessionStore?.getVar(':acctID') || 'N/A'
-      };
-    })
-    .sort((a, b) => {
-      if (!a.lastCallDate) return 1;
-      if (!b.lastCallDate) return -1;
-      return b.lastCallDate.getTime() - a.lastCallDate.getTime();
-    });
-};
-
-export { LOG_LEVELS };
+// Export both as default and named for maximum compatibility
+export { createLogger };
 export default createLogger;
 
 

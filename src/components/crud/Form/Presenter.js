@@ -1,139 +1,110 @@
 import createLogger from '../../../utils/logger';
-import { getVar, setVar } from '../../../utils/externalStore';
 import crudDML from '../../../utils/DML';
 
 export class FormPresenter {
   constructor(columnMap) {
-    this.log = createLogger('Form.Presenter');
     this.columnMap = columnMap;
+    this.log = createLogger('FormPresenter');
   }
 
-  refresh(mode) {
-    this.log.debug('Form refresh triggered:', { 
-      mode,
-      columnMap: Boolean(this.columnMap),
-      columns: this.columnMap?.columns?.length || 0
-    });
-
-    const formData = this.getFormData(mode);
-    
-    this.log.debug('Form data loaded:', {
-      mode,
-      fields: Object.keys(formData),
-      values: formData
-    });
-
-    return formData;
-  }
-
-  updateField(field, value) {
-    const column = this.columnMap.columns.find(col => col.field === field);
-    if (column?.setVar) {
-      setVar(column.setVar, value);
-      this.log.debug('Updated external store:', { 
-        field, 
-        var: column.setVar, 
-        value 
-      });
-    }
-  }
-
-  async handleSubmit(formData) {
-    if (!this.columnMap?.saveEvent) {
-      this.log.warn('No save event configured');
-      return false;
-    }
-
-    // Update all vars before DML
-    Object.entries(formData).forEach(([field, value]) => {
-      this.updateField(field, value);
-    });
-
-    return await crudDML(this.columnMap.saveEvent);
-  }
-
-  async getFormData() {
-    if (!this.columnMap?.columns) return {};
-
-    const formMode = getVar(':formMode') || 'view';
-    const data = {};
-
-    this.log.debug('Getting form data:', {
-      formMode,
-      totalColumns: this.columnMap.columns.length
-    });
-
-    for (const col of this.columnMap.columns) {
-      if (col.setVar) {
-        if (formMode === 'edit' || formMode === 'view') {
-          const value = getVar(col.setVar);
-          
-          if (col.selList) {
-            this.log.debug('Processing select field:', {
-              field: col.field,
-              setVar: col.setVar,
-              value,
-              listName: col.selList,
-              formMode
-            });
-          }
-          
-          data[col.field] = value || '';
-        } else {
-          // In add mode, set all fields to empty
-          data[col.field] = '';
-          
-          if (col.selList) {
-            this.log.debug('Clearing select field:', {
-              field: col.field,
-              setVar: col.setVar,
-              formMode
-            });
-          }
-        }
-      }
-    }
-
-    return data;
-  }
-
-  async getFields() {
+  // Process column definitions into form fields
+  getFields() {
     if (!this.columnMap?.columns) {
       this.log.warn('No columns defined for form fields');
       return [];
     }
 
     try {
-      const fields = this.columnMap.columns.filter(col => col.group > 0) || [];
+      // Only include columns with group > 0 (visible in form)
+      const fields = this.columnMap.columns
+        .filter(col => col.group > 0)
+        .map(col => ({
+          id: col.field,             // Always use field as ID
+          field: col.field,
+          defaultValue: col.value,   // Add defaultValue for static values
+          label: col.headerName || col.field,
+          list: col.list,            // Reference list name for dropdowns
+          group: col.group
+        }));
       
-      // Debug logging for all fields
-      this.log.debug('Getting form fields:', {
+      this.log.debug('Form fields processed:', {
         totalColumns: this.columnMap.columns.length,
         visibleFields: fields.length
       });
       
-      // Process select lists
-      for (const field of fields) {
-        if (field.selList) {
-          const value = getVar(field.setVar);
-          const options = await window.accountStore?.getReferenceData(field.selList);
-          
-          this.log.debug('Select field debug:', {
-            field: field.field,
-            setVar: field.setVar,
-            currentValue: value,
-            listName: field.selList,
-            optionsLoaded: options?.length || 0,
-            firstOption: options?.[0],
-            hasAccountStore: !!window.accountStore
-          });
-        }
-      }
-
       return fields;
     } catch (error) {
       this.log.error('Error getting form fields:', error);
       return [];
+    }
+  }
+
+  // Process row data into form values
+  processRowData(rowData) {
+    // Make sure we complete the method even if there's an error
+    try {
+      // Add detailed debugging at the start
+      this.log.debug('ProcessRowData called:', {
+        payload: JSON.stringify(rowData).substring(0, 200),
+        hasRow: Boolean(rowData?.row),
+        hasColumnValues: Boolean(rowData?.columnValues)
+      });
+
+      if (!rowData || !this.columnMap?.columns) {
+        this.log.warn('Cannot process row data: missing data or columns');
+        return {};
+      }
+      
+      // Extract the actual data from the action payload
+      // rowData is the entire action payload, not just the row data
+      const sourceData = rowData.columnValues || rowData.row || rowData;
+      
+      this.log.debug('Using source data:', {
+        fields: Object.keys(sourceData),
+        values: JSON.stringify(sourceData).substring(0, 200)
+      });
+      
+      const formData = {};
+      
+      // Process fields for the form - SIMPLIFIED VERSION
+      this.columnMap.columns
+        .filter(col => col.group > 0)  // Only visible form fields
+        .forEach(col => {
+          // If we have a source value, use it
+          if (sourceData[col.field] !== undefined) {
+            formData[col.field] = sourceData[col.field];
+            this.log.debug(`Mapped field: ${col.field} = ${formData[col.field]}`);
+          }
+          // If we have a static value, use that
+          else if (col.value) {
+            formData[col.field] = col.value;
+            this.log.debug(`Using static value: ${col.field} = ${col.value}`);
+          }
+        });
+      
+      this.log.debug('Final form data:', formData);
+      
+      return formData;
+    } catch (error) {
+      this.log.error('Error in processRowData:', error);
+      return {}; // Return empty object on error
+    }
+  }
+  
+  // Handle form submission
+  async submitForm(formData) {
+    if (!this.columnMap?.saveEvent) {
+      this.log.warn('No save event configured');
+      return false;
+    }
+
+    this.log.debug('Submitting form data');
+    try {
+      const result = await crudDML(this.columnMap.saveEvent, formData);
+      return result;
+    } catch (error) {
+      this.log.error('Error submitting form:', error);
+      throw error; // Re-throw to let the component handle it
     }
   }
 }

@@ -1,9 +1,10 @@
+import React from 'react';
 import { setVar } from '../../../utils/externalStore';
 import createLogger from '../../../utils/logger';
 import { execEvent } from '../../../stores/eventStore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { IconButton } from '@mui/material';
-import tracker from '../../../logger/tracker';
+import tracker from '../../../actions/tracker';
 
 export class TablePresenter {
   constructor(columnMap, listEvent) {
@@ -11,16 +12,28 @@ export class TablePresenter {
     this.columnMap = columnMap;
     this.listEvent = listEvent;
 
-    // Wrap methods with tracking
-    this.fetchData = tracker.wrapFunction(this.fetchData.bind(this));
-    this.handleRowClick = tracker.wrapFunction(this.handleRowClick.bind(this));
+    // Initialize tracking after constructor is ready
+    setTimeout(() => {
+      this.initializeTracking();
+    }, 0);
+  }
+
+  initializeTracking() {
+    try {
+      // Wrap methods with tracking
+      this.fetchData = tracker.wrapFunction(this.fetchData.bind(this));
+      this.handleRowClick = tracker.wrapFunction(this.handleRowClick.bind(this));
+      this.log.debug('Tracking initialized');
+    } catch (error) {
+      this.log.error('Failed to initialize tracking:', error);
+      // Continue without tracking if it fails
+    }
   }
 
   async fetchData() {
     try {
       this.log.debug('Fetching data:', { listEvent: this.listEvent });
-      const result = await execEvent(this.listEvent);
-      return result;
+      return await execEvent(this.listEvent);
     } catch (error) {
       this.log.error('Failed to fetch data:', error);
       throw error;
@@ -31,7 +44,7 @@ export class TablePresenter {
     const idColumn = this.columnMap.columns.find(col => col.where === 1);
     if (!idColumn) {
       this.log.warn('No ID column found (where: 1)');
-      return null;
+      return 'id'; // Fallback to 'id'
     }
     return idColumn.field;
   }
@@ -40,17 +53,11 @@ export class TablePresenter {
     if (!this.columnMap?.columns) return [];
 
     let columns = this.columnMap.columns
-      .map(col => ({
-        ...col,
-        hide: this.shouldHideInTable(col),
-        // Set fixed width for DATE fields
-        width: col.dataType === 'DATE' ? 100 : (col.width || 100)
-      }))
-      .filter(col => !col.hide)
+      .filter(col => !this.shouldHideInTable(col))
       .map(col => ({
         field: col.field,
         headerName: col.label,
-        width: col.width,
+        width: col.dataType === 'DATE' ? 100 : (col.width || 100),
         ...col
       }));
 
@@ -60,7 +67,6 @@ export class TablePresenter {
         field: 'delete',
         headerName: '',
         width: 50,
-        hide: false,
         renderCell: (params) => (
           <IconButton onClick={() => onDelete(params.row)}>
             <DeleteIcon />
@@ -94,26 +100,79 @@ export class TablePresenter {
     );
   }
 
-  handleRowClick(row, onRowSelect) {
-    this.log.debug('Row clicked:', row);
-    if (!row) return;
+  mapRowToColumnValues(rowData) {
+    if (!rowData || !this.columnMap?.columns) {
+      this.log.warn('Cannot map row data: missing data or columns');
+      return {};
+    }
     
-    // Set form mode first
+    const mappedData = {};
+    let errorFound = false;
+    
+    // Process all columns, not just those with existing value values
+    this.columnMap.columns.forEach(col => {
+      // Skip if no field defined
+      if (!col.field) return;
+      
+      // Check if the row has data for this field
+      if (rowData[col.field] !== undefined) {
+        // If value exists (even empty string), use it as target
+        if ('value' in col) {
+          // Empty value means use the field name itself
+          const targetField = col.value || col.field;
+          mappedData[targetField] = rowData[col.field];
+          
+          // Apply any transformations if needed
+          if (col.transform) {
+            try {
+              mappedData[targetField] = col.transform(mappedData[targetField]);
+            } catch (error) {
+              this.log.error(`Transform error for ${col.field}:`, error);
+            }
+          }
+        } else {
+          // Column is missing value property completely
+          errorFound = true;
+          this.log.error(`Column '${col.field}' is missing value attribute`);
+        }
+      }
+    });
+    
+    if (errorFound) {
+      this.log.warn('Some columns were missing value attributes, check configuration');
+    }
+    
+    this.log.debug('Mapped row to column values:', {
+      rowFields: Object.keys(rowData).length,
+      mappedFields: Object.keys(mappedData).length
+    });
+    
+    return mappedData;
+  }
+
+  handleRowClick(row) {
+    this.log.debug('Row clicked:', row);
+    if (!row) return null;
+    
+    // Set form mode first (legacy approach)
     setVar(':formMode', 'edit');
     
-    // Set vars for form fields
+    // Update external store for backward compatibility
     this.columnMap?.columns?.forEach(col => {
       if (col.setVar) {
         setVar(col.setVar, row[col.field]);
-        this.log.debug('Setting var:', {
-          var: col.setVar,
-          value: row[col.field]
-        });
       }
     });
-
-    // Then notify parent
-    onRowSelect?.(row);
-    return row;
+    
+    // Map row data to column values
+    const columnValues = this.mapRowToColumnValues(row);
+    
+    // Log what's about to be returned
+    this.log.debug('Mapped row data:', {
+      originalFields: Object.keys(row).length,
+      mappedFields: Object.keys(columnValues).length
+    });
+    
+    return columnValues;
   }
 }

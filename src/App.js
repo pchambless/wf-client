@@ -2,15 +2,13 @@ import React, { useEffect } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { themeOptions } from './theme';
-import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import store from './utils/externalStore'; 
 import ErrorBoundary from './components/ErrorBoundary';
 import Modal from './components/modal/Modal';
 import { useModalStore } from './stores/modalStore';
-import { useSessionStore } from './stores/sessionStore';
 import createLogger from './utils/logger';
-import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Import pages
 import Login from './pages/Login';
@@ -46,69 +44,34 @@ const App = () => {
   );
 };
 
-// Log router location and authentication status inside AppContent
+// Simplify route definitions - remove ProtectedRoute wrapper
 const AppContent = () => {
-  const { authenticated } = useSessionStore();
-  const location = useLocation();
-  const log = createLogger('App');
-
-  // Memoize the protectedElement function
-  const protectedElement = React.useCallback((path, Component) => {
-    log.debug('Creating protected route', { 
-      path, 
-      currentPath: location.pathname,
-      component: Component.name 
-    });
-    
-    return (
-      <ProtectedRoute path={path}>
-        <Component />
-      </ProtectedRoute>
-    );
-  }, [location.pathname, log]);
 
   return (
     <Routes>
       {/* Public routes */}
-      <Route 
-        path="/" 
-        element={authenticated ? <Navigate to="/welcome" replace /> : <Login />} 
-      />
-      <Route 
-        path="/login" 
-        element={authenticated ? <Navigate to="/welcome" replace /> : <Login />} 
-      />
+      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/login" element={<Login />} />
 
-      {/* Protected routes */}
-      <Route path="/welcome" element={protectedElement("/welcome", Welcome)} />
-      <Route path="/ingredients" element={protectedElement("/ingredients", Ingredient)} />
-      <Route path="/products" element={protectedElement("/products", Product)} />
-      <Route path="/account" element={protectedElement("/account", Account)} />
-      <Route path="/admin" element={protectedElement("/admin", Admin)} />
+      {/* Direct routes without protection for MVP */}
+      <Route path="/welcome" element={<Welcome />} />
+      <Route path="/ingredients" element={<Ingredient />} />
+      <Route path="/products" element={<Product />} />
+      <Route path="/account" element={<Account />} />
+      <Route path="/admin" element={<Admin />} />
 
-      {/* Catch-all with logging */}
-      <Route 
-        path="*" 
-        element={
-          (() => {
-            log.debug('Catch-all route hit', {
-              path: location.pathname,
-              redirectTo: authenticated ? "/welcome" : "/login"
-            });
-            return <Navigate to={authenticated ? "/welcome" : "/login"} replace />;
-          })()
-        } 
-      />
+      {/* Simple catch-all */}
+      <Route path="*" element={<Navigate to="/welcome" replace />} />
     </Routes>
   );
 };
 
 const ModalContainer = () => {
   const { isOpen, config, closeModal } = useModalStore();
-  const modalLog = createLogger('ModalContainer');
+  const modalLog = createLogger('App.Modal');
   
   useEffect(() => {
-    modalLog.debug('ModalContainer rendered', { isOpen, config });
+    modalLog.debug(' - rendered', { isOpen, config });
   }, [isOpen, config, modalLog]);
 
   const modalProps = {

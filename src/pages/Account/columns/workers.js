@@ -20,7 +20,7 @@ export const Workers = {
       label: "Worker Name",
       width: 200,
       dataType: "STRING",
-      required: 1,
+      required: true,
       setVar: ":wrkrName"
     },
     {

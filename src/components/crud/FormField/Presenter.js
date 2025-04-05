@@ -1,9 +1,16 @@
 import createLogger from '../../../utils/logger';
-import { getVar } from '../../../utils/externalStore';
+// Remove this import
+// import { getVar } from '../../../utils/externalStore';
 
 export class FormFieldPresenter {
-  constructor() {
+  constructor(selectOptionsMap = {}) {
     this.log = createLogger('FormField.Presenter');
+    this.selectOptionsMap = selectOptionsMap; // Store options directly
+  }
+
+  // Set options map for selections
+  setSelectOptions(optionsMap) {
+    this.selectOptionsMap = optionsMap;
   }
 
   getFieldType(fieldConfig) {
@@ -26,22 +33,11 @@ export class FormFieldPresenter {
     }
   }
 
-  getSelectOptions(fieldConfig) {
-    const listName = fieldConfig.selList;
-    if (!listName) {
-      this.log.warn(`No selList specified for field: ${fieldConfig.field}`);
+  transformOptions(rawOptions) {
+    if (!Array.isArray(rawOptions) || rawOptions.length === 0) {
       return [];
     }
-
-    const rawOptions = getVar(`:${listName}`) || [];
     
-    this.log.debug('Getting select options:', { 
-      field: fieldConfig.field,
-      listName,
-      rawCount: rawOptions.length,
-      rawFirst: rawOptions[0]
-    });
-
     // Transform options using first and second properties
     const options = rawOptions.map(opt => {
       const [idKey, labelKey] = Object.keys(opt);
@@ -51,14 +47,20 @@ export class FormFieldPresenter {
       };
     });
 
-    this.log.debug('Transformed options:', {
-      field: fieldConfig.field,
-      count: options.length,
-      first: options[0],
-      values: options.map(o => o.value)
-    });
-
     return options;
+  }
+
+  // Updated to use options passed directly instead of getVar
+  getSelectOptions(fieldConfig) {
+    const listName = fieldConfig.selList;
+    if (!listName) {
+      this.log.warn(`No selList specified for field: ${fieldConfig.field}`);
+      return [];
+    }
+
+    // Use options from map instead of getVar
+    const rawOptions = this.selectOptionsMap[listName] || [];
+    return this.transformOptions(rawOptions);
   }
 
   validateField(fieldConfig, value) {
