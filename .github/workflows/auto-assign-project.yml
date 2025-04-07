@@ -23,6 +23,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           variables: |
             {
-              "projectId": "YOUR_PROJECT_ID",
+              "projectId": "PVT_kwHOAq2Mhc4A2FS_",
               "contentId": "${{ github.event.issue.node_id }}"
             }
