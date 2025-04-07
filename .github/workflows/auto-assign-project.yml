@@ -9,9 +9,20 @@ jobs:
   assign_to_project:
     runs-on: ubuntu-latest
     steps:
-      - name: Add issue to project
-        uses: andymckay/add-to-github-projects@v1.4
+      - name: Run GraphQL Query
+        uses: octokit/graphql-action@v1
         with:
+          query: |
+            mutation($projectId: ID!, $contentId: ID!) {
+              addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+                item {
+                  id
+                }
+              }
+            }
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          project: "Whatsfresh Requirements" # Replace with your exact project name
-          column: "Backlog"                 # Replace with your exact column name
+          variables: |
+            {
+              "projectId": "YOUR_PROJECT_ID",
+              "contentId": "${{ github.event.issue.node_id }}"
+            }
