@@ -9,58 +9,9 @@ jobs:
   assign_to_project:
     runs-on: ubuntu-latest
     steps:
-      - name: Assign issue to project
-        uses: actions/github-script@v6
+      - name: Add issue to project
+        uses: lyzidiamond/add-to-github-projects@v1
         with:
-          script: |
-            const { graphql } = require('@octokit/graphql');
-
-            // The token for authentication
-            const token = process.env.GITHUB_TOKEN;
-
-            // GraphQL client
-            const graphqlWithAuth = graphql.defaults({
-              headers: {
-                authorization: `token ${token}`,
-              },
-            });
-
-            // Replace these with your project name and column name
-            const projectName = "Whatsfresh Requirements";
-            const columnName = "Backlog";
-
-            // Step 1: Get the project ID
-            const projects = await graphqlWithAuth(`
-              query ($org: String!, $name: String!) {
-                organization(login: $org) {
-                  projectsV2(first: 10, query: $name) {
-                    nodes {
-                      id
-                      title
-                    }
-                  }
-                }
-              }
-            `, {
-              org: "pchambless",
-              name: projectName,
-            });
-
-            const project = projects.organization.projectsV2.nodes.find(p => p.title === projectName);
-            if (!project) {
-              throw new Error(`Project "${projectName}" not found`);
-            }
-
-            // Step 2: Add issue to the project
-            await graphqlWithAuth(`
-              mutation ($projectId: ID!, $contentId: ID!) {
-                addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
-                  item {
-                    id
-                  }
-                }
-              }
-            `, {
-              projectId: project.id,
-              contentId: context.payload.issue.node_id,
-            });
+          github-token: ${{ secrets.GITHUB_TOKEN }}  # Use the default GitHub token
+          project-url: https://github.com/orgs/YourOrganization/projects/1  # Replace with your project URL
+          content-id: ${{ github.event.issue.node_id }}  # The issue ID
