@@ -28,7 +28,7 @@ jobs:
 
       - name: Add Issue to Project via GraphQL
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MY_SECRET_PAT }}
           ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
         run: |
           node -e "
