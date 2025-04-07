@@ -17,8 +17,15 @@ jobs:
         with:
           node-version: '16'  # Use Node.js version 16 for compatibility
 
-      - name: Install Octokit GraphQL Library
-        run: npm install @octokit/graphql
+      - name: Install Yarn
+        run: npm install --global yarn
+
+      - name: Create package.json for dependencies
+        run: |
+          echo '{}' > package.json
+
+      - name: Install Octokit GraphQL Library Using Yarn
+        run: yarn add @octokit/graphql
 
       - name: Add issue to project via GraphQL
         env:
