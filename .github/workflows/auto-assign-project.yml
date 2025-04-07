@@ -13,6 +13,6 @@ jobs:
         uses: peter-evans/create-or-update-project-card@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          project: @Whatsfresh Requirements
+          project: "@Whatsfresh Requirements"
           column: BackLog
           issue-number: ${{ github.event.issue.number }}
