@@ -13,6 +13,6 @@ jobs:
         uses: peter-evans/create-or-update-project-card@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          project: "@Whatsfresh Requirements"
-          column: BackLog
+          project-name: "Whatsfresh Requirements" # Name of the new-style project
+          column-name: "Backlog"      # Column where the issue should go
           issue-number: ${{ github.event.issue.number }}
