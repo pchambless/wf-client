@@ -15,15 +15,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '16'  # Use Node.js version 16 for compatibility
 
       - name: Install Octokit GraphQL Library
         run: npm install @octokit/graphql
 
       - name: Add issue to project via GraphQL
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Automatically provided token
+          ISSUE_NODE_ID: ${{ github.event.issue.node_id }}  # Issue ID from GitHub event
         run: |
           node -e "
           const { graphql } = require('@octokit/graphql');
@@ -36,19 +36,24 @@ jobs:
           });
 
           (async () => {
-            const projectId = 'PVT_kwHOAq2Mhc4A2FS_';
-            const contentId = process.env.ISSUE_NODE_ID;
+            try {
+              const projectId = 'PVT_kwHOAq2Mhc4A2FS_';  // Replace with your actual project ID
+              const contentId = process.env.ISSUE_NODE_ID;  // Dynamic issue node ID
 
-            await graphqlWithAuth(\`
-              mutation ($projectId: ID!, $contentId: ID!) {
-                addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
-                  item {
-                    id
+              await graphqlWithAuth(\`
+                mutation ($projectId: ID!, $contentId: ID!) {
+                  addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+                    item {
+                      id
+                    }
                   }
                 }
-              }
-            \`, { projectId, contentId });
+              \`, { projectId, contentId });
 
-            console.log('Issue successfully added to project.');
+              console.log('Issue successfully added to project.');
+            } catch (error) {
+              console.error('Failed to add issue to project:', error);
+              process.exit(1);
+            }
           })();
           "
