@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Add issue to project
-        uses: lyzidiamond/add-to-github-projects@v1
+        uses: andymckay/add-to-github-projects@v1.4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}  # Use the default GitHub token
-          project-url: https://github.com/users/pchambless/projects/4  # Replace with your project URL
-          content-id: ${{ github.event.issue.node_id }}  # The issue ID
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          project: "Whatsfresh Requirements" # Replace with your exact project name
+          column: "Backlog"                 # Replace with your exact column name
