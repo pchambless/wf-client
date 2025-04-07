@@ -15,12 +15,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'  # Use Node.js version 16 for compatibility
+          node-version: '16'
 
-      - name: Install Yarn
+      - name: Remove Existing Yarn Folder
+        run: rm -rf .yarn
+
+      - name: Install Yarn Globally
         run: npm install --global yarn
 
-      - name: Create package.json for dependencies
+      - name: Create package.json
         run: |
           echo '{}' > package.json
 
@@ -29,8 +32,8 @@ jobs:
 
       - name: Add issue to project via GraphQL
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Automatically provided token
-          ISSUE_NODE_ID: ${{ github.event.issue.node_id }}  # Issue ID from GitHub event
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
         run: |
           node -e "
           const { graphql } = require('@octokit/graphql');
@@ -44,8 +47,8 @@ jobs:
 
           (async () => {
             try {
-              const projectId = 'PVT_kwHOAq2Mhc4A2FS_';  // Replace with your actual project ID
-              const contentId = process.env.ISSUE_NODE_ID;  // Dynamic issue node ID
+              const projectId = 'PVT_kwHOAq2Mhc4A2FS_';
+              const contentId = process.env.ISSUE_NODE_ID;
 
               await graphqlWithAuth(\`
                 mutation ($projectId: ID!, $contentId: ID!) {
