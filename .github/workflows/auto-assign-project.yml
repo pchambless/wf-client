@@ -9,20 +9,46 @@ jobs:
   assign_to_project:
     runs-on: ubuntu-latest
     steps:
-      - name: Run GraphQL Query
-        uses: octokit/graphql-action@v1
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          query: |
-            mutation($projectId: ID!, $contentId: ID!) {
-              addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
-                item {
-                  id
+          node-version: '16'
+
+      - name: Install Octokit GraphQL Library
+        run: npm install @octokit/graphql
+
+      - name: Add issue to project via GraphQL
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        run: |
+          node -e "
+          const { graphql } = require('@octokit/graphql');
+
+          const token = process.env.GITHUB_TOKEN;
+          const graphqlWithAuth = graphql.defaults({
+            headers: {
+              authorization: \`token ${token}\`,
+            },
+          });
+
+          (async () => {
+            const projectId = 'PVT_kwHOAq2Mhc4A2FS_';
+            const contentId = process.env.ISSUE_NODE_ID;
+
+            await graphqlWithAuth(\`
+              mutation ($projectId: ID!, $contentId: ID!) {
+                addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+                  item {
+                    id
+                  }
                 }
               }
-            }
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          variables: |
-            {
-              "projectId": "PVT_kwHOAq2Mhc4A2FS_",
-              "contentId": "${{ github.event.issue.node_id }}"
-            }
+            \`, { projectId, contentId });
+
+            console.log('Issue successfully added to project.');
+          })();
+          "
