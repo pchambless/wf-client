@@ -1,0 +1,68 @@
+name: Auto-Assign Issue to Project
+
+on:
+  issues:
+    types:
+      - opened
+
+jobs:
+  assign_to_project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Remove Existing Yarn Folder and Configurations
+        run: rm -rf .yarn .yarnrc
+
+      - name: Install Yarn Globally
+        run: npm install --global yarn
+
+      - name: Initialize Yarn Environment
+        run: yarn init -y
+
+      - name: Install Octokit GraphQL Library Using Yarn
+        run: yarn add @octokit/graphql
+
+      - name: Add issue to project via GraphQL
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        run: |
+          node -e "
+          const { graphql } = require('@octokit/graphql');
+
+          const token = process.env.GITHUB_TOKEN;
+          const graphqlWithAuth = graphql.defaults({
+            headers: {
+              authorization: \`token ${token}\`,
+            },
+          });
+
+          (async () => {
+            try {
+              const projectId = 'PVT_kwHOAq2Mhc4A2FS_';  // Replace with your actual project ID
+              const contentId = process.env.ISSUE_NODE_ID;  // Dynamic issue node ID
+
+              await graphqlWithAuth(\`
+                mutation ($projectId: ID!, $contentId: ID!) {
+                  addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+                    item {
+                      id
+                    }
+                  }
+                }
+              \`, { projectId, contentId });
+
+              console.log('Issue successfully added to project.');
+            } catch (error) {
+              console.error('Failed to add issue to project:', error);
+              process.exit(1);
+            }
+          })();
+          "
