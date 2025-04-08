@@ -9,29 +9,39 @@ jobs:
   assign_to_project:
     runs-on: ubuntu-latest
     steps:
+      # Step 1: Check out repository code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Step 2: Set up Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '20'
 
-      - name: Remove Existing Yarn Folder and Configurations
+      # Optional: Cleanup Yarn configurations (if present)
+      - name: Remove Yarn Configurations (If Needed)
         run: rm -rf .yarn .yarnrc
 
-      - name: Install Yarn Globally
-        run: npm install --global yarn
+      # Step 3: Create a minimal package.json file for dependency installation
+      - name: Create package.json for Dependencies
+        run: echo '{}' > package.json
 
-      - name: Initialize Yarn Environment
-        run: yarn init -y
+      # Step 4: Install GraphQL library using NPM
+      - name: Install Octokit GraphQL Library Using NPM
+        run: npm install @octokit/graphql --legacy-peer-deps
 
-      - name: Install Octokit GraphQL Library Using Yarn
-        run: yarn add @octokit/graphql
+      # Step 5: Debug Environment Variables
+      # Logs the Project ID and Issue Node ID for verification.
+      - name: Debug Workflow Environment
+        run: |
+          echo "Project ID: PVT_kwHOAq2Mhc4A2FS_"
+          echo "Issue Node ID: ${{ github.event.issue.node_id }}"
 
-      - name: Add issue to project via GraphQL
+      # Step 6: Add Issue to Project via GraphQL Mutation
+      - name: Add Issue to Project via GraphQL
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MY_SECRET_PAT }} # Ensure this secret is correctly set in your repo
           ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
         run: |
           node -e "
@@ -47,8 +57,13 @@ jobs:
           (async () => {
             try {
               const projectId = 'PVT_kwHOAq2Mhc4A2FS_';  // Replace with your actual project ID
-              const contentId = process.env.ISSUE_NODE_ID;  // Dynamic issue node ID
+              const contentId = process.env.ISSUE_NODE_ID; // Dynamically fetch issue node_id
 
+              // Log values for debugging
+              console.log('Project ID:', projectId);
+              console.log('Content ID:', contentId);
+
+              // Execute GraphQL Mutation
               await graphqlWithAuth(\`
                 mutation ($projectId: ID!, $contentId: ID!) {
                   addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
