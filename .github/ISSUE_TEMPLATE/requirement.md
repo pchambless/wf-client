@@ -2,17 +2,15 @@
 name: Feature Request / Requirement
 about: Describe a new feature or capture requirements for a module.
 title: "[Feature] <Add Title Here>"
-labels: ["requirement", "enhancement"]
-assignees: ["pchambless"]
+labels: ["requirement"]
+assignees: [""]
 ---
 
 ## Description
-Provide a detailed description of the requirement or feature request:
-- What problem is this feature solving?
-- Why is it important?
 
-## Behavior
-Describe any workflows or hierarchies involved (if applicable):
+## Behavior / Flow
+
+
 
 ## Relevant Links
 - **Repo Link:** [Insert link here]
