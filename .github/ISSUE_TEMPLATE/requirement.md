@@ -7,22 +7,25 @@ assignees: [""]
 ---
 
 ## Description
+<!-- Brief explanation of what this feature does and why it's needed -->
 
 ## Behavior / Flow
-
-
-
-## Relevant Links
-- **Repo Link:** [Insert link here]
-- **Other Link:** [Insert documentation link here]
+<!-- How the feature works from a user perspective -->
 
 ## Acceptance Criteria
-List specific outcomes that will determine if this feature/requirement is complete:
-- [ ] Criteria 1
-- [ ] Criteria 2
-- [ ] Criteria 3
+<!-- What must be implemented for this to be considered complete -->
+- [ ] 
 
-## Labels
-Default labels: `requirement`
+## Related Components
+<!-- List files affected by this change. Examples: -->
+<!-- - src\pages\types\hierPage.js -->
+<!-- - src\components\crud\CrudLayout.js -->
 
----
+<!-- Optional sections -->
+<!--
+## Links
+- **Related docs:** [link]
+
+## Notes
+Any additional information
+-->
