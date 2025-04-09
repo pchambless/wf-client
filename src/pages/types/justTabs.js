@@ -5,16 +5,13 @@ import CrudLayout from '../../components/crud/CrudLayout';
 import createLogger from '../../utils/logger';
 import { setVar } from '../../utils/externalStore';
 
-const log = createLogger('TabbedPage');
+const log = createLogger('JustTabs');
 
 /**
- * A reusable tabbed page component for hierarchical data navigation
+ * A simple tabbed page component
  * Supports both single layout and isolated layouts per tab
- * 
- * @deprecated Use HierPage component instead. This component remains for backward compatibility.
- * @see Issue #25
  */
-const TabbedPage = ({
+const JustTabs = ({
   tabConfiguration,
   presenter,
   pageTitle = "WhatsFresh",
@@ -23,11 +20,6 @@ const TabbedPage = ({
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [selections, setSelections] = useState(initialSelections);
-
-  // Log deprecation warning
-  useEffect(() => {
-    console.warn('TabbedPage is deprecated. Please use HierPage instead for new implementations.');
-  }, []);
 
   // Update page title when tab changes
   useEffect(() => {
@@ -45,41 +37,8 @@ const TabbedPage = ({
 
   // Handle tab change with validation
   const handleTabChange = (_, newValue) => {
-    if (isTabEnabled(newValue)) {
-      setActiveTab(newValue);
-      log.debug(`Tab changed to ${newValue}`);
-    } else {
-      log.warn(`Cannot switch to tab ${newValue} - prerequisites not met`);
-    }
-  };
-
-  // Check if a tab should be enabled based on hierarchy
-  const isTabEnabled = (tabIndex) => {
-    // First tab always enabled
-    if (tabIndex === 0) return true;
-    
-    // Use presenter logic if available
-    if (presenter && presenter.isTabEnabled) {
-      return presenter.isTabEnabled(tabIndex, selections);
-    }
-    
-    // Default hierarchical logic - check if previous tab has a selection
-    const selectionKeys = Object.keys(selections);
-    if (tabIndex <= selectionKeys.length) {
-      // Check for a non-null selection in the previous tab
-      const previousSelectionKey = selectionKeys[tabIndex - 1];
-      const hasSelection = selections[previousSelectionKey] != null;
-      
-      log.debug(`Tab ${tabIndex} enabled check:`, { 
-        previousKey: previousSelectionKey,
-        hasSelection,
-        selection: selections[previousSelectionKey]
-      });
-      
-      return hasSelection;
-    }
-    
-    return false;
+    setActiveTab(newValue);
+    log.debug(`Tab changed to ${newValue}`);
   };
 
   // Handle row selection
@@ -89,44 +48,6 @@ const TabbedPage = ({
     if (presenter && presenter.handleRowSelection) {
       const newSelections = presenter.handleRowSelection(tabIndex, row, selections);
       setSelections(newSelections);
-    } else {
-      // Default hierarchical selection behavior
-      setSelections(prev => {
-        const updated = { ...prev };
-        
-        if (tabIndex === 0) {
-          // Type selection - clear dependent selections
-          const typeKey = Object.keys(initialSelections)[0] || 'type';
-          updated[typeKey] = row;
-          
-          // Clear child selections
-          const itemKey = Object.keys(initialSelections)[1] || 'item';
-          updated[itemKey] = null;
-          
-          const batchKey = Object.keys(initialSelections)[2] || 'batch';
-          if (batchKey in initialSelections) {
-            updated[batchKey] = null;
-          }
-        } 
-        else if (tabIndex === 1) {
-          // Item selection
-          const itemKey = Object.keys(initialSelections)[1] || 'item';
-          updated[itemKey] = row;
-          
-          // Clear child selection if it exists
-          const batchKey = Object.keys(initialSelections)[2] || 'batch';
-          if (batchKey in initialSelections) {
-            updated[batchKey] = null;
-          }
-        }
-        else if (tabIndex === 2) {
-          // Batch selection
-          const batchKey = Object.keys(initialSelections)[2] || 'batch';
-          updated[batchKey] = row;
-        }
-        
-        return updated;
-      });
     }
   };
 
@@ -181,7 +102,6 @@ const TabbedPage = ({
           <Tab 
             key={index}
             label={tab.label}
-            disabled={!isTabEnabled(index)}
           />
         ))}
       </Tabs>
@@ -191,4 +111,4 @@ const TabbedPage = ({
   );
 };
 
-export default TabbedPage;
+export default JustTabs;

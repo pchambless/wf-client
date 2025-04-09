@@ -1,27 +1,30 @@
 import React, { useMemo } from 'react';
-import TabbedPage from '../types/tabbedPage';
+import JustTabs from '../types/justTabs'; // Changed to new consistent filename
 import { accountConfig } from './config';
 import createLogger from '../../utils/logger';
 
-const log = createLogger('Account');
-
 const Account = () => {
+  const log = useMemo(() => createLogger('AccountPage'), []);
+
   // Simple presenter for the Account page
   const presenter = useMemo(() => {
     return {
       getListEvent: (tabIndex) => {
         const tab = accountConfig.tabs[tabIndex];
+        log.debug(`Getting list event for account tab ${tabIndex}`, {
+          event: tab.listEvent?.name || tab.listEvent
+        });
         return tab.listEvent;
       }
     };
-  }, []);
+  }, [log]);
   
   return (
-    <TabbedPage
+    <JustTabs
       tabConfiguration={accountConfig.tabs}
       presenter={presenter}
       pageTitle="Account Information"
-      // Non-hierarchical tabs don't need initialSelections or isolatedLayouts
+      isolatedLayouts={true} // Each tab has its own independent data
     />
   );
 };

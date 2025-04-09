@@ -1,6 +1,7 @@
 import createLogger from '../../utils/logger';
 import { subscribeToAction } from '../../actions/actionStore';
 import { SELECTION } from '../../actions/core/constants';
+import { setVar } from '../../utils/externalStore'; // Add missing import
 
 const TAB_NAMES = ['Type', 'Ingredient', 'Batch'];
 
@@ -70,17 +71,26 @@ export class IngredientPresenter {
   }
 
   getListEvent(activeTab, selections, tabConfiguration) {
+    // Add defensive check for tabConfiguration
+    if (!tabConfiguration) {
+      this.log.warn('tabConfiguration not provided to getListEvent', { activeTab });
+      return '';
+    }
+    
     const config = tabConfiguration[activeTab];
     if (!config || !config.listEvent) return '';
     
-    // Get base event from config
-    let eventName = config.listEvent;
+    // Return just the clean event name - no parameters attached
+    // The eventStore will resolve parameters from setVar values
+    const eventName = config.listEvent;
     
-    // Add parameters based on tab
+    // Log which params will be needed (but don't append to event name)
     if (activeTab === 1 && selections.ingrType) {
-      eventName = `${eventName}`;
+      const ingrTypeId = selections.ingrType?.ingrTypeID || selections.ingrType?.id;
+      this.log.debug(`Tab 1 will use parameter: ingrTypeID=${ingrTypeId}`);
     } else if (activeTab === 2 && selections.ingredient) {
-      eventName = `${eventName}`;
+      const ingrId = selections.ingredient?.ingrID || selections.ingredient?.id;
+      this.log.debug(`Tab 2 will use parameter: ingrID=${ingrId}`);
     }
     
     this.log.debug(`Generated list event: ${eventName}`);
@@ -93,9 +103,21 @@ export class IngredientPresenter {
     switch (activeTab) {
       case 0:
         newSelections.ingrType = row;
+        // Set var for the parameter that will be needed by Tab 1
+        const ingrTypeId = row?.ingrTypeID || row?.id;
+        if (ingrTypeId) {
+          setVar(':ingrTypeID', ingrTypeId); // Added colon prefix for consistency with Issue #27
+          this.log.debug(`Set var for Tab 1 parameter: :ingrTypeID=${ingrTypeId}`);
+        }
         break;
       case 1:
         newSelections.ingredient = row;
+        // Set var for the parameter that will be needed by Tab 2
+        const ingrId = row?.ingrID || row?.id;
+        if (ingrId) {
+          setVar(':ingrID', ingrId); // Added colon prefix for consistency with Issue #27
+          this.log.debug(`Set var for Tab 2 parameter: :ingrID=${ingrId}`);
+        }
         break;
       case 2:
         newSelections.batch = row;

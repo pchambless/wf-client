@@ -3,6 +3,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Box } from '@mui/material';
 import createLogger from '../../../utils/logger';
 import { TablePresenter } from './Presenter';
+import { setVar } from '../../../utils/externalStore';
 import tracker from '../../../actions/tracker';
 import { SELECTION, triggerAction } from '../../../actions/actionStore';
 
@@ -19,21 +20,23 @@ const Table = ({ columnMap, listEvent, onRowSelect, selectedId }) => {
     presenter.listEvent = listEvent;
   }, [presenter, columnMap, listEvent]);
 
-  // Load data
+  // Load data - simplified with minimal logging
   useEffect(() => {
     let isMounted = true;
     
     const loadData = async () => {
       try {
         setLoading(true);
+        log.debug('Table loading...', { listEvent });
+        
         const data = await presenter.fetchData();
         
         if (isMounted) {
           setRows(data);
-          log.debug('Data loaded successfully', { count: data.length });
+          log.debug('Table loaded', { count: data.length });
         }
       } catch (error) {
-        log.error('Failed to load data:', error);
+        log.error('Failed to load table data:', error);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -43,39 +46,36 @@ const Table = ({ columnMap, listEvent, onRowSelect, selectedId }) => {
     
     loadData();
     
-    return () => {
-      isMounted = false;
-    };
-  }, [presenter]);
+    return () => { isMounted = false; };
+  }, [presenter, listEvent]);
 
-  // Handle row click
+  // Streamlined row click handler
   const handleRowClick = useCallback((params) => {
     const row = params.row;
-    const idField = presenter.getIdField();
+    const idField = columnMap.idField || presenter.getIdField();
     const id = row[idField];
     
-    // Trigger action with raw row and mapped column values
+    // Set ID field directly for event resolution
+    if (idField && id !== undefined) {
+      setVar(`:${idField}`, id);
+      log.debug(`Set variable :${idField}=${id} for event resolution`);
+    }
+    
+    // Trigger action for other components to respond
     triggerAction(SELECTION.ROW_SELECT, {
       id,
       idField,
       source: 'table',
-      tableId: columnMap.id || 'unknown',
-      row, // original row
-      columnValues: presenter.mapRowToColumnValues(row) // mapped values
+      listEvent: listEvent, // Use listEvent as table identifier - more reliable
+      row
     });
     
-    // Also call direct callback if provided
-    onRowSelect?.(row);
+    // Call direct callback if provided
+    if (onRowSelect) onRowSelect(row);
     
-    // Track row click
-    tracker.trackComponentAction('Table', 'rowClick', {
-      tableId: columnMap.id || 'unknown',
-      rowId: id,
-      idField
-    });
-
-    log.debug('Row selected', { id });
-  }, [presenter, columnMap, onRowSelect]);
+    // Simple debug log
+    log.debug('Row selected', { id, field: idField });
+  }, [presenter, columnMap, onRowSelect, listEvent]);
 
   const idField = presenter.getIdField();
   

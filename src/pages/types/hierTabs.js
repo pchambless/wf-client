@@ -6,25 +6,25 @@ import CrudLayout from '../../components/crud/CrudLayout';
 import createLogger from '../../utils/logger';
 import { setVar } from '../../utils/externalStore';
 
-const log = createLogger('HierPage');
+const log = createLogger('HierTabs');
 
 /**
- * Hierarchical Page Component
+ * Hierarchical Tabs Component
  * 
  * Specialized for pages with parent-child relationships between tabs,
  * where selections in one tab enable and populate the next tab.
  */
-const HierPage = ({
+const HierTabs = ({
   tabConfiguration,
   presenter,
   pageTitle = "WhatsFresh",
   isolatedLayouts = false,
   initialSelections = {},
-  contextualNavigation = [] // New prop for related pages
+  contextualNavigation = []
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [selections, setSelections] = useState(initialSelections);
-  const navigate = useNavigate(); // Get navigate function from React Router
+  const navigate = useNavigate();
 
   // Update page title when tab changes
   useEffect(() => {
@@ -40,6 +40,15 @@ const HierPage = ({
     if (isTabEnabled(newValue)) {
       setActiveTab(newValue);
       log.debug(`Tab changed to ${newValue}`);
+      
+      // Log the listEvent that will be used for this tab
+      const tabListEvent = presenter.getListEvent(newValue, selections, tabConfiguration);
+      log.debug(`Tab ${newValue} will use listEvent: ${tabListEvent}`);
+      
+      // If presenter has handleTabChange, call it
+      if (presenter.handleTabChange) {
+        presenter.handleTabChange(newValue, selections);
+      }
     } else {
       log.warn(`Cannot switch to tab ${newValue} - prerequisites not met`);
     }
@@ -138,6 +147,7 @@ const HierPage = ({
 
   // Render contextual navigation buttons if available for current tab
   const renderContextualNav = () => {
+    // Remove unused variable
     const relevantNavs = contextualNavigation.filter(nav => 
       nav.sourceTab === activeTab && (
         !nav.requiresSelection || 
@@ -201,4 +211,4 @@ const HierPage = ({
   );
 };
 
-export default HierPage;
+export default HierTabs;

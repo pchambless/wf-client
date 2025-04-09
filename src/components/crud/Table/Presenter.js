@@ -19,15 +19,12 @@ export class TablePresenter {
   }
 
   initializeTracking() {
-    try {
-      // Wrap methods with tracking
-      this.fetchData = tracker.wrapFunction(this.fetchData.bind(this));
-      this.handleRowClick = tracker.wrapFunction(this.handleRowClick.bind(this));
-      this.log.debug('Tracking initialized');
-    } catch (error) {
-      this.log.error('Failed to initialize tracking:', error);
-      // Continue without tracking if it fails
-    }
+    // For MVP, we can simplify or even comment this out
+    // Just log that we're deferring tracking for now
+    this.log.debug('Tracking deferred until post-MVP');
+    
+    // Keep the method but make it a no-op for now
+    // We can implement proper tracking in a future iteration
   }
 
   async fetchData() {
@@ -41,6 +38,12 @@ export class TablePresenter {
   }
 
   getIdField() {
+    // Check if idField is explicitly defined in columnMap
+    if (this.columnMap.idField) {
+      return this.columnMap.idField;
+    }
+    
+    // Fall back to traditional where:1 approach
     const idColumn = this.columnMap.columns.find(col => col.where === 1);
     if (!idColumn) {
       this.log.warn('No ID column found (where: 1)');
