@@ -4,7 +4,6 @@ import Container from '../Container';
 import CrudLayout from '../../components/crud/CrudLayout';
 import createLogger from '../../utils/logger';
 import { setVar } from '../../utils/externalStore';
-import { navigate } from 'gatsby';
 
 const log = createLogger('HierPage');
 
@@ -20,7 +19,7 @@ const HierPage = ({
   pageTitle = "WhatsFresh",
   isolatedLayouts = false,
   initialSelections = {},
-  contextualNavigation = [] // New prop for related pages
+  contextualNavigation = []
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [selections, setSelections] = useState(initialSelections);
@@ -54,22 +53,16 @@ const HierPage = ({
     }
     
     // Default hierarchical logic
+    const selectionKeys = Object.keys(initialSelections);
+    // For tab 1, check if selection from tab 0 exists
     if (tabIndex === 1) {
-      // Tab 1 requires selection in Tab 0
-      return Boolean(getParentSelectionForTab(1));
+      return Boolean(selections[selectionKeys[0]]);
     }
+    // For tab 2, check if selection from tab 1 exists
     if (tabIndex === 2) {
-      // Tab 2 requires selection in Tab 1
-      return Boolean(getParentSelectionForTab(2));
+      return Boolean(selections[selectionKeys[1]]);
     }
     return false;
-  };
-
-  // Get parent selection for a specific tab
-  const getParentSelectionForTab = (tabIndex) => {
-    const selectionKeys = Object.keys(initialSelections);
-    if (tabIndex <= 0 || tabIndex >= selectionKeys.length) return null;
-    return selections[selectionKeys[tabIndex - 1]];
   };
 
   // Handle row selection with hierarchical updates
@@ -100,49 +93,11 @@ const HierPage = ({
     }
   };
 
-  // Render layouts based on strategy
-  const renderContent = () => {
-    if (isolatedLayouts) {
-      // Isolated layouts - one CrudLayout per tab
-      return (
-        <>
-          {tabConfiguration.map((tab, index) => (
-            activeTab === index && (
-              <Box key={`tab-content-${index}`} sx={{ pt: 2 }}>
-                <CrudLayout
-                  key={`tab${index}-layout`}
-                  columnMap={{
-                    ...tab.columnMap,
-                    onRowSelect: (row) => handleRowSelection(row, index)
-                  }}
-                  listEvent={presenter.getListEvent(index, selections, tabConfiguration)}
-                />
-              </Box>
-            )
-          ))}
-        </>
-      );
-    } else {
-      // Single layout with changing configuration
-      const currentTab = tabConfiguration[activeTab];
-      return (
-        <CrudLayout
-          columnMap={currentTab?.columnMap}
-          listEvent={presenter.getListEvent(activeTab, selections, tabConfiguration)}
-          onRowSelection={(row) => handleRowSelection(row, activeTab)}
-        />
-      );
-    }
-  };
-
-  // Render contextual navigation buttons if available for current tab
+  // Render contextual navigation buttons
   const renderContextualNav = () => {
-    const currentTabConfig = tabConfiguration[activeTab];
     const relevantNavs = contextualNavigation.filter(nav => 
-      nav.sourceTab === activeTab && (
-        !nav.requiresSelection || 
-        (nav.requiresSelection && getSelectionForTab(nav.sourceTab))
-      )
+      nav.sourceTab === activeTab && 
+      (!nav.requiresSelection || selections[Object.keys(selections)[activeTab]])
     );
 
     if (relevantNavs.length === 0) return null;
@@ -155,16 +110,7 @@ const HierPage = ({
             variant="outlined"
             color="primary"
             startIcon={nav.icon}
-            onClick={() => {
-              if (nav.onClick) {
-                nav.onClick(getSelectionForTab(nav.sourceTab));
-              } else if (nav.path) {
-                // Pass relevant selection as state in navigation
-                navigate(nav.path, { 
-                  state: { selection: getSelectionForTab(nav.sourceTab) } 
-                });
-              }
-            }}
+            onClick={() => nav.onClick && nav.onClick(selections[Object.keys(selections)[activeTab]])}
           >
             {nav.label}
           </Button>
@@ -172,11 +118,35 @@ const HierPage = ({
       </Box>
     );
   };
-  
-  // Helper to get the appropriate selection for a tab
-  const getSelectionForTab = (tabIndex) => {
-    const selectionKeys = Object.keys(initialSelections);
-    return tabIndex < selectionKeys.length ? selections[selectionKeys[tabIndex]] : null;
+
+  // Render isolated layouts (one per tab)
+  const renderIsolatedLayouts = () => (
+    <>
+      {tabConfiguration.map((tab, index) => (
+        activeTab === index && (
+          <Box key={`tab-content-${index}`} sx={{ pt: 2 }}>
+            <CrudLayout
+              key={`tab${index}-layout`}
+              columnMap={tab.columnMap}
+              listEvent={presenter.getListEvent(index, selections, tabConfiguration)}
+              onRowSelection={(row) => handleRowSelection(row, index)}
+            />
+          </Box>
+        )
+      ))}
+    </>
+  );
+
+  // Render single layout with dynamic configuration
+  const renderSingleLayout = () => {
+    const currentTab = tabConfiguration[activeTab];
+    return (
+      <CrudLayout
+        columnMap={currentTab?.columnMap}
+        listEvent={presenter.getListEvent(activeTab, selections, tabConfiguration)}
+        onRowSelection={(row) => handleRowSelection(row, activeTab)}
+      />
+    );
   };
 
   return (
@@ -194,8 +164,7 @@ const HierPage = ({
         ))}
       </Tabs>
       
-      {renderContent()}
-      
+      {isolatedLayouts ? renderIsolatedLayouts() : renderSingleLayout()}
       {renderContextualNav()}
     </Container>
   );
