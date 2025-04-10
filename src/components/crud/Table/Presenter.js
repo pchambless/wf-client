@@ -4,7 +4,6 @@ import createLogger from '../../../utils/logger';
 import { execEvent } from '../../../stores/eventStore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { IconButton } from '@mui/material';
-import tracker from '../../../actions/tracker';
 
 export class TablePresenter {
   constructor(columnMap, listEvent) {
