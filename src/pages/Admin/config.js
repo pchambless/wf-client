@@ -2,7 +2,7 @@ import { columnMap } from './columns';
 
 export const pageConfig = {
   pageName: 'Admin',
-  tabConfiguration: [
+  tabConfig: [
     {
       label: 'Accounts',
       columnMap: columnMap.accounts,

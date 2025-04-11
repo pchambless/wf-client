@@ -7,7 +7,7 @@ const log = createLogger('PageStore');
 let currentPageName = null;
 let pageTitle = 'WhatsFresh';
 let pageMetadata = {}; // For storing additional page metadata
-let tabConfiguration = [];
+let _tabConfigData = []; // Renamed to avoid conflict
 let activeTabIndex = 0;
 let selectedTabItems = {};
 
@@ -52,7 +52,7 @@ export const setCurrentPage = (pageName, options = {}) => {
   
   // Set tab configuration if provided
   if (options.tabConfig) {
-    setTabConfiguration(options.tabConfig);
+    settabConfig(options.tabConfig);
   }
   
   log(`Current page set to: ${pageName}`);
@@ -119,18 +119,18 @@ export const getPageMetadata = () => ({ ...pageMetadata });
 
 /**
  * Set tab configuration
- * @param {Array} tabConfig - Array of tab configuration objects
+ * @param {Array} newTabConfig - Array of tab configuration objects
  */
-export const setTabConfiguration = (tabConfig) => {
-  tabConfiguration = [...tabConfig];
-  log('Tab configuration updated', tabConfig);
+export const settabConfig = (newTabConfig) => {
+  _tabConfigData = [...newTabConfig]; // Use renamed variable
+  log('Tab configuration updated', _tabConfigData);
 };
 
 /**
  * Get tab configuration
  * @returns {Array} Current tab configuration
  */
-export const getTabConfiguration = () => [...tabConfiguration];
+export const gettabConfig = () => [..._tabConfigData]; // Use renamed variable
 
 /**
  * Set active tab index
@@ -163,7 +163,7 @@ export const setSelectedTabItem = (tabLevel, item, updateBreadcrumbs = true) => 
   log(`Selected item for tab level ${tabLevel} updated`, item);
   
   // Update breadcrumbs based on selected tab items
-  if (updateBreadcrumbs && tabConfiguration.length > 0) {
+  if (updateBreadcrumbs && _tabConfigData.length > 0) {
     const newBreadcrumbs = [{
       label: 'Home',
       path: '/'
@@ -181,7 +181,7 @@ export const setSelectedTabItem = (tabLevel, item, updateBreadcrumbs = true) => 
       .sort((a, b) => Number(a) - Number(b))
       .forEach(level => {
         const item = selectedTabItems[level];
-        const tabConfig = tabConfiguration[level];
+        const tabConfig = _tabConfigData[level];
         if (item && tabConfig) {
           // Try to get a suitable display name from the item
           const displayField = tabConfig.displayField || 'name';
@@ -226,7 +226,7 @@ export const handleTabRowSelection = (level, rowData, activateNextTab = true) =>
   setSelectedTabItem(level, rowData);
   
   // Activate next tab if specified
-  if (activateNextTab && rowData && level < tabConfiguration.length - 1) {
+  if (activateNextTab && rowData && level < _tabConfigData.length - 1) {
     setActiveTabIndex(level + 1);
   }
   
@@ -244,7 +244,7 @@ export const usePageStore = () => {
   const [title, setTitle] = useState(pageTitle);
   const [crumbs, setCrumbs] = useState(getBreadcrumbs());
   const [metadata, setMetadata] = useState(pageMetadata);
-  const [tabConfig, setTabConfig] = useState(tabConfiguration);
+  const [tabConfigState, setTabConfigState] = useState(_tabConfigData); // Renamed variable
   const [activeTab, setActiveTab] = useState(activeTabIndex);
   const [selectedItems, setSelectedItems] = useState(selectedTabItems);
   
@@ -263,8 +263,8 @@ export const usePageStore = () => {
       if (JSON.stringify(pageMetadata) !== JSON.stringify(metadata)) {
         setMetadata({ ...pageMetadata });
       }
-      if (JSON.stringify(tabConfiguration) !== JSON.stringify(tabConfig)) {
-        setTabConfig([...tabConfiguration]);
+      if (JSON.stringify(_tabConfigData) !== JSON.stringify(tabConfigState)) {
+        setTabConfigState([..._tabConfigData]);
       }
       if (activeTabIndex !== activeTab) {
         setActiveTab(activeTabIndex);
@@ -275,7 +275,7 @@ export const usePageStore = () => {
     }, 100);
     
     return () => clearInterval(intervalId);
-  }, [page, title, crumbs, metadata, tabConfig, activeTab, selectedItems]);
+  }, [page, title, crumbs, metadata, tabConfigState, activeTab, selectedItems]);
   
   const handleRowSelection = useCallback((level, rowData, activateNextTab = true) => {
     handleTabRowSelection(level, rowData, activateNextTab);
@@ -286,7 +286,7 @@ export const usePageStore = () => {
     pageTitle: title,
     breadcrumbs: crumbs,
     metadata: metadata,
-    tabConfiguration: tabConfig,
+    tabConfig: tabConfigState, // Use the state variable
     activeTabIndex: activeTab,
     selectedTabItems: selectedItems,
     
@@ -295,7 +295,7 @@ export const usePageStore = () => {
     setPageTitle: (newTitle) => setPageTitle(newTitle),
     setBreadcrumbs: (newCrumbs) => setBreadcrumbs(newCrumbs),
     setPageMetadata: (newMetadata) => setPageMetadata(newMetadata),
-    setTabConfiguration: (newConfig) => setTabConfiguration(newConfig),
+    settabConfig: (newConfig) => settabConfig(newConfig),
     setActiveTabIndex: (index) => setActiveTabIndex(index),
     setSelectedTabItem: (level, item) => setSelectedTabItem(level, item),
     handleRowSelection,

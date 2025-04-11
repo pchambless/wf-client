@@ -21,7 +21,7 @@ const Account = () => {
   
   return (
     <JustTabs
-      tabConfiguration={accountConfig.tabs}
+      tabConfig={accountConfig.tabs}
       presenter={presenter}
       pageTitle="Account Information"
       isolatedLayouts={true} // Each tab has its own independent data

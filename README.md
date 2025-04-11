@@ -42,7 +42,7 @@ Tab-based pages are configured using standard patterns:
 ```javascript
 const pageConfig = {
     pageName: 'Products',
-    tabConfiguration: [
+    tabConfig: [
         {
             label: 'Product Types',
             columnMap: columnMap.ProductTypes,
@@ -55,3 +55,48 @@ const pageConfig = {
 ```
 
 ## Directory Structure
+
+```
+wf-client/
+├── public/               # Static files and HTML template
+├── src/
+│   ├── actions/          # Action creators and event handlers
+│   ├── components/       # Reusable UI components
+│   │   ├── common/       # Shared components used across features
+│   │   ├── hiertabs/     # Hierarchical tab components
+│   │   └── justtabs/     # Independent tab components
+│   ├── config/           # Application configuration files
+│   ├── pages/            # Page-level components
+│   ├── presenters/       # Business logic separated from UI
+│   ├── services/         # API and external service integrations
+│   ├── styles/           # CSS and styling resources
+│   ├── utils/            # Utility functions and helpers
+│   ├── App.js            # Root application component
+│   └── index.js          # Application entry point
+├── tests/                # Test files and test utilities
+├── docs/                 # Comprehensive documentation
+├── .env                  # Environment variables
+└── package.json          # Project dependencies and scripts
+```
+
+## Core Principles
+
+1. **Consistency**: Similar operations work the same way across the application
+2. **Modularity**: Components are designed to be reused across different contexts
+3. **Configuration Over Code**: Behavior changes are primarily made through configuration
+4. **Separation of Concerns**: UI components don't contain business logic
+
+## Documentation
+
+For comprehensive documentation about the application architecture, components, and usage, please see the [Documentation Hub](docs/README.md).
+
+## Main Modules
+
+- **Products**: Management of product definitions
+- **Ingredients**: Management of ingredient data
+- **Types**: Management of categorization systems
+- **Accounts**: User and permission management
+
+## License
+
+[MIT License](LICENSE)

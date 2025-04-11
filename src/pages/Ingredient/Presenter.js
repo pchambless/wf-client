@@ -1,24 +1,25 @@
+import HierPresenter from '../../presenters/HierPresenter';
 import createLogger from '../../utils/logger';
-import { subscribeToAction } from '../../actions/actionStore';
-import { SELECTION } from '../../actions/core/constants';
-import { setVar } from '../../utils/externalStore'; // Add missing import
+import { setVar } from '../../utils/externalStore';
+// Import proper configuration for Ingredient page
+import { pageConfig } from './config';
 
 const TAB_NAMES = ['Type', 'Ingredient', 'Batch'];
 
-export class IngredientPresenter {
-  constructor() {
-    this.log = createLogger('Ingr.Presenter');
+export class IngredientPresenter extends HierPresenter {
+  constructor(presenterConfig) {
+    // Get proper tab configuration from ingredient config file
+    super({
+      ...presenterConfig, 
+      tabConfig: pageConfig.tabConfig
+    });
+    
     this.tabLog = createLogger('Ingr.Presenter.Tab');
     
-    // Initialization log in next tick to avoid React warnings
-    Promise.resolve().then(() => {
-      this.log.info('Init Ingr Presenter');
-    });
-
-    // Subscribe to actions directly in the presenter
-    this._unsubscribers = [
-      subscribeToAction(SELECTION.ROW_SELECT, this._handleRowSelectAction.bind(this))
-    ];
+    // IMPORTANT: Don't re-subscribe to actions that HierPresenter already handles
+    // this._unsubscribers = [
+    //   subscribeToAction(SELECTION.ROW_SELECT, this._handleRowSelectAction.bind(this))
+    // ];
     
     // State maintained by presenter
     this._selections = {
@@ -31,6 +32,8 @@ export class IngredientPresenter {
     this._listeners = {
       onSelectionsChange: []
     };
+    
+    this.logger.info('IngredientPresenter initialized with HierPresenter');
   }
 
   // Private action handler
@@ -49,7 +52,7 @@ export class IngredientPresenter {
     this._listeners.onSelectionsChange.forEach(callback => callback(this._selections));
     
     // Log for debugging
-    this.log.info('Selections updated via action:', newSelections);
+    this.logger.info('Selections updated via action:', newSelections);
   }
 
   // Public API for components
@@ -64,37 +67,31 @@ export class IngredientPresenter {
     };
   }
   
-  // Clean up on unmount
+  // Override destroy to handle our own cleanup
   destroy() {
-    this._unsubscribers.forEach(unsub => unsub());
+    // Call parent class destroy first
+    super.destroy();
+    
+    // Clear our listeners
     this._listeners.onSelectionsChange = [];
   }
 
-  getListEvent(activeTab, selections, tabConfiguration) {
-    // Add defensive check for tabConfiguration
-    if (!tabConfiguration) {
-      this.log.warn('tabConfiguration not provided to getListEvent', { activeTab });
-      return '';
+  // Override getListEvent from HierPresenter with our custom implementation
+  getListEvent(activeTab) {
+    // First use the parent class implementation to get the basic event
+    const baseEvent = super.getListEvent(activeTab);
+    
+    // Then add our custom logging
+    if (activeTab === 1 && this._selections.ingrType) {
+      const ingrTypeId = this._selections.ingrType?.ingrTypeID || this._selections.ingrType?.id;
+      this.logger.debug(`Tab 1 will use parameter: ingrTypeID=${ingrTypeId}`);
+    } else if (activeTab === 2 && this._selections.ingredient) {
+      const ingrId = this._selections.ingredient?.ingrID || this._selections.ingredient?.id;
+      this.logger.debug(`Tab 2 will use parameter: ingrID=${ingrId}`);
     }
     
-    const config = tabConfiguration[activeTab];
-    if (!config || !config.listEvent) return '';
-    
-    // Return just the clean event name - no parameters attached
-    // The eventStore will resolve parameters from setVar values
-    const eventName = config.listEvent;
-    
-    // Log which params will be needed (but don't append to event name)
-    if (activeTab === 1 && selections.ingrType) {
-      const ingrTypeId = selections.ingrType?.ingrTypeID || selections.ingrType?.id;
-      this.log.debug(`Tab 1 will use parameter: ingrTypeID=${ingrTypeId}`);
-    } else if (activeTab === 2 && selections.ingredient) {
-      const ingrId = selections.ingredient?.ingrID || selections.ingredient?.id;
-      this.log.debug(`Tab 2 will use parameter: ingrID=${ingrId}`);
-    }
-    
-    this.log.debug(`Generated list event: ${eventName}`);
-    return eventName;
+    this.logger.debug(`Generated list event: ${baseEvent}`);
+    return baseEvent;
   }
 
   handleRowSelection(activeTab, row, currentSelections) {
@@ -106,8 +103,8 @@ export class IngredientPresenter {
         // Set var for the parameter that will be needed by Tab 1
         const ingrTypeId = row?.ingrTypeID || row?.id;
         if (ingrTypeId) {
-          setVar(':ingrTypeID', ingrTypeId); // Added colon prefix for consistency with Issue #27
-          this.log.debug(`Set var for Tab 1 parameter: :ingrTypeID=${ingrTypeId}`);
+          setVar(':ingrTypeID', ingrTypeId);
+          this.logger.debug(`Set var for Tab 1 parameter: :ingrTypeID=${ingrTypeId}`);
         }
         break;
       case 1:
@@ -115,8 +112,8 @@ export class IngredientPresenter {
         // Set var for the parameter that will be needed by Tab 2
         const ingrId = row?.ingrID || row?.id;
         if (ingrId) {
-          setVar(':ingrID', ingrId); // Added colon prefix for consistency with Issue #27
-          this.log.debug(`Set var for Tab 2 parameter: :ingrID=${ingrId}`);
+          setVar(':ingrID', ingrId);
+          this.logger.debug(`Set var for Tab 2 parameter: :ingrID=${ingrId}`);
         }
         break;
       case 2:
@@ -126,7 +123,7 @@ export class IngredientPresenter {
         break;
     }
     
-    this.log.debug(`Row selected in tab ${activeTab}:`, {
+    this.logger.debug(`Row selected in tab ${activeTab}:`, {
       row: row?.id || row?.ingrTypeID,
       newSelections
     });

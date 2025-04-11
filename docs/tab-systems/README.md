@@ -23,7 +23,7 @@ Tab systems are configured using standard configuration objects:
 ```javascript
 const pageConfig = {
   pageName: 'Products',
-  tabConfiguration: [
+  tabConfig: [
     {
       label: 'Tab 1',
       columnMap: columnMaps.Tab1,

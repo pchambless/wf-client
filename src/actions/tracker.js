@@ -170,3 +170,51 @@ class ActionTracker {
 const tracker = new ActionTracker();
 tracker.wrapFunction = tracker.wrapFunction.bind(tracker);
 export default tracker;
+
+// Track actions with more metadata
+export const trackAction = (actionType, payload) => {
+  const now = new Date();
+  const actionHistory = getVar(':actionHistory') || [];
+  
+  const actionData = {
+    type: actionType,
+    timestamp: now.getTime(),
+    date: now.toISOString(),
+    module: payload.module || determineModule(actionType),
+    function: determineFunctionFromAction(actionType),
+    user: getVar(':currentUser')?.username || 'anonymous',
+    acct: getVar(':acctID') || 'unknown',
+    data: payload
+  };
+  
+  actionHistory.push(actionData);
+  setVar(':actionHistory', actionHistory);
+  
+  log.debug(`Tracked action: ${actionType} `, actionData);
+};
+
+// Categorize actions by module
+function determineModule(actionType) {
+  if (actionType.startsWith('page')) return 'Navigation';
+  if (actionType.startsWith('row')) return 'Data Selection';
+  if (actionType.startsWith('tab')) return 'UI Interaction';
+  return 'General';
+}
+
+// Determine function from action type
+function determineFunctionFromAction(actionType) {
+  // Extract a user-friendly function name from the action type
+  if (actionType === 'pageSelect') return 'Page Navigation';
+  if (actionType === 'tabSelect') return 'Tab Selection';
+  if (actionType === 'rowSelect') return 'Row Selection';
+  if (actionType === 'itemSelect') return 'Item Selection';
+  if (actionType.includes('Create')) return 'Create';
+  if (actionType.includes('Update')) return 'Update';
+  if (actionType.includes('Delete')) return 'Delete';
+  
+  // Default: capitalize and add spaces between camelCase
+  return actionType
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, str => str.toUpperCase())
+    .trim();
+}

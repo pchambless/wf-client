@@ -9,26 +9,29 @@ console.log('Loading ingredient config with columnMap:', {
 
 export const pageConfig = {
     pageName: 'Ingredients',
-    tabConfiguration: [
+    tabConfig: [
         {
+            tab: 0,
             label: 'Ingredient Types',
             columnMap: columnMap.IngrTypes,
             listEvent: 'ingrTypeList',
             idField: 'ingrTypeID'  // Explicitly define primary key field
         },
         {
+            tab: 1,
             label: 'Ingredients',
             columnMap: columnMap.Ingredients,
             listEvent: 'ingrList',
             idField: 'ingrID',      // Primary key for this tab
-            parentID: 'ingrTypeID'  // Renamed from parentField for clarity
+            parentIdField: 'ingrTypeID'  // Changed from parentID to parentIdField for consistency
         },
         {
+            tab: 2,
             label: 'Batches',
             columnMap: columnMap.IngrBatches,
             listEvent: 'ingrBtchList',
             idField: 'ingrBtchID',  // Primary key for batches
-            parentID: 'ingrID'      // Link to parent ingredient
+            parentIdField: 'ingrID'  // Changed from parentID to parentIdField for consistency
         }
     ]
     // Removing the fetchOnTabActivation flag since we're standardizing on pre-loading
@@ -39,7 +42,7 @@ export const pageConfig = {
 console.log('Ingredient pageConfig:', pageConfig);
 
 // Make sure each tab has required props
-pageConfig.tabConfiguration.forEach((tab, i) => {
+pageConfig.tabConfig.forEach((tab, i) => {
   // Check for missing columnMap or columns array
   if (!tab.columnMap || !tab.columnMap.columns) {
     console.error(`Tab ${i} (${tab.label}) is missing columnMap or columns array`);

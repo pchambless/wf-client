@@ -29,11 +29,11 @@ const TabPanel = ({ children, value, index, ...other }) => {
 
 const Admin = () => {
   const [tabIndex, setTabIndex] = useState(0);
-  const { pageName, tabConfiguration } = pageConfig;
+  const { pageName, tabConfig } = pageConfig;
 
   useEffect(() => {
-    log.debug('Admin page initialized', { pageName, tabCount: tabConfiguration.length });
-  }, [pageName, tabConfiguration]);
+    log.debug('Admin page initialized', { pageName, tabCount: tabConfig.length });
+  }, [pageName, tabConfig]);
 
   const handleTabChange = (event, newValue) => {
     log.debug('Tab changed', { newValue });
@@ -48,7 +48,7 @@ const Admin = () => {
           onChange={handleTabChange}
           aria-label="admin crud tabs"
         >
-          {tabConfiguration.map((tab, idx) => (
+          {tabConfig.map((tab, idx) => (
             <Tab
               key={tab.label}
               label={tab.label}
@@ -56,7 +56,7 @@ const Admin = () => {
             />
           ))}
         </Tabs>
-        {tabConfiguration.map((tab, idx) => (
+        {tabConfig.map((tab, idx) => (
           <TabPanel value={tabIndex} index={idx} key={tab.label}>
             <CrudLayout 
               pageName={tab.pageName}

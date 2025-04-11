@@ -1,74 +1,57 @@
-import React, { useMemo } from 'react';
-import HierTabs from '../types/hierTabs';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import createHierPage from '../common/createHierPage';
 import { pageConfig } from './config';
 import { IngredientPresenter } from './Presenter';
-import createLogger from '../../utils/logger';
 
-const Ingredient = () => {
-  const log = useMemo(() => createLogger('IngredientPage'), []);
-  
-  const presenter = useMemo(() => {
-    // Create enhanced presenter with debug logging
-    const basePresenter = new IngredientPresenter();
+// Create the Ingredient page using the same factory pattern as Product
+const Ingredient = createHierPage({
+  pageName: 'Ingredients',
+  pageConfig,
+  PresenterClass: IngredientPresenter,
+  initialSelections: {
+    ingrType: null,
+    ingredient: null,
+    batch: null
+  },
+  // Simple contextual navigation (can be expanded later)
+  contextualNavigation: [],
+  isolatedLayouts: true,
+  // Custom presenter enhancements specific to Ingredients
+  customizePresenter: (presenter, log) => ({
+    ...presenter,
     
-    return {
-      ...basePresenter,
+    // Add ingredient-specific isTabEnabled logic
+    isTabEnabled: (tabIndex, selections) => {
+      if (tabIndex === 0) return true;
       
-      // Override getListEvent to add debugging and pass through tabConfiguration
-      getListEvent: (tabIndex, selections, tabConfiguration) => {
-        const event = basePresenter.getListEvent(tabIndex, selections, tabConfiguration);
-        
-        log.debug(`Getting list event for tab ${tabIndex}`, {
-          selections,
-          event: event?.name || event,
-          params: event?.params || 'none'
+      if (tabIndex === 1) {
+        const hasSelection = !!selections.ingrType;
+        log.debug(`Ingredient Tab ${tabIndex} enabled check:`, { 
+          hasIngredientType: hasSelection, 
+          ingrType: selections.ingrType
         });
-        
-        return event;
-      },
-      
-      // Override handleRowSelection for debugging
-      handleRowSelection: (tabIndex, row, selections) => {
-        log.debug(`Row selected in tab ${tabIndex}`, { 
-          row,
-          currentSelections: selections
-        });
-        
-        // Call original handler
-        return basePresenter.handleRowSelection(tabIndex, row, selections);
+        return hasSelection;
       }
-    };
-  }, [log]);
-  
-  // Define optional contextual navigation if needed
-  const contextualNavigation = [
-    // Can add navigation options here if needed for ingredients
-    // Example:
-    // {
-    //   label: "View Details",
-    //   icon: <InfoIcon />,
-    //   sourceTab: 1,
-    //   requiresSelection: true,
-    //   onClick: (selection) => {
-    //     // Navigate or perform action with the selection
-    //   }
-    // }
-  ];
-  
-  return (
-    <HierTabs
-      tabConfiguration={pageConfig.tabConfiguration}
-      presenter={presenter}
-      pageTitle="Ingredients"
-      isolatedLayouts={true}
-      initialSelections={{
-        ingrType: null,
-        ingredient: null,
-        batch: null
-      }}
-      contextualNavigation={contextualNavigation}
-    />
-  );
+      
+      if (tabIndex === 2) {
+        const hasSelection = !!selections.ingredient;
+        log.debug(`Ingredient Tab ${tabIndex} enabled check:`, {
+          hasIngredient: hasSelection,
+          ingredient: selections.ingredient
+        });
+        return hasSelection;
+      }
+      
+      return false;
+    }
+  })
+});
+
+// Wrapper to provide navigation
+const IngredientPage = (props) => {
+  const navigate = useNavigate();
+  return <Ingredient navigate={navigate} {...props} />;
 };
 
-export default Ingredient;
+export default IngredientPage;

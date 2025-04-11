@@ -4,21 +4,27 @@ import { Box } from '@mui/material';
 import createLogger from '../../../utils/logger';
 import { TablePresenter } from './Presenter';
 import { setVar } from '../../../utils/externalStore';
-import { SELECTION, triggerAction } from '../../../actions/actionStore';
 
 const log = createLogger('Table');
 
-const Table = ({ columnMap, listEvent, onRowSelect, selectedId }) => {
+// Fix parameter destructuring to properly handle unused params
+const Table = ({ 
+  columnMap, 
+  listEvent, 
+  onRowSelect, 
+  selectedId,
+  onRowSelection
+}) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [presenter] = useState(() => new TablePresenter(columnMap, listEvent));
+  const [tablePresenter] = useState(() => new TablePresenter(columnMap, listEvent));
   
   // Update presenter config when props change
   useEffect(() => {
-    presenter.columnMap = columnMap;
-    presenter.listEvent = listEvent;
-  }, [presenter, columnMap, listEvent]);
+    tablePresenter.columnMap = columnMap;
+    tablePresenter.listEvent = listEvent;
+  }, [tablePresenter, columnMap, listEvent]);
 
   // Load data - enhanced with better error handling
   useEffect(() => {
@@ -35,7 +41,7 @@ const Table = ({ columnMap, listEvent, onRowSelect, selectedId }) => {
           throw new Error('Missing listEvent configuration');
         }
         
-        const data = await presenter.fetchData();
+        const data = await tablePresenter.fetchData();
         
         if (isMounted) {
           setRows(Array.isArray(data) ? data : []);
@@ -57,42 +63,64 @@ const Table = ({ columnMap, listEvent, onRowSelect, selectedId }) => {
     loadData();
     
     return () => { isMounted = false; };
-  }, [presenter, listEvent]);
+  }, [tablePresenter, listEvent]);
 
-  // Streamlined row click handler with more defensive coding
+  // Enhance row click handler with better debugging for tab flow
   const handleRowClick = useCallback((params) => {
     try {
       const row = params.row;
-      const idField = columnMap?.idField || presenter.getIdField() || 'id';
+      const idField = columnMap?.idField || tablePresenter.getIdField() || 'id';
       const id = row[idField];
       
-      // Set ID field directly for event resolution
+      // Get a human-readable identifier from the row data
+      const nameField = columnMap?.nameField || 'name';
+      const displayName = row[nameField] || row.title || row.name || id;
+      
+      // Log detailed information about the clicked row
+      log.info('Row clicked', { 
+        id, 
+        displayName,
+        idField,
+        listEvent,
+        hasOnRowSelection: !!onRowSelection,
+        hasOnRowSelect: !!onRowSelect,
+        rowData: Object.keys(row).reduce((obj, key) => {
+          // Show first few characters of long values
+          const value = typeof row[key] === 'string' && row[key].length > 20 
+            ? `${row[key].substring(0, 20)}...` 
+            : row[key];
+          return { ...obj, [key]: value };
+        }, {})
+      });
+      
+      // Just store ID for parameter resolution - minimal responsibility
       if (idField && id !== undefined) {
         setVar(`:${idField}`, id);
         log.debug(`Set variable :${idField}=${id} for event resolution`);
       }
       
-      // Trigger action for other components to respond
-      triggerAction(SELECTION.ROW_SELECT, {
-        id,
-        idField,
-        source: 'table',
-        listEvent: listEvent, // Use listEvent as table identifier
-        row
-      });
+      // Delegate to callbacks - prefer onRowSelection from hierTabs
+      if (onRowSelection) {
+        log.debug(`Delegating row selection to hierTabs for ${displayName} (${id})`);
+        onRowSelection(row);
+        return;
+      }
       
-      // Call direct callback if provided
-      if (onRowSelect) onRowSelect(row);
-      
-      log.debug('Row selected', { id, field: idField });
+      // Legacy support for onRowSelect (columnMap handler)
+      if (onRowSelect) {
+        log.debug(`Using legacy onRowSelect handler for ${displayName} (${id})`);
+        onRowSelect(row);
+      } else {
+        log.warn(`No row selection handler available for ${displayName} (${id})`);
+      }
     } catch (err) {
       log.error('Error handling row click:', err);
     }
-  }, [presenter, columnMap, onRowSelect, listEvent]);
+  }, [columnMap, tablePresenter, onRowSelection, onRowSelect, listEvent]);
 
   // Safe access to ID field with fallback
-  const idField = presenter.getIdField() || 'id';
-  
+  const idField = tablePresenter.getIdField() || 'id';
+
   return (
     <Box sx={{ width: '100%', height: 400 }}>
       {error && (
@@ -102,7 +130,7 @@ const Table = ({ columnMap, listEvent, onRowSelect, selectedId }) => {
       )}
       <DataGrid
         rows={rows}
-        columns={presenter.getColumns() || []}
+        columns={tablePresenter.getColumns() || []}
         getRowId={(row) => row[idField] || row.id || Math.random()}
         onRowClick={handleRowClick}
         loading={loading}

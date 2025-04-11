@@ -26,7 +26,7 @@ HierTabs require a specific configuration structure that defines the parent-chil
 ```javascript
 const typesConfig = {
   pageName: 'Types',
-  tabConfiguration: [
+  tabConfig: [
     {
       label: 'Type Categories',
       columnMap: columnMaps.TypeCategories,

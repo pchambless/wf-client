@@ -54,3 +54,66 @@ export const ACTIONS = {
   CRUD,
   UI
 };
+
+/**
+ * Action implementation status metadata
+ * This doesn't affect the action constants but provides useful information
+ * about which actions are implemented and which are planned for the future
+ * 
+ * Status:
+ * - implemented: Currently in use in the application
+ * - inProgress: Being implemented but not fully used
+ * - planned: Planned for future implementation
+ * - deprecated: No longer recommended for use
+ * 
+ * Priority:
+ * - high: Critical for MVP
+ * - medium: Important for good UX
+ * - low: Nice to have
+ */
+export const ACTION_STATUS = {
+  // Navigation actions
+  [NAVIGATION.TAB_SELECT]: { status: 'implemented', priority: 'high' },
+  [NAVIGATION.PAGE_SELECT]: { status: 'planned', priority: 'medium' },
+  [NAVIGATION.MODAL_OPEN]: { status: 'planned', priority: 'low' },
+  [NAVIGATION.MODAL_CLOSE]: { status: 'planned', priority: 'low' },
+  
+  // Selection actions
+  [SELECTION.ROW_SELECT]: { status: 'implemented', priority: 'high' },
+  [SELECTION.ITEM_SELECT]: { status: 'planned', priority: 'medium' },
+  [SELECTION.FILTER_APPLY]: { status: 'planned', priority: 'low' },
+  [SELECTION.SORT_CHANGE]: { status: 'planned', priority: 'low' },
+  
+  // Form actions
+  [FORM.FIELD_CHANGED]: { status: 'planned', priority: 'high' },
+  [FORM.SUBMITTED]: { status: 'planned', priority: 'high' },
+  [FORM.VALIDATED]: { status: 'planned', priority: 'medium' },
+  [FORM.MODE_CHANGED]: { status: 'planned', priority: 'low' },
+  [FORM.REFRESHED]: { status: 'planned', priority: 'low' },
+  
+  // CRUD operations
+  [CRUD.ITEM_CREATE]: { status: 'planned', priority: 'high' },
+  [CRUD.ITEM_UPDATE]: { status: 'planned', priority: 'high' },
+  [CRUD.ITEM_DELETE]: { status: 'planned', priority: 'high' },
+  [CRUD.LIST_REFRESH]: { status: 'planned', priority: 'high' },
+  
+  // UI state actions
+  [UI.STATE_CHANGE]: { status: 'planned', priority: 'low' },
+  [UI.LOADING_START]: { status: 'planned', priority: 'medium' },
+  [UI.LOADING_FINISH]: { status: 'planned', priority: 'medium' },
+  [UI.ERROR_OCCUR]: { status: 'planned', priority: 'medium' },
+};
+
+// Utility function to get actions by status
+export const getActionsByStatus = (status) => {
+  return Object.entries(ACTION_STATUS)
+    .filter(([_, meta]) => meta.status === status)
+    .map(([actionType]) => actionType);
+};
+
+// Utility function to get actions by priority
+export const getActionsByPriority = (priority) => {
+  return Object.entries(ACTION_STATUS)
+    .filter(([_, meta]) => meta.priority === priority)
+    .map(([actionType]) => actionType);
+};

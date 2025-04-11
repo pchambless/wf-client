@@ -26,7 +26,7 @@ JustTabs use a configuration structure similar to HierTabs but without parent-ch
 ```javascript
 const accountsConfig = {
   pageName: 'Accounts',
-  tabConfiguration: [
+  tabConfig: [
     {
       label: 'Users',
       columnMap: columnMaps.Users,

@@ -17,8 +17,14 @@ const PageHeader = () => {
   
   // Set document title when page title changes
   useEffect(() => {
-    document.title = `WhatsFresh - ${pageTitle || "What's Fresh"}`;
-  }, [pageTitle]);
+    // Only update document title when pageTitle changes
+    if (pageTitle) {
+      document.title = `WhatsFresh - ${pageTitle}`;
+      
+      // For debugging, log when the title changes
+      log.debug(`Document title updated: ${document.title}`);
+    }
+  }, [pageTitle, log]);
 
   const accountList = useMemo(() => {
     const list = getVar(':userAcctList') || [];

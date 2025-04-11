@@ -8,7 +8,9 @@ import store from './utils/externalStore';
 import ErrorBoundary from './components/ErrorBoundary';
 import Modal from './components/modal/Modal';
 import { useModalStore } from './stores/modalStore';
-import createLogger from './utils/logger';
+import createLogger, { configureLogger } from './utils/logger';
+import { disableBrowserFetchLogs } from './utils/fetchLogHelper';
+import { ActionHandlerProvider } from './actions/ActionHandlerContext';
 
 // Import pages
 import Login from './pages/Login';
@@ -21,9 +23,19 @@ import Admin from './pages/Admin';
 const theme = createTheme(themeOptions);
 const log = createLogger('App');
 
+// Configure logger at application startup
+configureLogger({
+  // Add any custom configuration here
+  showTimestamps: true,
+  dedupeTimeWindow: 500
+});
+
 // Log at the top-level App mounting
 const App = () => {
   useEffect(() => {
+    // Filter out noisy browser fetch logs
+    disableBrowserFetchLogs();
+
     log.debug('App component mounted');
   }, []);
 
@@ -35,7 +47,10 @@ const App = () => {
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <ErrorBoundary>
-            <AppContent />
+            {/* Add ActionHandlerProvider to register handlers application-wide */}
+            <ActionHandlerProvider options={{ executeHandlers: true, logOnly: false }}>
+              <AppContent />
+            </ActionHandlerProvider>
           </ErrorBoundary>
           <ModalContainer />
         </ThemeProvider>

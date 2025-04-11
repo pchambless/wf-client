@@ -18,7 +18,7 @@ This module uses the tab navigation pattern with hierarchical relationships:
 ```javascript
 const typesConfig = {
     pageName: 'Types',
-    tabConfiguration: [
+    tabConfig: [
         {
             label: 'Type Categories',
             columnMap: columnMaps.TypeCategories,

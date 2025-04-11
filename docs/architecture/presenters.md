@@ -60,11 +60,11 @@ Presenters provide access to configuration with safety checks:
 
 ```javascript
 getTabConfig(index = 0) {
-  if (!Array.isArray(this.config.tabConfiguration) || 
-      !this.config.tabConfiguration[index]) {
+  if (!Array.isArray(this.config.tabConfig) || 
+      !this.config.tabConfig[index]) {
     return { label: `Missing Tab ${index}`, columnMap: {}, listEvent: '' };
   }
-  return this.config.tabConfiguration[index];
+  return this.config.tabConfig[index];
 }
 ```
 

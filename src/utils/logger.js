@@ -1,82 +1,237 @@
-export const LOG_LEVELS = {
-  NONE: 0,
-  ERROR: 1,
-  WARN: 2,
-  INFO: 3,
-  DEBUG: 4
+// Configuration object for logger
+const loggerConfig = {
+  // Global log level
+  defaultLevel: 'info',
+  // Component-specific log levels
+  componentLevels: {
+    // Core components
+    'ActionStore': 'info',
+    'ActionHandlers': 'info',
+    'API': 'info',
+    'EventStore': 'info',
+    
+    // UI components
+    'CrudLayout': 'info',
+    'Table': 'info',
+    'Form': 'info',
+    'FormField': 'warn',
+    'Table.Presenter': 'info',
+    'FormPresenter': 'info',
+    
+    // Page level components
+    'HierTabs': 'info',
+    'ProductsPage': 'info',
+    'IngredientsPage': 'info',
+    'MenuStrip': 'info',
+    
+    // Lifecycle/mounting noise
+    'ComponentLife': 'warn',
+    
+    // React Router
+    'Router': 'warn'
+  },
+  // Group related logs
+  groupByOperation: true,
+  // Deduplicate identical logs within this timeframe (ms)
+  dedupeTimeWindow: 500,
+  // Collapse stack traces in console
+  collapseTraces: true,
+  // Add timestamps to logs
+  showTimestamps: false
+};
+
+// Log level numeric values
+const LOG_LEVELS = {
+  debug: 0,
+  info: 1,
+  warn: 2,
+  error: 3
+};
+
+// Keep track of recent logs to deduplicate
+const recentLogs = {};
+
+// Should this log message be displayed based on configured levels?
+const shouldLog = (component, level) => {
+  // Get component level or default
+  const configuredLevel = loggerConfig.componentLevels[component] || loggerConfig.defaultLevel;
+  return LOG_LEVELS[level] >= LOG_LEVELS[configuredLevel];
+};
+
+// Check if this is a duplicate log
+const isDuplicate = (component, level, message, args) => {
+  if (!loggerConfig.dedupeTimeWindow) return false;
+  
+  const now = Date.now();
+  const key = `${component}:${level}:${message}:${JSON.stringify(args)}`;
+  
+  if (recentLogs[key] && now - recentLogs[key] < loggerConfig.dedupeTimeWindow) {
+    // Update timestamp but return true (is duplicate)
+    recentLogs[key] = now;
+    return true;
+  }
+  
+  // Not a duplicate, update timestamp
+  recentLogs[key] = now;
+  return false;
+};
+
+// Clean up old entries in recentLogs
+setInterval(() => {
+  const now = Date.now();
+  Object.keys(recentLogs).forEach(key => {
+    if (now - recentLogs[key] > loggerConfig.dedupeTimeWindow * 2) {
+      delete recentLogs[key];
+    }
+  });
+}, loggerConfig.dedupeTimeWindow * 10);
+
+// Active log groups
+const activeGroups = {};
+
+// Format log message with optional timestamp
+const formatMessage = (message) => {
+  if (!loggerConfig.showTimestamps) return message;
+  
+  const now = new Date();
+  const timestamp = `${now.getHours().toString().padStart(2, '0')}:${
+    now.getMinutes().toString().padStart(2, '0')}:${
+    now.getSeconds().toString().padStart(2, '0')}.${
+    now.getMilliseconds().toString().padStart(3, '0')}`;
+  
+  return `[${timestamp}] ${message}`;
 };
 
 /**
- * Enhanced logger with different log levels and performance tracking
+ * Create a logger for a specific component
+ * Supports both function-style and method-style logging
  */
-const createLogger = (module) => {
-  const prefix = `[${module}]`;
+const createLogger = (component) => {
+  // For improved browser console display
+  const componentStyle = 'color: #0078d4; font-weight: bold';
+  const levelStyles = {
+    debug: 'color: #6B6B6B',
+    info: 'color: #0078D4',
+    warn: 'color: #FFA500; font-weight: bold',
+    error: 'color: #FF0000; font-weight: bold'
+  };
   
-  // Base log function that also returns the message for chaining
-  const logFn = (level, message, data) => {
-    // Future: This object will be used for persistent logging
-    // eslint-disable-next-line no-unused-vars
-    const _logObject = {
-      timestamp: new Date().toISOString(),
-      module,
-      level,
-      message,
-      ...(data ? { data } : {})
-    };
-    
-    // Different styling for different log levels
-    let consoleFn;
-    switch (level) {
-      case 'ERROR':
-        consoleFn = console.error;
-        break;
-      case 'WARN':
-        consoleFn = console.warn;
-        break;
-      case 'INFO':
-        consoleFn = console.info;
-        break;
-      case 'DEBUG':
-        consoleFn = console.debug;
-        break;
-      default:
-        consoleFn = console.log;
+  // Check if in development mode
+  const isDev = process.env.NODE_ENV === 'development';
+
+  // Create the actual logger functions
+  const debugFn = (message, ...args) => {
+    if (isDev && shouldLog(component, 'debug')) {
+      if (isDuplicate(component, 'debug', message, args)) return;
+      
+      console.debug(
+        `%c[${component}]%c DEBUG:`, 
+        componentStyle, 
+        levelStyles.debug, 
+        formatMessage(message), 
+        ...args
+      );
     }
+  };
+  
+  const infoFn = (message, ...args) => {
+    if (shouldLog(component, 'info')) {
+      if (isDuplicate(component, 'info', message, args)) return;
+      
+      console.info(
+        `%c[${component}]%c INFO:`, 
+        componentStyle, 
+        levelStyles.info, 
+        formatMessage(message), 
+        ...args
+      );
+    }
+  };
+  
+  const warnFn = (message, ...args) => {
+    if (isDuplicate(component, 'warn', message, args)) return;
     
-    // Log to console with appropriate styling
-    consoleFn(`${prefix} ${level}: ${message}`, data || '');
-    
-    return message; // Return for chaining
+    console.warn(
+      `%c[${component}]%c WARN:`, 
+      componentStyle, 
+      levelStyles.warn, 
+      formatMessage(message), 
+      ...args
+    );
+  };
+  
+  const errorFn = (message, ...args) => {
+    // Don't deduplicate errors
+    console.error(
+      `%c[${component}]%c ERROR:`, 
+      componentStyle, 
+      levelStyles.error, 
+      formatMessage(message), 
+      ...args
+    );
+  };
+  
+  const groupFn = (operationId, title) => {
+    if (loggerConfig.groupByOperation) {
+      console.group(`%c[${component}]%c ${title}`, componentStyle, 'font-weight: normal');
+      activeGroups[operationId] = true;
+    }
+  };
+  
+  const groupEndFn = (operationId) => {
+    if (loggerConfig.groupByOperation && activeGroups[operationId]) {
+      console.groupEnd();
+      delete activeGroups[operationId];
+    }
   };
 
-  // Timer functionality
-  const startPerformanceTimer = (label) => {
-    const startTime = performance.now();
-    return () => {
-      const endTime = performance.now();
-      const duration = endTime - startTime;
-      logFn('INFO', `Timer [${label}]: ${duration.toFixed(2)}ms`);
-      return duration;
-    };
+  // Setup lifecycle tracking for mounting/unmounting
+  let mountState = 'none';
+  
+  // Create a callable function that also has properties
+  const logger = function(message, ...args) {
+    // When called directly as a function, use the default level (info)
+    infoFn(message, ...args);
   };
-
-  // Create the logger object with different log levels
-  const logger = (message, data) => logFn('INFO', message, data);
   
-  // Add specific log level methods
-  logger.error = (message, data) => logFn('ERROR', message, data);
-  logger.warn = (message, data) => logFn('WARN', message, data);
-  logger.info = (message, data) => logFn('INFO', message, data);
-  logger.debug = (message, data) => logFn('DEBUG', message, data);
+  // Add the methods as properties
+  logger.debug = debugFn;
+  logger.info = infoFn;
+  logger.warn = warnFn;
+  logger.error = errorFn;
+  logger.group = groupFn;
+  logger.groupEnd = groupEndFn;
   
-  // Add the timer functionality
-  logger.startPerformanceTimer = startPerformanceTimer;
-
+  // Add lifecycle tracking helpers
+  logger.mount = () => {
+    if (mountState === 'mounted') return;
+    mountState = 'mounted';
+    debugFn(`Component mounted`);
+  };
+  
+  logger.unmount = () => {
+    if (mountState === 'unmounted') return;
+    mountState = 'unmounted';
+    debugFn(`Component unmounted`);
+  };
+  
+  // Add utility method for stack traces
+  logger.trace = (message, ...args) => {
+    if (isDev && shouldLog(component, 'debug')) {
+      console.groupCollapsed(`%c[${component}]%c TRACE:`, componentStyle, 'color: #888', message);
+      console.trace(...args);
+      console.groupEnd();
+    }
+  };
+  
   return logger;
 };
 
-// Export both as default and named for maximum compatibility
-export { createLogger };
 export default createLogger;
+
+// Export configuration - allows dynamic adjustment of log levels
+export const configureLogger = (newConfig) => {
+  Object.assign(loggerConfig, newConfig);
+};
 
 

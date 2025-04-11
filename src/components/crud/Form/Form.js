@@ -128,9 +128,40 @@ const Form = forwardRef(({ columnMap, onSubmit, formMode: propFormMode }, ref) =
   // Expose methods to parent components via ref
   React.useImperativeHandle(ref, () => ({
     getFormData: () => formData,
-    setFormData: (data) => setFormData(prev => ({...prev, ...data})),
-    handleSubmit
-  }), [formData, handleSubmit]);
+    setFormData: (data, mode) => {
+      log.debug('setFormData called with mode:', mode);
+      setFormData(prev => ({...prev, ...data}));
+      // Update form mode if provided
+      if (mode) {
+        log.debug(`Setting form mode to: ${mode}`);
+        // Update form mode if passed
+      }
+    },
+    handleSubmit,
+    // Add refresh method to match the API expected by CrudLayout
+    refresh: (newMode) => {
+      log.debug(`Form refresh called with mode: ${newMode || 'none'}`);
+      // If a new mode is provided, update it
+      if (newMode) {
+        log.debug(`Setting form mode to: ${newMode}`);
+        // Any mode-specific logic would go here
+      }
+      
+      // Reset form data if we're switching to 'add' mode
+      if (newMode === 'add') {
+        setFormData({});
+      }
+      
+      // Re-fetch fields from the current columnMap
+      const formFields = presenter.getFields();
+      setFields(formFields);
+      
+      log.debug('Form refreshed with fields:', {
+        count: formFields.length,
+        mode: newMode || 'current'
+      });
+    }
+  }), [formData, handleSubmit, presenter]);
   
   // RENDER THE FORM
   return (
