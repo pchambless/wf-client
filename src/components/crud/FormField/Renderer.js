@@ -1,135 +1,127 @@
-import React, { useMemo } from 'react';
-import { Grid, CircularProgress, Typography, Divider } from '@mui/material';
-import FormField from './FormField';
+import React from 'react';
+import { Grid, CircularProgress, Alert, Typography, Box, Divider } from '@mui/material';
+import FormField from './index';
 import createLogger from '../../../utils/logger';
-import formFieldPresenter from './Presenter';
 
-const log = createLogger('FormField.Renderer');
+const log = createLogger('FormFieldRenderer');
 
 /**
- * Renders a collection of form fields respecting group layout
+ * Renders a collection of form fields with proper layout and organization
  */
-const FormFieldRenderer = ({ 
+export const FormFieldRenderer = ({ 
   visibleFields = [], 
   formData = {}, 
-  handleInputChange, 
+  handleInputChange,
   loading = false,
-  error = null 
+  error = null
 }) => {
-  // Group fields by their group property
-  const groupedFields = useMemo(() => {
-    return formFieldPresenter.groupFields(visibleFields);
-  }, [visibleFields]);
-
-  // Debug the incoming field data
-  React.useEffect(() => {
-    log.debug('FormFieldRenderer received fields:', {
-      fieldCount: visibleFields.length,
-      groupCount: groupedFields.length,
-      fieldTypes: visibleFields.map(f => ({ id: f.id, type: f.type })),
-      hasFormData: !!formData,
-      formDataKeys: Object.keys(formData)
+  // Group fields for better organization
+  const fieldsByGroup = React.useMemo(() => {
+    const groups = {};
+    
+    visibleFields.forEach(field => {
+      // Default to group 1 if not specified
+      const group = field.group || 1;
+      
+      if (!groups[group]) {
+        groups[group] = [];
+      }
+      
+      groups[group].push(field);
     });
     
-    // Check for potential issues with select fields
-    const selectFields = visibleFields.filter(field => field.type === 'select');
-    if (selectFields.length > 0) {
-      selectFields.forEach(field => {
-        if (!field.options || !Array.isArray(field.options) || field.options.length === 0) {
-          log.warn(`Select field ${field.id} has no options array or empty options`, field);
-        }
-      });
-    }
-  }, [visibleFields, formData, groupedFields]);
-
-  if (loading) {
+    log.debug('Fields organized by groups:', {
+      groupCount: Object.keys(groups).length,
+      fieldCount: visibleFields.length
+    });
+    
+    return groups;
+  }, [visibleFields]);
+  
+  // Handle empty fields case
+  if (visibleFields.length === 0) {
     return (
-      <Grid container justifyContent="center">
-        <CircularProgress />
-      </Grid>
+      <Box sx={{ p: 2, textAlign: 'center' }}>
+        <Typography color="text.secondary">
+          {loading ? 'Loading form fields...' : 'No form fields available'}
+        </Typography>
+        {loading && <CircularProgress size={24} sx={{ mt: 2 }} />}
+      </Box>
     );
   }
-
-  if (error) {
-    return (
-      <div className="error-message">{error}</div>
-    );
-  }
-
-  if (!visibleFields || visibleFields.length === 0) {
-    return <div className="no-fields-message">No fields available</div>;
-  }
-
+  
   return (
-    // Reduce spacing from 2 to 1 to make the form more compact
-    <Grid container spacing={1}>
-      {groupedFields.map((fieldsInGroup, groupIndex) => {
-        // Count how many fields are in this group (for width calculation)
-        const fieldCount = fieldsInGroup.length;
-        // Determine if any field in the group should always be full width
-        const hasFullWidthField = fieldsInGroup.some(f => f.type === 'textarea' || f.multiline);
-        
-        return (
-          <React.Fragment key={`group-${groupIndex}`}>
-            {/* Optional group divider between groups - with reduced margins */}
+    <Box sx={{ position: 'relative', pb: 1 }}>
+      {/* Error message */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {/* Loading overlay */}
+      {loading && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10,
+            borderRadius: 1,
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      )}
+      
+      {/* Render fields by group */}
+      {Object.entries(fieldsByGroup)
+        .sort(([a], [b]) => Number(a) - Number(b))
+        .map(([group, fields], groupIndex) => (
+          <React.Fragment key={`group-${group}`}>
+            {/* Add dividers between groups */}
             {groupIndex > 0 && (
-              <Grid item xs={12}>
-                {/* Reduce margin from my: 1 to my: 0.5 */}
-                <Divider sx={{ my: 0.5 }} />
-              </Grid>
+              <Divider sx={{ my: 2 }} />
             )}
             
-            {/* Group label if available from first field - with reduced bottom padding */}
-            {fieldsInGroup[0]?.groupLabel && (
-              <Grid item xs={12}>
-                <Typography 
-                  variant="subtitle2" 
-                  color="textSecondary"
-                  // Add compact styling
-                  sx={{ pb: 0.5, fontSize: '0.85rem' }}
+            {/* Group title for groups > 1 */}
+            {Number(group) > 1 && (
+              <Typography 
+                variant="subtitle2" 
+                color="text.secondary" 
+                sx={{ mt: 2, mb: 1 }}
+              >
+                {`Group ${group}`}
+              </Typography>
+            )}
+            
+            <Grid container spacing={2}>
+              {fields.map((field) => (
+                <Grid 
+                  item 
+                  xs={12} 
+                  sm={field.fullWidth ? 12 : 6} 
+                  md={field.fullWidth ? 12 : 4}
+                  key={field.id}
                 >
-                  {fieldsInGroup[0].groupLabel}
-                </Typography>
-              </Grid>
-            )}
-            
-            {/* Create a container row for this group with reduced spacing */}
-            <Grid item xs={12} container spacing={1}>
-              {fieldsInGroup.map(field => {
-                // CRITICAL: Calculate optimal field width based on group size
-                // This ensures fields in the same group appear on the same line
-                let smSize = hasFullWidthField ? 12 : 
-                           field.type === 'textarea' || field.multiline ? 12 : 
-                           fieldCount === 1 ? 12 :
-                           fieldCount === 2 ? 6 :
-                           fieldCount === 3 ? 4 :
-                           fieldCount >= 4 ? 3 : 6;
-                
-                // Override with field's own sm size if specified
-                if (field.sm) smSize = field.sm;
-                
-                return (
-                  <Grid 
-                    item 
-                    xs={12} 
-                    sm={smSize}
-                    key={field.id}
-                    // Add reduced vertical padding
-                    sx={{ py: 0.5 }}
-                  >
-                    <FormField
-                      field={field}
-                      value={formData[field.id] || ''}
-                      onChange={(value) => handleInputChange(field.id, value)}
-                    />
-                  </Grid>
-                );
-              })}
+                  <FormField
+                    field={field}
+                    value={formData[field.id]}
+                    onChange={handleInputChange}
+                    disabled={loading || field.readOnly}
+                  />
+                </Grid>
+              ))}
             </Grid>
           </React.Fragment>
-        );
-      })}
-    </Grid>
+        ))}
+    </Box>
   );
 };
 
