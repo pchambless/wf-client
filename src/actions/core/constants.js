@@ -11,6 +11,9 @@ export const NAVIGATION = {
   PAGE_SELECT: 'pageSelect',
   MODAL_OPEN: 'modalOpen',
   MODAL_CLOSE: 'modalClose',
+  DETAIL_NAVIGATE: 'detailNavigate',
+  BREADCRUMB_NAVIGATE: 'breadcrumbNavigate',
+  BACK_NAVIGATE: 'backNavigate'
 };
 
 // Data selection actions
@@ -19,6 +22,7 @@ export const SELECTION = {
   ITEM_SELECT: 'itemSelect',
   FILTER_APPLY: 'filterApply',
   SORT_CHANGE: 'sortChange',
+  CONTEXT_CHANGE: 'contextChange'
 };
 
 // Form actions
@@ -77,12 +81,16 @@ export const ACTION_STATUS = {
   [NAVIGATION.PAGE_SELECT]: { status: 'planned', priority: 'medium' },
   [NAVIGATION.MODAL_OPEN]: { status: 'planned', priority: 'low' },
   [NAVIGATION.MODAL_CLOSE]: { status: 'planned', priority: 'low' },
+  [NAVIGATION.DETAIL_NAVIGATE]: { status: 'planned', priority: 'low' },
+  [NAVIGATION.BREADCRUMB_NAVIGATE]: { status: 'planned', priority: 'low' },
+  [NAVIGATION.BACK_NAVIGATE]: { status: 'planned', priority: 'low' },
   
   // Selection actions
   [SELECTION.ROW_SELECT]: { status: 'implemented', priority: 'high' },
   [SELECTION.ITEM_SELECT]: { status: 'planned', priority: 'medium' },
   [SELECTION.FILTER_APPLY]: { status: 'planned', priority: 'low' },
   [SELECTION.SORT_CHANGE]: { status: 'planned', priority: 'low' },
+  [SELECTION.CONTEXT_CHANGE]: { status: 'planned', priority: 'low' },
   
   // Form actions
   [FORM.FIELD_CHANGED]: { status: 'planned', priority: 'high' },

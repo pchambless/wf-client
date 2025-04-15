@@ -44,10 +44,22 @@ export const execEvent = async (eventConfig, params = {}) => {
   const executionPromise = new Promise(async (resolve, reject) => {
     try {
       // Get event config and validate
-      const config = getEventTypeConfig(eventConfig);
-      if (!config) {
-        log.error('Invalid event type:', eventConfig);
-        throw new Error(`Invalid event type: ${eventConfig}`);
+      let config;
+      try {
+        config = getEventTypeConfig(eventConfig);
+      } catch (error) {
+        // Enhanced error message for missing event type with suggestions
+        const availableEvents = eventTypes.map(e => e.eventType);
+        const suggestions = availableEvents
+          .filter(e => e.includes(eventConfig.replace('By', '')))
+          .slice(0, 3);
+          
+        const errorMsg = `Event type '${eventConfig}' not found. ${
+          suggestions.length ? `Did you mean: ${suggestions.join(', ')}?` : ''
+        }`;
+        
+        log.error(errorMsg);
+        throw new Error(errorMsg);
       }
 
       // Resolve parameters once with full context
@@ -87,6 +99,25 @@ export const execEvent = async (eventConfig, params = {}) => {
   // Store in cache and return
   executionCache.set(cacheKey, executionPromise);
   return executionPromise;
+};
+
+/**
+ * Stub function for future DML execution implementation
+ * Currently just logs that it was called without doing anything
+ */
+export const execDML = async (formData, columns, formMode) => {
+  log.info('execDML stub called:', { 
+    mode: formMode, 
+    formDataKeys: Object.keys(formData),
+    columnCount: columns?.length
+  });
+  
+  // This is just a stub - doesn't do anything yet
+  return {
+    success: false,
+    message: 'DML execution not implemented yet',
+    previewOnly: true
+  };
 };
 
 // Initialize event type service

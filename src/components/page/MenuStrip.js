@@ -16,7 +16,7 @@ const MenuStrip = () => {
     log.info('Menu navigation', { path, label });
     
     // Extract page name from path
-    const pageName = path.substring(1) || 'welcome';
+    const pageName = path.split('/')[1] || 'welcome';
     
     // Dispatch page selection action
     triggerAction(NAVIGATION.PAGE_SELECT, {
@@ -48,7 +48,7 @@ const MenuStrip = () => {
           </Button>
           <Button 
             color="inherit" 
-            onClick={() => handleMenuItemClick('/ingredients', 'Ingredients')}
+            onClick={() => handleMenuItemClick('/ingredients/types', 'Ingredients')}
           >
             Ingredients
           </Button>

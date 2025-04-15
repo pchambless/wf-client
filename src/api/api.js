@@ -148,6 +148,26 @@ export const useApi = () => {
   };
 };
 
+/**
+ * Simple stub for future DML request execution
+ * This is only a placeholder and doesn't actually make API calls
+ */
+export const execDmlRequest = async (requestBody) => {
+  log.info('DML request stub called (no actual API call made):', requestBody);
+  
+  return {
+    success: true,
+    message: 'DML request preview generated',
+    data: null
+  };
+};
+
+// Create a named variable for the default export
+const apiExports = { execEventType, fetchEventList };
+
+// Export the named variable
+export default apiExports;
+
 
 
 

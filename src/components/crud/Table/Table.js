@@ -1,125 +1,103 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { Box } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import createLogger from '../../../utils/logger';
-import { TablePresenter } from './Presenter';
-import { setVar } from '../../../utils/externalStore';
 
-const log = createLogger('Table');
+const log = createLogger('Table.Component');
 
-// Fix parameter destructuring to properly handle unused params
-const Table = ({ 
-  columnMap, 
-  listEvent, 
-  onRowSelect, 
-  selectedId,
-  onRowSelection
-}) => {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [tablePresenter] = useState(() => new TablePresenter(columnMap, listEvent));
+/**
+ * Styled Table component with improved visuals
+ */
+const Table = ({ tableConfig }) => {
+  // Extract everything from tableConfig including loading and error
+  const {
+    columns = [],
+    data = [],
+    idField = 'id',
+    onRowClick,
+    onDelete,
+    selectedId,
+    loading = false,
+    error = null
+  } = tableConfig || {};
   
-  // Update presenter config when props change
-  useEffect(() => {
-    tablePresenter.columnMap = columnMap;
-    tablePresenter.listEvent = listEvent;
-  }, [tablePresenter, columnMap, listEvent]);
+  // Add debug logging for the received data
+  log.debug('Table rendering with data:', { 
+    hasData: Array.isArray(data) && data.length > 0,
+    count: Array.isArray(data) ? data.length : 0,
+    columnCount: columns.length
+  });
 
-  // Load data - enhanced with better error handling
-  useEffect(() => {
-    let isMounted = true;
+  // Create enhanced columns with delete button if onDelete provided
+  const enhancedColumns = useMemo(() => {
+    // Leave columns unchanged if no onDelete handler
+    if (!onDelete) return columns;
     
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        log.debug('Table loading...', { listEvent });
-        
-        // Check if the listEvent is properly configured
-        if (!listEvent) {
-          throw new Error('Missing listEvent configuration');
-        }
-        
-        const data = await tablePresenter.fetchData();
-        
-        if (isMounted) {
-          setRows(Array.isArray(data) ? data : []);
-          log.debug('Table loaded', { count: data?.length || 0 });
-        }
-      } catch (error) {
-        log.error('Failed to load table data:', error);
-        if (isMounted) {
-          setError(`Error loading data: ${error.message}`);
-          setRows([]);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
+    // Add delete button column
+    const deleteColumn = {
+      field: 'actions',
+      headerName: '',
+      width: 60,
+      sortable: false,
+      filterable: false,
+      disableColumnMenu: true,
+      renderCell: (params) => (
+        <Tooltip title="Delete">
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent row selection
+              onDelete(params.row);
+            }}
+            aria-label="delete"
+            sx={{ 
+              color: 'error.main',
+              '&:hover': {
+                color: 'error.dark',
+                backgroundColor: 'rgba(211, 47, 47, 0.08)'
+              }
+            }}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )
     };
     
-    loadData();
+    // Return with delete column first
+    return [deleteColumn, ...columns];
+  }, [columns, onDelete]);
+
+  // Format cell values based on data type
+  const getCustomCellRender = (column) => (params) => {
+    const value = params.value;
     
-    return () => { isMounted = false; };
-  }, [tablePresenter, listEvent]);
-
-  // Enhance row click handler with better debugging for tab flow
-  const handleRowClick = useCallback((params) => {
-    try {
-      const row = params.row;
-      const idField = columnMap?.idField || tablePresenter.getIdField() || 'id';
-      const id = row[idField];
-      
-      // Get a human-readable identifier from the row data
-      const nameField = columnMap?.nameField || 'name';
-      const displayName = row[nameField] || row.title || row.name || id;
-      
-      // Log detailed information about the clicked row
-      log.info('Row clicked', { 
-        id, 
-        displayName,
-        idField,
-        listEvent,
-        hasOnRowSelection: !!onRowSelection,
-        hasOnRowSelect: !!onRowSelect,
-        rowData: Object.keys(row).reduce((obj, key) => {
-          // Show first few characters of long values
-          const value = typeof row[key] === 'string' && row[key].length > 20 
-            ? `${row[key].substring(0, 20)}...` 
-            : row[key];
-          return { ...obj, [key]: value };
-        }, {})
-      });
-      
-      // Just store ID for parameter resolution - minimal responsibility
-      if (idField && id !== undefined) {
-        setVar(`:${idField}`, id);
-        log.debug(`Set variable :${idField}=${id} for event resolution`);
-      }
-      
-      // Delegate to callbacks - prefer onRowSelection from hierTabs
-      if (onRowSelection) {
-        log.debug(`Delegating row selection to hierTabs for ${displayName} (${id})`);
-        onRowSelection(row);
-        return;
-      }
-      
-      // Legacy support for onRowSelect (columnMap handler)
-      if (onRowSelect) {
-        log.debug(`Using legacy onRowSelect handler for ${displayName} (${id})`);
-        onRowSelect(row);
-      } else {
-        log.warn(`No row selection handler available for ${displayName} (${id})`);
-      }
-    } catch (err) {
-      log.error('Error handling row click:', err);
+    // Handle null/undefined values
+    if (value === null || value === undefined) {
+      return '';
     }
-  }, [columnMap, tablePresenter, onRowSelection, onRowSelect, listEvent]);
-
-  // Safe access to ID field with fallback
-  const idField = tablePresenter.getIdField() || 'id';
+    
+    // Format based on dataType if available
+    if (column.dataType === 'DATE') {
+      // Format date values
+      try {
+        const date = new Date(value);
+        return date.toLocaleDateString();
+      } catch (error) {
+        return value;
+      }
+    }
+    
+    // Default return
+    return value;
+  };
+  
+  // Add cell rendering to columns
+  const columnsWithFormatting = enhancedColumns.map(column => ({
+    ...column,
+    renderCell: column.renderCell || getCustomCellRender(column)
+  }));
 
   return (
     <Box sx={{ width: '100%', height: 400 }}>
@@ -128,16 +106,57 @@ const Table = ({
           {error}
         </Box>
       )}
+      {data.length === 0 && !loading && !error && (
+        <Box sx={{ 
+          color: 'text.secondary', 
+          p: 2, 
+          textAlign: 'center',
+          border: '1px dashed',
+          borderColor: 'divider',
+          borderRadius: 1
+        }}>
+          No data available
+        </Box>
+      )}
       <DataGrid
-        rows={rows}
-        columns={tablePresenter.getColumns() || []}
-        getRowId={(row) => row[idField] || row.id || Math.random()}
-        onRowClick={handleRowClick}
+        rows={data}
+        columns={columnsWithFormatting}
+        getRowId={(row) => row[idField] || Math.random()}
+        onRowClick={onRowClick ? (params) => onRowClick(params.row) : undefined}
         loading={loading}
         disableColumnFilter
         disableColumnMenu
-        autoHeight
-        density="compact"
+        autoHeight={false}
+        rowHeight={42}
+        pageSize={50}
+        checkboxSelection={false}
+        disableSelectionOnClick
+        sx={{
+          height: '70vh',
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 1,
+          '& .MuiDataGrid-cell:focus': { outline: 'none' },
+          '& .MuiDataGrid-row:nth-of-type(odd)': {
+            backgroundColor: 'action.hover',
+          },
+          '& .MuiDataGrid-row.Mui-selected': {
+            backgroundColor: theme => theme.palette.primary.light + '22',
+            '&:hover': {
+              backgroundColor: theme => theme.palette.primary.light + '33',
+            },
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            backgroundColor: theme => theme.palette.mode === 'light' 
+              ? theme.palette.grey[100]
+              : theme.palette.grey[900],
+            fontWeight: 'bold',
+          },
+          '& .MuiDataGrid-footerContainer': {
+            borderTop: '1px solid',
+            borderColor: 'divider'
+          }
+        }}
         getRowClassName={(params) => 
           params.row[idField] === selectedId ? 'Mui-selected' : ''
         }

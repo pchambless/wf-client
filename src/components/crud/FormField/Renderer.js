@@ -1,102 +1,136 @@
 import React, { useMemo } from 'react';
-import { Grid, Box } from '@mui/material';
+import { Grid, CircularProgress, Typography, Divider } from '@mui/material';
+import FormField from './FormField';
 import createLogger from '../../../utils/logger';
-import Select from '../../../components/page/Select';
-import TextField from '@mui/material/TextField';
+import formFieldPresenter from './Presenter';
 
+const log = createLogger('FormField.Renderer');
+
+/**
+ * Renders a collection of form fields respecting group layout
+ */
 const FormFieldRenderer = ({ 
   visibleFields = [], 
   formData = {}, 
   handleInputChange, 
-  loading, 
-  error    
+  loading = false,
+  error = null 
 }) => {
-  const log = createLogger('FormField.Renderer');
-  
-  // Debug what's coming in
-  log.debug('Rendering form fields:', { 
-    fieldCount: visibleFields.length,
-    formDataFields: Object.keys(formData),
-    formData
-  });
-  
-  // IMPORTANT: Move all hooks to the top level, before any conditionals
-  
-  // Group fields by their group attribute
-  const fieldGroups = useMemo(() => {
-    const groups = {};
-    
-    visibleFields.forEach(field => {
-      const groupName = field.group || 'default';
-      if (!groups[groupName]) {
-        groups[groupName] = [];
-      }
-      groups[groupName].push(field);
-    });
-    
-    return groups;
+  // Group fields by their group property
+  const groupedFields = useMemo(() => {
+    return formFieldPresenter.groupFields(visibleFields);
   }, [visibleFields]);
-  
-  // Render a single field based on its type
-  const renderField = useMemo(() => (field, index) => {
-    const { id, label, list } = field;
-    const fieldId = id || `anonymous-field-${index}`;  // Ensure ID is never undefined
-    const fieldValue = formData[fieldId] || '';
-    
-    if (list) {
-      log.debug(`Rendering select field: ${fieldId} (list: ${list})`);
-      return (
-        <Grid item xs={12} sm={6} key={`field-${fieldId}-${index}`}>
-          <Select
-            placeholder={label}
-            value={fieldValue}
-            onChange={(newValue) => handleInputChange(fieldId, newValue)}
-            listName={list}
-            sx={{ mb: 2 }}
-          />
-        </Grid>
-      );
-    }
-    
-    log.debug(`Field ${fieldId}:`, {
-      hasValue: fieldValue !== undefined,
-      value: fieldValue,
-      defaultValue: field.defaultValue
-    });
 
+  // Debug the incoming field data
+  React.useEffect(() => {
+    log.debug('FormFieldRenderer received fields:', {
+      fieldCount: visibleFields.length,
+      groupCount: groupedFields.length,
+      fieldTypes: visibleFields.map(f => ({ id: f.id, type: f.type })),
+      hasFormData: !!formData,
+      formDataKeys: Object.keys(formData)
+    });
+    
+    // Check for potential issues with select fields
+    const selectFields = visibleFields.filter(field => field.type === 'select');
+    if (selectFields.length > 0) {
+      selectFields.forEach(field => {
+        if (!field.options || !Array.isArray(field.options) || field.options.length === 0) {
+          log.warn(`Select field ${field.id} has no options array or empty options`, field);
+        }
+      });
+    }
+  }, [visibleFields, formData, groupedFields]);
+
+  if (loading) {
     return (
-      <Grid item xs={12} sm={6} key={`field-${fieldId}-${index}`}>
-        <TextField
-          fullWidth
-          margin="normal"
-          id={fieldId}
-          name={fieldId}
-          label={label}
-          value={fieldValue || ''}
-          onChange={(e) => handleInputChange(fieldId, e.target.value)}
-          disabled={loading}
-          error={error && error[fieldId]}
-          helperText={error && error[fieldId] ? error[fieldId] : ''}
-        />
+      <Grid container justifyContent="center">
+        <CircularProgress />
       </Grid>
     );
-  }, [formData, handleInputChange, loading, error, log]);
+  }
 
-  // Render all groups with proper keys
+  if (error) {
+    return (
+      <div className="error-message">{error}</div>
+    );
+  }
+
+  if (!visibleFields || visibleFields.length === 0) {
+    return <div className="no-fields-message">No fields available</div>;
+  }
+
   return (
-    <>
-      {Object.entries(fieldGroups).map(([groupName, fields], groupIndex) => (
-        <Grid container spacing={2} key={`group-${groupName}-${groupIndex}`}>
-          {fields.map((field, fieldIndex) => renderField(field, fieldIndex))}
-        </Grid>
-      ))}
-      {error && (
-        <Box sx={{ color: 'error.main', mt: 2 }}>
-          {error}
-        </Box>
-      )}
-    </>
+    // Reduce spacing from 2 to 1 to make the form more compact
+    <Grid container spacing={1}>
+      {groupedFields.map((fieldsInGroup, groupIndex) => {
+        // Count how many fields are in this group (for width calculation)
+        const fieldCount = fieldsInGroup.length;
+        // Determine if any field in the group should always be full width
+        const hasFullWidthField = fieldsInGroup.some(f => f.type === 'textarea' || f.multiline);
+        
+        return (
+          <React.Fragment key={`group-${groupIndex}`}>
+            {/* Optional group divider between groups - with reduced margins */}
+            {groupIndex > 0 && (
+              <Grid item xs={12}>
+                {/* Reduce margin from my: 1 to my: 0.5 */}
+                <Divider sx={{ my: 0.5 }} />
+              </Grid>
+            )}
+            
+            {/* Group label if available from first field - with reduced bottom padding */}
+            {fieldsInGroup[0]?.groupLabel && (
+              <Grid item xs={12}>
+                <Typography 
+                  variant="subtitle2" 
+                  color="textSecondary"
+                  // Add compact styling
+                  sx={{ pb: 0.5, fontSize: '0.85rem' }}
+                >
+                  {fieldsInGroup[0].groupLabel}
+                </Typography>
+              </Grid>
+            )}
+            
+            {/* Create a container row for this group with reduced spacing */}
+            <Grid item xs={12} container spacing={1}>
+              {fieldsInGroup.map(field => {
+                // CRITICAL: Calculate optimal field width based on group size
+                // This ensures fields in the same group appear on the same line
+                let smSize = hasFullWidthField ? 12 : 
+                           field.type === 'textarea' || field.multiline ? 12 : 
+                           fieldCount === 1 ? 12 :
+                           fieldCount === 2 ? 6 :
+                           fieldCount === 3 ? 4 :
+                           fieldCount >= 4 ? 3 : 6;
+                
+                // Override with field's own sm size if specified
+                if (field.sm) smSize = field.sm;
+                
+                return (
+                  <Grid 
+                    item 
+                    xs={12} 
+                    sm={smSize}
+                    key={field.id}
+                    // Add reduced vertical padding
+                    sx={{ py: 0.5 }}
+                  >
+                    <FormField
+                      field={field}
+                      value={formData[field.id] || ''}
+                      onChange={(value) => handleInputChange(field.id, value)}
+                    />
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </React.Fragment>
+        );
+      })}
+    </Grid>
   );
 };
 
-export default React.memo(FormFieldRenderer);
+export default FormFieldRenderer;

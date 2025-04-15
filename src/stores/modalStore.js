@@ -1,19 +1,21 @@
-import { setVars, getVar, subscribe } from '../utils/externalStore';
-// Use a different logger name to avoid circular dependency
+import React, { useState, createContext, useContext } from 'react';
+import { 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions, 
+  Button,
+  CircularProgress,
+  Box // Add Box import
+} from '@mui/material';
 import createLogger from '../utils/logger';
 
 const log = createLogger('ModalStore');
 
-// Private state
-let isOpen = false;
-let currentConfig = {};
-let previousElement = null;
+// Add missing variables
+let _previousElement = null;
 
-// Store keys
-const MODAL_IS_OPEN = ':modal.isOpen';
-const MODAL_CONFIG = ':modal.config';
-
-// Modal type definitions
+// Add modalTypes definition
 const modalTypes = {
   deleteConfirm: {
     title: 'Confirm Deletion',
@@ -32,15 +34,174 @@ const modalTypes = {
   }
 };
 
+// Initialize as objects, will be assigned real functions during ModalProvider setup
+let _showConfirmation = () => { 
+  log.warn('Modal provider not initialized'); 
+  return Promise.reject(new Error('Modal provider not initialized'));
+};
+
+let _showModal = () => { 
+  log.warn('Modal provider not initialized'); 
+  return Promise.reject(new Error('Modal provider not initialized'));
+};
+
+let _closeModal = () => { 
+  log.warn('Modal provider not initialized');
+};
+
+export const ModalContext = createContext({
+  showConfirmation: _showConfirmation,
+  showModal: _showModal,
+  closeModal: _closeModal
+});
+
 /**
- * Open a modal dialog
- * @param {string} modalType - Type of modal to open
- * @param {object} additionalProps - Extra properties to merge with default configuration
+ * Provides modal functionality to the application
  */
+export const ModalProvider = ({ children }) => {
+  const [modalState, setModalState] = useState({
+    open: false,
+    title: '',
+    content: null,
+    onConfirm: null,
+    onCancel: null,
+    confirmText: 'OK',
+    cancelText: 'Cancel',
+    showConfirm: true,
+    maxWidth: 'sm',
+    loading: false
+  });
+
+  const showConfirmation = (content, onConfirm, onCancel, options = {}) => {
+    log.debug('Showing confirmation modal', options);
+    
+    return new Promise((resolve) => {
+      setModalState({
+        open: true,
+        title: options.title || 'Confirm',
+        content,
+        onConfirm: () => {
+          if (onConfirm) onConfirm();
+          resolve(true);
+          closeModal();
+        },
+        onCancel: () => {
+          if (onCancel) onCancel();
+          resolve(false);
+          closeModal();
+        },
+        confirmText: options.confirmText || 'OK',
+        cancelText: options.cancelText || 'Cancel',
+        showConfirm: options.showConfirm !== false,
+        maxWidth: options.maxWidth || 'sm',
+        loading: false
+      });
+    });
+  };
+
+  const showModal = (content, options = {}) => {
+    log.debug('Showing modal', options);
+    
+    return new Promise((resolve) => {
+      setModalState({
+        open: true,
+        title: options.title || 'Information',
+        content,
+        onConfirm: () => {
+          resolve(true);
+          closeModal();
+        },
+        onCancel: () => {
+          resolve(false);
+          closeModal();
+        },
+        confirmText: options.confirmText || 'OK',
+        cancelText: options.cancelText || 'Close',
+        showConfirm: options.showConfirm !== false,
+        maxWidth: options.maxWidth || 'sm',
+        loading: false
+      });
+    });
+  };
+
+  const closeModal = () => {
+    log.debug('Closing modal');
+    setModalState(prev => ({ ...prev, open: false }));
+    
+    // Restore focus to previous element
+    if (_previousElement) {
+      try {
+        _previousElement.focus();
+      } catch (e) {
+        log.warn('Could not restore focus');
+      }
+      _previousElement = null;
+    }
+  };
+
+  const setLoading = (loading) => {
+    setModalState(prev => ({ ...prev, loading }));
+  };
+
+  // Assign the real functions to the exported ones
+  _showConfirmation = showConfirmation;
+  _showModal = showModal;
+  _closeModal = closeModal;
+
+  return (
+    <>
+      <ModalContext.Provider value={{ showConfirmation, showModal, closeModal, setLoading }}>
+        {children}
+      </ModalContext.Provider>
+      
+      <Dialog 
+        open={modalState.open} 
+        onClose={() => modalState.onCancel?.()} 
+        maxWidth={modalState.maxWidth}
+        fullWidth
+      >
+        {modalState.title && <DialogTitle>{modalState.title}</DialogTitle>}
+        <DialogContent>
+          {modalState.content}
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => modalState.onCancel?.()} 
+            color="primary"
+            disabled={modalState.loading}
+          >
+            {modalState.cancelText}
+          </Button>
+          {modalState.showConfirm && (
+            <Button 
+              onClick={() => modalState.onConfirm?.()} 
+              color="primary" 
+              variant="contained"
+              disabled={modalState.loading}
+              startIcon={modalState.loading ? <CircularProgress size={16} /> : null}
+            >
+              {modalState.confirmText}
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+};
+
+// Export the hooks and functions
+export const useModalStore = () => useContext(ModalContext);
+
+// Export standalone functions that can be used outside of React components
+export const showConfirmation = _showConfirmation;
+export const showModal = _showModal;
+export const closeModal = _closeModal;
+
+// Add back the missing functions
 export const openModal = (modalType, additionalProps = {}) => {
   // Save currently focused element
   try {
-    previousElement = document.activeElement;
+    _previousElement = document.activeElement;
   } catch (e) {
     log.warn('Could not save focused element');
   }
@@ -58,139 +219,28 @@ export const openModal = (modalType, additionalProps = {}) => {
     ...additionalProps
   };
 
-  log('Opening modal', { type: modalType, config });
+  log.debug('Opening modal', { type: modalType, config });
 
-  // Update state
-  isOpen = true;
-  currentConfig = config;
-
-  // Update external store
-  setVars({
-    [MODAL_IS_OPEN]: true,
-    [MODAL_CONFIG]: config
+  // Use the showModal function to display the content
+  return _showModal(config.message || config.content, {
+    title: config.title,
+    confirmText: config.confirmText || 'OK',
+    cancelText: config.cancelText || 'Cancel',
+    maxWidth: config.maxWidth || 'sm'
   });
 };
 
-/**
- * Close current modal dialog
- */
-export const closeModal = () => {
-  log('Closing modal');
-
-  // Update state
-  isOpen = false;
-  currentConfig = {};
-
-  // Update external store
-  setVars({
-    [MODAL_IS_OPEN]: false,
-    [MODAL_CONFIG]: {}
-  });
-
-  // Restore focus to previous element
-  if (previousElement) {
-    try {
-      previousElement.focus();
-    } catch (e) {
-      log.warn('Could not restore focus');
-    }
-    previousElement = null;
-  }
-};
-
-/**
- * Show an error modal with message
- * @param {string} message - Error message to display
- * @param {string} title - Optional custom title
- */
 export const showError = (message, title = 'Error') => {
-  openModal('error', {
-    title,
-    message,
-    isError: true
-  });
+  log.debug('Showing error modal', { message, title });
+  return _showModal(
+    <Box sx={{ color: 'error.main' }}>
+      {message}
+    </Box>, 
+    {
+      title,
+      confirmText: 'OK',
+      showConfirm: true,
+      maxWidth: 'sm'
+    }
+  );
 };
-
-/**
- * Show a confirmation dialog
- * @param {string} message - Confirmation message
- * @param {Function} onConfirm - Function to call when confirmed
- * @param {Function} onCancel - Function to call when cancelled
- * @param {object} options - Additional options
- */
-export const showConfirmation = (message, onConfirm, onCancel, options = {}) => {
-  openModal('deleteConfirm', {
-    message,
-    onConfirm,
-    onCancel,
-    ...options
-  });
-};
-
-/**
- * Get current modal state
- * @returns {object} Modal state with isOpen and config properties
- */
-export const getModalState = () => {
-  return {
-    isOpen,
-    config: currentConfig
-  };
-};
-
-/**
- * React hook for using the modal store in components
- * @returns {object} Modal state and methods
- */
-export const useModalStore = () => {
-  const { useState, useEffect } = require('react');
-
-  // Initialize state from current values
-  const [modalState, setModalState] = useState({
-    isOpen,
-    config: { ...currentConfig }
-  });
-
-  // Subscribe to changes
-  useEffect(() => {
-    const unsubscribe = subscribe(MODAL_IS_OPEN, (value) => {
-      // Handle the subscription event
-      console.log('Modal state changed:', value);
-
-      const newIsOpen = getVar(MODAL_IS_OPEN) || false;
-      const newConfig = getVar(MODAL_CONFIG) || {};
-
-      // Only update if something changed
-      if (newIsOpen !== modalState.isOpen || 
-          JSON.stringify(newConfig) !== JSON.stringify(modalState.config)) {
-        setModalState({
-          isOpen: newIsOpen,
-          config: newConfig
-        });
-      }
-    });
-
-    return unsubscribe;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return {
-    isOpen: modalState.isOpen,
-    config: modalState.config,
-    openModal,
-    closeModal,
-    showError,
-    showConfirmation
-  };
-};
-
-// Initialize store
-(() => {
-  // Set initial values in external store if not already set
-  if (getVar(MODAL_IS_OPEN) === undefined) {
-    setVars({
-      [MODAL_IS_OPEN]: false,
-      [MODAL_CONFIG]: {}
-    });
-  }
-})();

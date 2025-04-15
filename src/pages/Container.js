@@ -1,17 +1,38 @@
 import React from 'react';
-import { Container as MuiContainer, Box } from '@mui/material'; // Import Material-UI components
+import { Container as MuiContainer, Box } from '@mui/material';
 import PageHeader from './PageHeader';
-import MenuStrip from '../components/page/MenuStrip'; // Import MenuStrip
+import MenuStrip from '../components/page/MenuStrip';
+import createLogger from '../utils/logger';
+
+const log = createLogger('Container');
 
 const Container = ({ children }) => {
+  log.debug('Container rendering with page-based (non-tab) navigation structure');
+  
   return (
-    <MuiContainer maxWidth="xl" sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'lightGray', padding: '0' }}>
+    <MuiContainer 
+      maxWidth="xl" 
+      sx={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        bgcolor: 'background.default', 
+        padding: '0' 
+      }}
+    >
       <PageHeader />
       <MenuStrip />
-      <Box component="main" sx={{ flexGrow: 1, p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Box 
+        component="main" 
+        sx={{ 
+          flexGrow: 1, 
+          p: 2, 
+          display: 'flex', 
+          flexDirection: 'column'
+        }}
+      >
         {children}
       </Box>
-      {/* You can add a footer here if needed */}
     </MuiContainer>
   );
 };

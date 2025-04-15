@@ -1,6 +1,6 @@
 import { setVars } from '../../utils/externalStore';
 import { triggerAction } from '../actionStore';
-import { SELECTION } from '../core/constants';
+import { SELECTION, NAVIGATION } from '../core/constants';
 import { initAccountStore } from '../../stores/accountStore';
 import createLogger from '../../utils/logger';
 
@@ -78,36 +78,17 @@ const selectionHandlers = {
     }
   },
   
+  // Modify ROW_SELECT to trigger navigation instead of tab changes
   ROW_SELECT: {
     description: "Handle table row selection",
     payload: {
       row: "Selected row data",
-      tabIndex: "Index of the active tab",
-      tabId: "ID of the active tab"
-    },
-    // Add a summary section that lists handlers in execution order
-    summary: `
-      Row selection processing steps:
-      1. Update Form (ID: 1) - Updates the form with selected row data [scope: crudLayout]
-      2. Update Selections (ID: 2) - Updates presenter's internal selections [scope: hierarchy]  
-      3. Update Tab States (ID: 3) - Updates tab enabled/disabled states [scope: hierarchy]
-    `,
-    // Add handlerFlow to document dependencies
-    handlerFlow: {
-      order: [1, 2, 3],
-      dependencies: {
-        "2": [], // No dependencies
-        "1": [], // No dependencies
-        "3": ["2"] // Depends on handler 2 having run first
-      }
+      entityType: "Type of entity selected",
+      listContext: "Current list context"
     },
     handlers: [
       {
-        id: 1,
         name: "Update form with selected row data",
-        code: `setFormData(payload.row)`,
-        priority: "high",
-        scope: "crudLayout",
         implementation: (payload, context) => {
           // This handler only cares about updating the Form component
           if (context?.setFormData) {
@@ -137,75 +118,63 @@ const selectionHandlers = {
         }
       },
       {
-        id: 2,
-        name: "Update presenter selections",
-        code: `presenter.handleRowSelection(payload.tabIndex, payload.row)`,
-        priority: "high", 
-        scope: "hierarchy",
+        name: "Navigate to detail page for selected item",
         implementation: (payload, context) => {
-          // This handler only cares about the tab hierarchy presenter
-          if (context?.presenter && typeof context.presenter.handleRowSelection === 'function') {
-            try {
-              const newSelections = context.presenter.handleRowSelection(
-                payload.tabIndex, 
-                payload.row, 
-                context.presenter._selections || {}
-              );
+          // Only navigate if navigation function is provided
+          if (context?.navigate && payload.row) {
+            const idField = payload.idField || 'id';
+            const id = payload.row[idField];
+            
+            // Determine detail page path based on entity type and context
+            let detailPath;
+            if (payload.entityType === 'ingredientType') {
+              detailPath = `/ingredients/types/${id}/ingredients`;
+            } else if (payload.entityType === 'ingredient') {
+              const parentId = context.parentId;
+              detailPath = `/ingredients/types/${parentId}/ingredients/${id}/batches`;
+            } else if (payload.entityType === 'product') {
+              const parentId = context.parentId;
+              detailPath = `/products/types/${parentId}/products/${id}/batches`;
+            }
+            
+            if (detailPath) {
+              log.info(`Navigating to detail page: ${detailPath}`);
+              context.navigate(detailPath);
               
-              if (newSelections) {
-                context.presenter._selections = newSelections;
-                log.debug('Updated presenter selections:', { newSelections });
-              }
-            } catch (err) {
-              log.error('Error in handleRowSelection:', err);
+              // Trigger navigation action for breadcrumbs, etc.
+              triggerAction(NAVIGATION.DETAIL_NAVIGATE, {
+                parentType: payload.entityType,
+                parentId: id,
+                childType: payload.childEntityType,
+                path: detailPath
+              });
             }
           }
         }
-      },
+      }
+    ]
+  },
+  
+  // Add handler for parent-child context
+  CONTEXT_CHANGE: {
+    description: "Handle change in entity context",
+    payload: {
+      parentType: "Type of parent entity",
+      parentId: "ID of parent entity", 
+      childType: "Type of child entities to display"
+    },
+    handlers: [
       {
-        id: 3,
-        name: "Evaluate tab states after selection",
-        code: `updateTabStates(presenter._selections)`,
-        priority: "medium",
-        scope: "hierarchy",
-        // Add a note about dependencies
-        dependsOn: [2],
-        implementation: (payload, context) => {
-          // Add detailed logging to diagnose context issues
-          log.debug('Evaluate tab states handler received context:', {
-            hasContext: !!context,
-            contextKeys: context ? Object.keys(context) : [],
-            hasPresenter: !!context?.presenter,
-            source: context?.__source || 'unknown'
-          });
-          
-          if (context?.presenter && context.presenter._selections) {
-            // CRITICAL FIX: Ensure we update the UI state to reflect selection changes
-            if (context.updateTabStates) {
-              log.debug('Calling updateTabStates with:', context.presenter._selections);
-              context.updateTabStates(context.presenter._selections);
-            } else {
-              log.warn('updateTabStates function not provided in context');
-            }
+        name: "Set context parameters in store",
+        implementation: (payload) => {
+          if (payload.parentId && payload.parentType) {
+            // Convert parent type to appropriate param name
+            const paramName = payload.parentType === 'ingredientType' ? ':ingrTypeID' :
+                             payload.parentType === 'product' ? ':productID' : 
+                             `:${payload.parentType}ID`;
             
-            // CRITICAL FIX: Remove auto-tab activation to match Issue #25 requirements
-            // Check if we should auto-activate the next tab
-            const nextTabIndex = payload.tabIndex + 1;
-            if (context.presenter.isTabEnabled) {
-              const isNextTabEnabled = context.presenter.isTabEnabled(
-                nextTabIndex, 
-                context.presenter._selections
-              );
-              
-              log.debug(`Next tab ${nextTabIndex} enabled check: ${isNextTabEnabled}`);
-              
-              // Remove automatic tab activation, just log the state
-              if (isNextTabEnabled) {
-                log.info(`Next tab ${nextTabIndex} is now enabled (but not auto-activated)`);
-              }
-            }
-          } else {
-            // ...existing error log...
+            log.info(`Setting context parameter ${paramName}=${payload.parentId}`);
+            setVars({ [paramName]: payload.parentId });
           }
         }
       }

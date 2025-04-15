@@ -31,7 +31,42 @@ class CrudLayoutPresenter extends MinViableProd {
   componentDidMount() {
     super.componentDidMount();
     this.mounted = true;
+    
+    // Load data when component mounts
+    this.loadData();
   }
+
+  // Add method to load data from presenter or from listEvent directly
+  loadData = async () => {
+    const { pagePresenter, listEvent } = this.props;
+    
+    try {
+      let data = [];
+      
+      // Try to get data from presenter first
+      if (pagePresenter) {
+        if (typeof pagePresenter.getTableData === 'function') {
+          this.log.debug('Loading data via pagePresenter.getTableData()');
+          data = await pagePresenter.getTableData();
+        } else if (typeof pagePresenter.fetchData === 'function') {
+          this.log.debug('Loading data via pagePresenter.fetchData()');
+          data = await pagePresenter.fetchData(listEvent);
+        }
+      }
+      
+      // If presenter doesn't have data methods, use TablePresenter directly
+      if (!data || !data.length) {
+        const TablePresenter = await import('./Table/Presenter').then(m => m.default);
+        this.log.debug('Loading data via TablePresenter');
+        data = await TablePresenter.fetchData(listEvent);
+      }
+      
+      this.setState({ tableData: data });
+      this.log.debug('Data loaded successfully', { count: data.length });
+    } catch (error) {
+      this.log.error('Error loading data:', error);
+    }
+  };
 
   componentWillUnmount() {
     super.componentWillUnmount();
@@ -39,6 +74,11 @@ class CrudLayoutPresenter extends MinViableProd {
   }
 
   componentDidUpdate(prevProps) {
+    // Load data when listEvent changes
+    if (this.props.listEvent !== prevProps.listEvent) {
+      this.loadData();
+    }
+
     // More robust handling of tab/columnMap changes
     if (this.props.columnMap !== prevProps.columnMap || 
         this.props.activeTabIndex !== prevProps.activeTabIndex) {
@@ -143,9 +183,9 @@ class CrudLayoutPresenter extends MinViableProd {
   };
 
   render() {
-    // Update to pass the page presenter to Table
-    const { columnMap, listEvent, pagePresenter, onRowSelection } = this.props;
-    const { formMode, selectedRow } = this.state;
+    const { columnMap, listEvent, pagePresenter } = this.props;
+    const { formMode, selectedRow, tableData } = this.state;
+
     const canAdd = true;
     
     // Debug what we're about to render
@@ -154,7 +194,7 @@ class CrudLayoutPresenter extends MinViableProd {
       listEvent,
       formMode,
       hasPagePresenter: !!pagePresenter,
-      hasRowSelectionHandler: !!onRowSelection
+      hasRowSelectionHandler: !!this.props.onRowSelection
     });
     
     // Check if we have the minimum required props
@@ -195,15 +235,17 @@ class CrudLayoutPresenter extends MinViableProd {
             </Box>
             
             <Table 
-              columnMap={columnMap}
-              listEvent={listEvent}
-              onRowClick={this.handleRowSelect}
-              onRowSelect={columnMap.onRowSelect}
-              selectedId={selectedRow?.id}
-              presenter={pagePresenter}
-              setActiveTab={this.props.setActiveTab}
-              updateTabStates={this.props.updateTabStates}
-              onRowSelection={this.props.onRowSelection}
+              tableConfig={{
+                // FIX: Don't pass columnMap to getColumns() - it expects a tab index
+                columns: typeof pagePresenter?.getColumns === 'function'
+                  ? pagePresenter.getColumns(0) // Pass 0 as tab index, not columnMap 
+                  : columnMap?.columns || [],
+                idField: columnMap?.idField || 'id',
+                data: tableData || [], // Use tableData from state
+                selectedId: selectedRow?.id,
+                onRowClick: this.handleRowSelect,
+                onDelete: this.handleDelete
+              }}
             />
           </Grid>
           
@@ -211,7 +253,8 @@ class CrudLayoutPresenter extends MinViableProd {
             <Form 
               ref={this.formRef}
               columnMap={columnMap}
-              formMode={formMode}
+              formMode={this.state.formMode}
+              formData={selectedRow}
             />
           </Grid>
         </Grid>

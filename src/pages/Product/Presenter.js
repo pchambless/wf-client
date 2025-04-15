@@ -80,8 +80,7 @@ export class ProductPresenter extends HierPresenter {
         case 0: return true; // Product Types always enabled
         case 1: return !!selections.prodType;
         case 2: return !!selections.product;
-        case 3: return !!selections.prodType;
-        case 4: return !!selections.product;
+        // Remove references to non-existent tabs 3 and 4
         default: return false;
       }
     })();

@@ -77,11 +77,32 @@ class HierPresenter {
    * @returns {Object} The tab configuration or a safe empty object
    */
   getTabConfig(index = 0) {
+    // Add robust type checking and handling for invalid inputs
+    if (typeof index !== 'number') {
+      const type = typeof index;
+      const isObject = index !== null && typeof index === 'object';
+      
+      // More descriptive error with information to help debug
+      this.logger.error(`Invalid tab index type: ${type}${isObject ? ' - received object instead of number' : ''}`, 
+        isObject ? { objectType: index.constructor?.name || 'unknown' } : index);
+      
+      // Default to first tab instead of throwing
+      index = 0;
+    }
+    
+    // Check array bounds
     if (!Array.isArray(this.config.tabConfig) || 
         !this.config.tabConfig[index]) {
       this.logger.error(`Tab configuration missing at index ${index}`);
-      return { label: `Missing Tab ${index}`, columnMap: {}, listEvent: '' };
+      
+      // Return a safe default to avoid crashing
+      return { 
+        label: `Missing Tab ${index}`, 
+        columnMap: { columns: [] }, 
+        listEvent: '' 
+      };
     }
+    
     return this.config.tabConfig[index];
   }
 

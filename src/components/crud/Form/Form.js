@@ -24,10 +24,35 @@ const Form = forwardRef(({ columnMap, onSubmit, formMode: propFormMode }, ref) =
   }
   const presenter = presenterRef.current;
   
-  // Update presenter's columnMap if it changes
+  // Update presenter's columnMap if it changes and REFRESH FIELDS
   useEffect(() => {
+    // Always update presenter with latest columnMap
     presenter.columnMap = columnMap;
-  }, [presenter, columnMap]);
+    
+    // Set the current form mode in the presenter
+    if (propFormMode) {
+      presenter.setFormMode(propFormMode);
+    }
+    
+    // CRITICAL: Re-fetch fields when columnMap changes - key to solving our issue
+    if (columnMap && columnMap.columns) {
+      try {
+        const formFields = presenter.getFields();
+        setFields(formFields);
+        
+        log.debug('Form fields updated due to columnMap change:', {
+          fieldCount: formFields.length,
+          fieldTypes: formFields.map(f => ({ id: f.id, type: f.type, group: f.group })),
+          columnMapName: columnMap.name || 'unnamed'
+        });
+        
+        // Clear form data when tab changes to avoid showing wrong field values
+        setFormData({});
+      } catch (err) {
+        log.error('Error updating fields from columnMap:', err);
+      }
+    }
+  }, [presenter, columnMap, propFormMode]);
   
   // INITIALIZATION - Run this once
   const initialized = useRef(false);
@@ -103,11 +128,14 @@ const Form = forwardRef(({ columnMap, onSubmit, formMode: propFormMode }, ref) =
     setError(null);
     
     try {
+      // Set form mode before submitting
+      presenter.setFormMode(propFormMode || 'add');
+      
       // Use presenter to submit form
       const result = await presenter.submitForm(formData);
-      if (result) {
+      if (result && result.success) {
         log.info('Form submitted successfully');
-        onSubmit?.();
+        onSubmit?.(result);
         return true;
       }
       return false;
@@ -118,7 +146,7 @@ const Form = forwardRef(({ columnMap, onSubmit, formMode: propFormMode }, ref) =
     } finally {
       setLoading(false);
     }
-  }, [presenter, formData, onSubmit]);
+  }, [presenter, formData, onSubmit, propFormMode]);
   
   // INPUT CHANGES
   const handleInputChange = useCallback((field, value) => {
@@ -168,7 +196,8 @@ const Form = forwardRef(({ columnMap, onSubmit, formMode: propFormMode }, ref) =
     <Box 
       className="form-container" 
       sx={{
-        padding: theme.spacing(2),
+        // Reduce padding to make the form more compact
+        padding: theme.spacing(1),
         backgroundColor: theme.palette.background.paper,
         borderRadius: theme.shape.borderRadius,
         boxShadow: theme.shadows[1],
@@ -183,13 +212,15 @@ const Form = forwardRef(({ columnMap, onSubmit, formMode: propFormMode }, ref) =
       />
       
       {propFormMode !== 'view' && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
           <Button
             onClick={handleSubmit}
             disabled={loading}
             variant="contained"
             color="primary"
             startIcon={<SaveIcon />}
+            // Make button smaller
+            size="small"
           >
             {loading ? 'Saving...' : 'Save'}
           </Button>

@@ -1,39 +1,45 @@
 import React from 'react';
-import { Breadcrumbs as MuiBreadcrumbs, Link, Typography } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
-import { usePageStore } from '../../stores';
-import createLogger from '../../utils/logger';
-
-const log = createLogger('Breadcrumbs');
+import { Link, useParams, useLocation } from 'react-router-dom';
+import { Breadcrumbs as MuiBreadcrumbs, Typography, Link as MuiLink } from '@mui/material';
+import HomeIcon from '@mui/icons-material/Home';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import { useBreadcrumbs } from '../../hooks/useBreadcrumbs';
 
 const Breadcrumbs = () => {
-  const { breadcrumbs } = usePageStore();
-  
-  if (!breadcrumbs || breadcrumbs.length <= 1) {
-    return null; // Don't show breadcrumbs if we only have 'Home' or nothing
-  }
-  
-  log('Rendering breadcrumbs:', breadcrumbs);
+  const { breadcrumbs } = useBreadcrumbs();
   
   return (
-    <MuiBreadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
+    <MuiBreadcrumbs 
+      separator={<NavigateNextIcon fontSize="small" />} 
+      aria-label="breadcrumb"
+      sx={{ mb: 2, mt: 1 }}
+    >
+      <MuiLink
+        component={Link}
+        to="/"
+        color="inherit"
+        sx={{ display: 'flex', alignItems: 'center' }}
+      >
+        <HomeIcon sx={{ mr: 0.5 }} fontSize="small" />
+        Home
+      </MuiLink>
+      
       {breadcrumbs.map((crumb, index) => {
         const isLast = index === breadcrumbs.length - 1;
         
         return isLast ? (
-          <Typography key={index} color="text.primary">
+          <Typography key={crumb.path} color="text.primary">
             {crumb.label}
           </Typography>
         ) : (
-          <Link
-            key={index}
-            component={RouterLink}
+          <MuiLink 
+            key={crumb.path} 
+            component={Link} 
             to={crumb.path}
-            underline="hover"
             color="inherit"
           >
             {crumb.label}
-          </Link>
+          </MuiLink>
         );
       })}
     </MuiBreadcrumbs>

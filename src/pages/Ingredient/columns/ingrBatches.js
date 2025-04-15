@@ -25,6 +25,17 @@ export const IngrBatches = {
       setVar: ":btchNbr"
     },
     {
+      group: 1,
+      ordr: 5,
+      field: "purchDate",
+      dbCol: "purchase_date",
+      label: "Purch Date",
+      width: 120,
+      dataType: "DATE",
+      value: "",
+      setVar: ":purchDate"
+    },
+    {
       group: 2,
       ordr: 3,
       field: "vndrID",
@@ -48,17 +59,6 @@ export const IngrBatches = {
       value: "",
       setVar: ":brndID",
       selList: "brndList"
-    },
-    {
-      group: 1,
-      ordr: 5,
-      field: "purchDate",
-      dbCol: "purchase_date",
-      label: "Purch Date",
-      width: 120,
-      dataType: "DATE",
-      value: "",
-      setVar: ":purchDate"
     },
     {
       group: 3,
