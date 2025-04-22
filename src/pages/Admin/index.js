@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Tabs, Tab } from '@mui/material';
+import { Box, Tabs, Tab, Button, Typography } from '@mui/material';
 import Container from '../Container';
 import CrudLayout from '../../components/crud/CrudLayout';
 import createLogger from '../../utils/logger';
 import { pageConfig } from './config';
+import SettingsIcon from '@mui/icons-material/Settings';
+import IssueImporter from '../../admin/IssueImporter';
+import GitHubSettings from '../../admin/GitHubSettings';
+import { withMainLayout } from '../../layouts/MainLayout';
 
 const log = createLogger('Admin');
 
@@ -30,6 +34,7 @@ const TabPanel = ({ children, value, index, ...other }) => {
 const Admin = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const { pageName, tabConfig } = pageConfig;
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     log.debug('Admin page initialized', { pageName, tabCount: tabConfig.length });
@@ -41,23 +46,38 @@ const Admin = () => {
   };
 
   return (
-    <Container>
-      <Box>
-        <Tabs
-          value={tabIndex}
-          onChange={handleTabChange}
-          aria-label="admin crud tabs"
+    <Container maxWidth="lg">
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        mb: 3 
+      }}>
+        <Typography variant="h4">Admin Dashboard</Typography>
+        <Button 
+          variant="outlined" 
+          startIcon={<SettingsIcon />}
+          onClick={() => setSettingsOpen(true)}
         >
-          {tabConfig.map((tab, idx) => (
-            <Tab
-              key={tab.label}
-              label={tab.label}
-              id={`admin-tab-${idx}`}
-            />
-          ))}
-        </Tabs>
+          GitHub Settings
+        </Button>
+      </Box>
+      
+      <Tabs value={tabIndex} onChange={handleTabChange} sx={{ mb: 2 }}>
         {tabConfig.map((tab, idx) => (
-          <TabPanel value={tabIndex} index={idx} key={tab.label}>
+          <Tab
+            key={tab.label}
+            label={tab.label}
+            id={`admin-tab-${idx}`}
+          />
+        ))}
+      </Tabs>
+      
+      {tabConfig.map((tab, idx) => (
+        <TabPanel value={tabIndex} index={idx} key={tab.label}>
+          {tab.label === "GitHub Issues" ? (
+            <IssueImporter />
+          ) : (
             <CrudLayout 
               pageName={tab.pageName}
               columnMap={tab.columnMap}
@@ -67,11 +87,16 @@ const Admin = () => {
                 // Additional actions on row selection can be implemented here.
               }}
             />
-          </TabPanel>
-        ))}
-      </Box>
+          )}
+        </TabPanel>
+      ))}
+      
+      <GitHubSettings 
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </Container>
   );
 };
 
-export default Admin;
+export default withMainLayout(Admin);

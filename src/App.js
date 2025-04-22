@@ -29,6 +29,9 @@ import Admin from './pages/Admin';
 // Import the ingredient routes array correctly
 import ingredientRoutes from './pages/Ingredients/routes';
 
+// Import the IssueImporter component
+import IssueImporter from './admin/IssueImporter';
+
 const theme = createTheme(themeOptions);
 const log = createLogger('App');
 
@@ -109,6 +112,9 @@ const App = () => {
                   <Route path="/product" element={<Product />} />
                   <Route path="/account" element={<Account />} />
                   <Route path="/admin" element={<Admin />} />
+                  
+                  {/* Add this new route for the GitHub Issue Importer */}
+                  <Route path="/admin/issues" element={<IssueImporter />} />
                   
                   {/* Map through ingredient routes instead of trying to render as a component */}
                   {ingredientRoutes.map((route, index) => (
