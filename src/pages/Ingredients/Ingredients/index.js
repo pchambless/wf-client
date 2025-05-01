@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CrudLayout from '../../../components/crud/CrudLayout';
+import CrudLayout from '../../../layouts/CrudLayout';
 import columnMap from './columns';
 import { setVar } from '../../../utils/externalStore';
 import createLogger from '../../../utils/logger';

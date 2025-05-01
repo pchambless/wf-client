@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { themeOptions } from './theme';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
-import store from './utils/externalStore'; 
+import store from './utils/externalStore';
 import ErrorBoundary from './components/ErrorBoundary';
 import Modal from './components/modal/Modal';
 import { useModalStore } from './stores/modalStore';
@@ -12,27 +11,21 @@ import createLogger, { configureLogger } from './utils/logger';
 import { disableBrowserFetchLogs } from './utils/fetchLogHelper';
 import { ActionHandlerProvider } from './actions/ActionHandlerContext';
 import { initEventTypeService, isEventTypeServiceInitialized } from './stores/eventStore';
-import { BreadcrumbProvider } from './contexts/BreadcrumbContext'; // Add BreadcrumbProvider import
+import { BreadcrumbProvider } from './contexts/BreadcrumbContext';
 import { 
   CircularProgress, 
   Box,
   Typography 
 } from '@mui/material';
+import theme from './theme';
 
 // Import pages
 import Login from './pages/Login';
 import Welcome from './pages/Welcome';
-import Product from './pages/Product';
-import Account from './pages/Account';
-import Admin from './pages/Admin';
-
-// Import the ingredient routes array correctly
 import ingredientRoutes from './pages/Ingredients/routes';
+import productRoutes from './pages/Products/routes';
+import { accountRoutes, defaultAccountRoute } from './pages/Account/routes';
 
-// Import the IssueImporter component
-import IssueImporter from './admin/IssueImporter';
-
-const theme = createTheme(themeOptions);
 const log = createLogger('App');
 
 // Configure logger at application startup
@@ -109,12 +102,23 @@ const App = () => {
                 <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route path="/welcome" element={<Welcome />} />
-                  <Route path="/product" element={<Product />} />
-                  <Route path="/account" element={<Account />} />
-                  <Route path="/admin" element={<Admin />} />
                   
-                  {/* Add this new route for the GitHub Issue Importer */}
-                  <Route path="/admin/issues" element={<IssueImporter />} />
+                
+                  {/* Add all the nested Account routes */}
+                  {accountRoutes.map((route, index) => (
+                    <Route 
+                      key={`account-route-${index}`}
+                      path={route.path}
+                      element={<route.component />}
+                    />
+                  ))}
+                  
+                  {/* Add the default redirect */}
+                  <Route
+                    path="/account"
+                    element={<Navigate to={defaultAccountRoute.redirect} replace />}
+                    exact={defaultAccountRoute.exact}
+                  />
                   
                   {/* Map through ingredient routes instead of trying to render as a component */}
                   {ingredientRoutes.map((route, index) => (
@@ -124,7 +128,24 @@ const App = () => {
                       element={route.element}
                     />
                   ))}
-                  
+
+                  {/* Map through product routes similar to ingredients */}
+                  {productRoutes.map((route, index) => (
+                    <Route 
+                      key={`product-route-${index}`}
+                      path={route.path}
+                      element={route.element}
+                    />
+                  ))}
+
+                  {/* Add simple redirect for the products base path */}
+                  <Route
+                    path="/products"
+                    element={<Navigate to={productRoutes[0]?.path} replace />}
+                    exact
+                  />
+
+                  {/* Make sure this is your LAST route */}
                   <Route path="*" element={<Navigate to="/login" />} />
                 </Routes>
                 <ModalContainer />

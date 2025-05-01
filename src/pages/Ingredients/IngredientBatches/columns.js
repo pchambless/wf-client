@@ -1,5 +1,6 @@
 // Define key configuration properties at the top for better readability
 const dbTable = 'ingredient_batches';
+const pageTitle = 'Ingredient Batches';
 const idField = 'ingrBtchID'; 
 const listEvent = 'ingrBtchList';
 const parentIdField = 'ingrID';
@@ -7,16 +8,31 @@ const parentIdField = 'ingrID';
 // Export columns as an array for backwards compatibility
 export const columns = [
   {
-    group: -1,
-    where: 1,
-    ordr: 1,
-    field: "btchID",
+    field: "btchID", // idField
     dbCol: "id",
-    label: "",
-    width: 0,
+    label: "btchID",
     dataType: "INT",
-    value: "",
-    setVar: ":btchID"
+    hideInTable: true,
+    hideInForm: true
+  },
+  {
+    field: "ingrID",  // parentIdField
+    dbCol: "ingredient_id",
+    label: "ingrID",
+    dataType: "INT",
+    hideInTable: true,
+    hideInForm: true
+  },
+  {
+    group: 1,
+    ordr: 1,
+    field: "purchDate",
+    dbCol: "purchase_date",
+    label: "Purch Date",
+    width: 120,
+    dataType: "DATE",
+    displayType: "date",
+    required: true
   },
   {
     group: 1,
@@ -26,19 +42,8 @@ export const columns = [
     label: "Batch Number",
     width: 150,
     dataType: "STRING",
-    value: "",
-    setVar: ":btchNbr"
-  },
-  {
-    group: 1,
-    ordr: 5,
-    field: "purchDate",
-    dbCol: "purchase_date",
-    label: "Purch Date",
-    width: 120,
-    dataType: "DATE",
-    value: "",
-    setVar: ":purchDate"
+    displayType: "text",
+    required: true
   },
   {
     group: 2,
@@ -46,12 +51,11 @@ export const columns = [
     field: "vndrID",
     dbCol: "vendor_id",
     label: "Vendor",
-    width: 150,
     dataType: "INT",
     required: true,
-    setVar: ":vndrID",
-    value: "",
-    selList: "vndrList"
+    displayType: "select",
+    selList: "vndrList",
+    hideInTable: true,
   },
   {
     group: 2,
@@ -59,113 +63,116 @@ export const columns = [
     field: "brndID",
     dbCol: "brand_id",
     label: "Brand",
-    width: 150,
     dataType: "INT",
-    value: "",
-    setVar: ":brndID",
-    selList: "brndList"
+    displayType: "select",
+    selList: "brndList",
+    hideInTable: true,
   },
+{
+  group: 3,
+  ordr: 5, 
+  field: "purch_dtl",
+  label: "Purchase Detail",
+  width: 250,
+  dataType: "STRING",
+  displayType: "text",
+  readOnly: true, // Cannot be edited
+  calculated: true, // Flag as a calculated field
+  dependencies: ["purchQty", "unitPrice", "unitQty", "measID"], // Fields this depends on
+  // Calculation formula as a function string that can be evaluated
+  calculateFn: `(data, lookups) => {
+  // Get measure name (with fallback)
+  const measure = lookups.measList?.find(m => m.value === data.measID);
+  const measureName = measure ? measure.label : '';
+  
+  // Break into multiple lines with concatenation
+  return \`\${data.purchQty || '__'} @ \` +
+         \`$\${data.unitPrice ? Number(data.unitPrice).toFixed(2) : '__.__'} per \` +
+         \`\${data.unitQty || '__'} \${measureName || '__'}\`;
+}`
+},
   {
-    group: 3,
+    group: 4,
     ordr: 6,
     field: "unitQty",
     dbCol: "unit_quantity",
     label: "Unit Qty",
     width: 100,
     dataType: "INT",
-    value: "",
+    displayType: "number",
     required: true,
-    setVar: ":unitQty"
   },
   {
-    group: 3,
+    group: 4,
     ordr: 7,
     field: "unitPrice",
     dbCol: "unit_price",
     label: "Unit Price",
     width: 100,
-    dataType: "STRING",
-    value: "",
-    required: true,
-    setVar: ":unitPrice"
+    dataType: "FLOAT", 
+    displayType: "number", 
+    step: "0.01", // Allow 2 decimal places
+    required: true
   },
   {
-    group: 3,
+    group: 4,
     ordr: 8,
     field: "purchQty",
     dbCol: "purchase_quantity",
     label: "Purch Qty",
     width: 100,
     dataType: "INT",
-    value: "",
+    displayType: "number",
     required: true,
-    setVar: ":purchQty"
   },
   {
-    group: 3,
+    group: 4,
     ordr: 9,
     field: "measID",
     dbCol: "global_measure_unit_id",
     label: "Measure",
     width: 120,
     dataType: "INT",
-    value: "",
-    setVar: ":measID",
-    selList: "measList"
+    displayType: "select",
+    selList: "measList",
+    required: true
   },
   {
-    group: 4,
+    group: 5,
     ordr: 10,
     field: "lotNbr",
     dbCol: "lot_number",
-    label: "Lot Number",
-    width: 150,
+    label: "Vendor Lot",
+    width: 180,
     dataType: "STRING",
-    value: "",
-    required: true,
-    setVar: ":lotNbr"
+    displayType: "text",
   },
   {
-    group: 4,
+    group: 5,
     ordr: 11,
     field: "bestByDate",
     dbCol: "best_by_date",
     label: "Best By",
     width: 120,
     dataType: "DATE",
-    value: "",
-    setVar: ":bestByDate"
+    displayType: "date"
   },
   {
-    group: 5,
+    group: 6,
     ordr: 12,
     field: "comments",
     dbCol: "comments",
     label: "Comments",
-    width: 300,
-    multiline: true,
     dataType: "STRING",
-    value: "",
-    required: true,
-    setVar: ":comments"
-  },
-  {
-    group: 0,
-    ordr: 13,
-    field: "ingrID",
-    dbCol: "ingredient_id",
-    label: "",
-    width: 0,
-    dataType: "INT",
-    value: "",
-    required: true,
-    setVar: ":ingrID"
+    displayType: "multiLine",
+    hideInTable: true
   }
 ];
 
 // Export a complete columnMap object as default
 const columnMap = {
   dbTable,
+  pageTitle,
   idField,
   listEvent,
   parentIdField,

@@ -3,33 +3,40 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CrudLayout from '../../../layouts/CrudLayout';
-import columnMap from './columns';
+import { columns } from './columns';
 import { setVar } from '../../../utils/externalStore';
 import createLogger from '../../../utils/logger';
 import NavigationHeader from '../../../components/navigation/NavigationHeader';
 import { useBreadcrumbs } from '../../../contexts/BreadcrumbContext';
 
-const log = createLogger('IngredientBatches');
+const log = createLogger('ProductBatches');
 
-const IngredientBatches = () => {
+const ProductBatches = () => {
   const navigate = useNavigate();
-  const { typeId, ingredientId } = useParams();
+  const { typeId, productId } = useParams();
   const { navigateToCrumb, addEntityCrumb } = useBreadcrumbs();
   
-  // Set the required parameter for ingrBtchList event
+  // Set the required parameter for prodBtchList event
   useEffect(() => {
-    if (ingredientId) {
-      log.debug(`Setting :ingrID=${ingredientId} for batch list`);
-      setVar(':ingrID', ingredientId);
+    if (productId) {
+      log.debug(`Setting :prodID=${productId} for batch list`);
+      setVar(':prodID', productId);
     }
-  }, [ingredientId]);
+  }, [productId]);
+  
+  // Column map configuration
+  const columnMap = {
+    dbTable: 'product_batches',
+    idField: 'prodBtchID',
+    columns: columns
+  };
   
   // Back button handler
   const handleBack = () => {
-    const path = `/ingredients/types/${typeId}/ingredients`;
+    const path = `/products/types/${typeId}/products`;
     navigate(path);
     navigateToCrumb(path);
-    log.debug('Navigated back to Ingredients list');
+    log.debug('Navigated back to Products list');
   };
   
   // Add batch selection to breadcrumbs if needed
@@ -37,8 +44,8 @@ const IngredientBatches = () => {
     if (batch) {
       addEntityCrumb(
         batch,
-        'ingredientBatch',
-        `/ingredients/types/${typeId}/ingredients/${ingredientId}/batches/${batch.btchID}`
+        'productBatch',
+        `/products/types/${typeId}/products/${productId}/batches/${batch.prodBtchID}`
       );
     }
   };
@@ -46,7 +53,7 @@ const IngredientBatches = () => {
   return (
     <>
       <NavigationHeader 
-        title={`Batches for Ingredient #${ingredientId}`}
+        title={`Batches for Product #${productId}`}
       />
       
       <Box sx={{ mb: 2 }}>
@@ -55,17 +62,17 @@ const IngredientBatches = () => {
           onClick={handleBack}
           variant="outlined"
         >
-          Back to Ingredients
+          Back to Products
         </Button>
       </Box>
       
       <CrudLayout
         columnMap={columnMap}
-        listEvent="ingrBtchList"
+        listEvent="prodBtchList"
         onRowSelection={handleBatchSelection}
       />
     </>
   );
 };
 
-export default IngredientBatches;
+export default ProductBatches;

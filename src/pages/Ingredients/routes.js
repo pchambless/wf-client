@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import IngredientTypes from './IngredientTypes';
 import Ingredients from './Ingredients';
 import IngredientBatches from './IngredientBatches';
@@ -27,6 +27,12 @@ const ErrorPlaceholder = ({ message }) => (
   </Box>
 );
 
+// Create this component to handle the parameterized redirect
+const AccountRedirect = () => {
+  const { acctID } = useParams();
+  return <Navigate to={`/ingredients/${acctID}/types`} replace />;
+};
+
 // Use regular components directly without HOC that's causing issues
 const routes = [
   // Base redirect
@@ -35,6 +41,12 @@ const routes = [
     element: <Navigate to="/ingredients/types" replace />
   },
   
+  // Base redirect with account ID
+  {
+    path: "/ingredients/:acctID",
+    element: <AccountRedirect />  // Special component needed (explained below)
+  },
+
   // Level 1: List of ingredient types
   {
     path: "/ingredients/types",
@@ -43,9 +55,15 @@ const routes = [
       : <ErrorPlaceholder message={`IngredientTypes component is not valid (type: ${typeof IngredientTypes})`} />
   },
   
+  // Level 1: List of ingredient types with account ID
+  {
+    path: "/ingredients/:acctID/types",
+    element: <IngredientTypes />
+  },
+
   // Level 2: Ingredients for a specific type
   {
-    path: "/ingredients/types/:typeId/ingredients",
+    path: "/ingredients/types/:ingrTypeID/ingredients",
     element: typeof Ingredients === 'function'
       ? <Ingredients />
       : <ErrorPlaceholder message={`Ingredients component is not valid (type: ${typeof Ingredients}, constructor: ${Ingredients?.constructor?.name})`} />
@@ -53,7 +71,7 @@ const routes = [
   
   // Level 3: Batches for a specific ingredient
   {
-    path: "/ingredients/types/:typeId/ingredients/:ingredientId/batches",
+    path: "/ingredients/types/:ingrTypeID/ingredients/:ingrID/batches",
     element: typeof IngredientBatches === 'function'
       ? <IngredientBatches />
       : <ErrorPlaceholder message={`IngredientBatches component is not valid (type: ${typeof IngredientBatches})`} />

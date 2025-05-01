@@ -1,81 +1,72 @@
 // Define key configuration properties at the top for better readability
 const dbTable = 'ingredients';
+const pageTitle = 'Ingredients';
 const idField = 'ingrID'; 
 const listEvent = 'ingrList';
+const parentIdField = 'ingrTypeID';
 
 // Export columns as an array for backwards compatibility
 export const columns = [
   {
-    group: -1,
-    where: 1,
-    ordr: 1,
-    field: "ingrID",
+    field: "ingrID",  // idField
     dbCol: "id",
-    label: "",
-    width: 0,
+    label: "ingrID",
     dataType: "INT",
-    value: "",
-    setVar: ":ingrID"
+    hideInTable: true,
+    hideInForm: true
   },
   {
-    group: 0,
-    ordr: 2,
-    field: "ingrTypeID",
+    field: "ingrTypeID",  // parentIdField
     dbCol: "ingredient_type_id",
-    label: "",
-    width: 0,
+    label: "integrTypeID",
     dataType: "INT",
-    value: "",
-    required: true,
-    setVar: ":ingrTypeID"
+    hideInTable: true,
+    hideInForm: true
   },
   {
     group: 1,
-    ordr: 3,
+    ordr: 1,
     field: "ingrName",
     dbCol: "name",
     label: "Name",
     width: 150,
     dataType: "STRING",
-    value: "",
+    displayType: "text",
     required: true,
-    setVar: ":ingrName"
   },
   {
     group: 1,
-    ordr: 4,
+    ordr: 2,
     field: "ingrCode",
     dbCol: "code",
     label: "Code",
     width: 70,
     dataType: "STRING",
-    value: "",
+    displayType: "text",
     required: true,
-    setVar: ":ingrCode"
+
   },
   {
     group: 2,
-    ordr: 5,
+    ordr: 3,
     field: "ingrDfltLoc",
     dbCol: "location",
     label: "Default Loc.",
     width: 120,
     dataType: "STRING",
-    value: "",
-    required: true,
-    setVar: ":ingrDfltLoc"
+    displayType: "text",
+    required: true
   },
   {
     group: 2,
-    ordr: 6,
+    ordr: 4,
     field: "ingrDfltBestBy",
     dbCol: "best_by_days",
     label: "Best By Days",
     width: 70,
     dataType: "INT",
-    value: "",
-    required: true,
-    setVar: ":ingrDfltBestBy"
+    displayType: "number",
+    required: true
   },
   {
     group: 3,
@@ -83,19 +74,18 @@ export const columns = [
     field: "ingrDesc",
     dbCol: "description",
     label: "Description",
-    width: 300,
-    multiline: true,
+    displayType: "multiline",
     dataType: "STRING",
-    value: "",
-    setVar: ":ingrDesc"
   }
 ];
 
 // Export a complete columnMap object as default
 const columnMap = {
   dbTable,
+  pageTitle,
   idField,
   columns,
+  parentIdField,
   listEvent
 };
 
