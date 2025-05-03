@@ -2,12 +2,12 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Box, Grid, Button, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import Table from '../components/crud/Table';
+import Table from './Table';
 // Change this import to use the Form from the Form folder
-import Form from '../components/crud/Form/Form'; // Updated path
-import createLogger from '../utils/logger';
-import MinViableProd from '../utils/MinViableProd';
-import { SELECTION, triggerAction } from '../actions/actionStore';
+import Form from './Form/Form'; // Updated path
+import createLogger from '../../utils/logger';
+import MinViableProd from '../../utils/MinViableProd';
+import { SELECTION, triggerAction } from '../../actions/actionStore';
 
 class CrudLayoutPresenter extends MinViableProd {
   constructor(props) {
@@ -56,7 +56,7 @@ class CrudLayoutPresenter extends MinViableProd {
       
       // If presenter doesn't have data methods, use TablePresenter directly
       if (!data || !data.length) {
-        const TablePresenter = await import('../components/crud/Table/Presenter').then(m => m.default);
+        const TablePresenter = await import('./Table/Presenter').then(m => m.default);
         this.log.debug('Loading data via TablePresenter');
         data = await TablePresenter.fetchData(listEvent);
       }
@@ -182,6 +182,30 @@ class CrudLayoutPresenter extends MinViableProd {
     });
   };
 
+  handleRowDoubleClick = (row) => {
+    const { columnMap, navigate, addEntityCrumb } = this.props;
+    
+    if (columnMap.navigateTo && row[columnMap.idField]) {
+      // Replace parameters in the navigation path
+      const path = columnMap.navigateTo.replace(
+        `:${columnMap.idField}`, 
+        row[columnMap.idField]
+      );
+      
+      // Add breadcrumb if needed
+      if (columnMap.entityType) {
+        addEntityCrumb(
+          row, 
+          columnMap.entityType, 
+          path
+        );
+      }
+      
+      // Navigate to the configured path
+      navigate(path);
+    }
+  }
+
   render() {
     const { columnMap, listEvent, pagePresenter } = this.props;
     const { formMode, selectedRow, tableData } = this.state;
@@ -189,7 +213,7 @@ class CrudLayoutPresenter extends MinViableProd {
     const canAdd = true;
     
     // Debug what we're about to render
-    this.log.debug('Rendering CrudLayout:', {
+    this.log.info('Rendering CrudLayout:', {
       hasColumnMap: !!columnMap,
       listEvent,
       formMode,
@@ -236,14 +260,14 @@ class CrudLayoutPresenter extends MinViableProd {
             
             <Table 
               tableConfig={{
-                // FIX: Don't pass columnMap to getColumns() - it expects a tab index
                 columns: typeof pagePresenter?.getColumns === 'function'
-                  ? pagePresenter.getColumns(0) // Pass 0 as tab index, not columnMap 
+                  ? pagePresenter.getColumns(0)
                   : columnMap?.columns || [],
                 idField: columnMap?.idField || 'id',
-                data: tableData || [], // Use tableData from state
-                selectedId: selectedRow?.id,
+                data: tableData || [],
+                selectedId: selectedRow && selectedRow[columnMap?.idField || 'id'],
                 onRowClick: this.handleRowSelect,
+                onRowDoubleClick: this.handleRowDoubleClick, // Add support for double-click
                 onDelete: this.handleDelete
               }}
             />
@@ -283,11 +307,11 @@ CrudLayoutPresenter.propTypes = {
   updateTabStates: PropTypes.func
 };
 
-// Fix this wrapper function with minimal changes
+// Update the wrapper function to extract listEvent from columnMap if needed
 const CrudLayout = (props) => {
   const { 
     columnMap, 
-    listEvent, 
+    listEvent: propListEvent, // Rename to avoid conflict
     onRowSelection,
     presenter,
     setActiveTab,  
@@ -295,6 +319,15 @@ const CrudLayout = (props) => {
   } = props;
     
   const log = createLogger('CrudLayout');
+  
+  // Extract listEvent from columnMap.config if not provided directly
+  const listEvent = propListEvent || (columnMap?.config?.listEvent);
+  
+  log.debug('CrudLayout resolving listEvent', {
+    providedDirectly: !!propListEvent,
+    fromColumnMapConfig: !!columnMap?.config?.listEvent,
+    finalValue: listEvent
+  });
   
   log.debug('CrudLayout presenter check:', {
     hasPresenter: !!presenter,
@@ -315,7 +348,7 @@ const CrudLayout = (props) => {
   return (
     <CrudLayoutPresenter
       columnMap={columnMap}
-      listEvent={listEvent}
+      listEvent={listEvent} // Pass the resolved listEvent
       onRowSelection={handleRowSelect}
       pagePresenter={presenter}
       setActiveTab={setActiveTab}

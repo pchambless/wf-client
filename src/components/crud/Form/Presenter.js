@@ -9,11 +9,18 @@ const log = createLogger('Form.Presenter');
  * Form presenter for handling form data and interactions
  */
 export class FormPresenter {
+  // Update the constructor to ensure columns is always an array
   constructor(columnMap) {
-    this.columnMap = columnMap;
+    this.columnMap = columnMap || {};
     this.log = log;
     this.formMode = 'view'; // Default form mode
     this.loadedReferenceLists = {}; // Track which reference lists are loaded
+    
+    // Ensure columns is always an array
+    if (!Array.isArray(this.columnMap.columns)) {
+      this.log.warn('FormPresenter initialized with non-array columns');
+      this.columnMap.columns = [];
+    }
   }
 
   /**
@@ -168,18 +175,20 @@ export class FormPresenter {
    * Get form fields from columns
    */
   getFields() {
-    if (!this.columnMap?.columns) {
-      this.log.error('Missing columnMap or columns array');
-      return [];
+    // Safety check - make sure columns is an array
+    const columns = Array.isArray(this.columnMap?.columns) ? this.columnMap.columns : [];
+    
+    if (columns.length === 0) {
+      this.log.warn('No columns available for form fields');
     }
     
     // Get visible fields
-    const fields = this.columnMap.columns
+    const fields = columns
       .filter(col => !this.shouldHideInForm(col))
       .map(col => this.createFieldConfig(col));
     
     this.log.debug('Processed form fields:', { 
-      total: this.columnMap.columns.length,
+      total: columns.length,
       visible: fields.length
     });
     
@@ -197,13 +206,15 @@ export class FormPresenter {
         hasColumnValues: Boolean(rowData?.columnValues)
       });
 
-      if (!rowData || !this.columnMap?.columns) {
-        this.log.warn('Cannot process row data: missing data or columns');
+      if (!rowData) {
+        this.log.warn('Cannot process row data: missing data');
         return {};
       }
       
+      // Safety check for columns
+      const columns = Array.isArray(this.columnMap?.columns) ? this.columnMap.columns : [];
+      
       // Extract the actual data from the action payload
-      // rowData is the entire action payload, not just the row data
       const sourceData = rowData.columnValues || rowData.row || rowData;
       
       this.log.debug('Using source data:', {
@@ -214,7 +225,7 @@ export class FormPresenter {
       const formData = {};
       
       // Process fields for the form - SIMPLIFIED VERSION
-      this.columnMap.columns
+      columns
         .filter(col => col.group > 0)  // Only visible form fields
         .forEach(col => {
           // If we have a source value, use it
@@ -243,16 +254,18 @@ export class FormPresenter {
     this.log.debug('Submitting form data with mode:', this.formMode);
     
     try {
-      if (!this.columnMap || !this.columnMap.columns) {
-        this.log.error('No columnMap or columns available for form submission');
+      // Ensure columns is an array
+      const columns = Array.isArray(this.columnMap?.columns) ? this.columnMap.columns : [];
+      
+      if (columns.length === 0) {
+        this.log.error('No columns available for form submission');
         return false;
       }
       
       // Use crudDML for form submission
-      // Pass formData, columnMap columns, and form mode (add or edit)
       const result = await crudDML(
         formData, 
-        this.columnMap.columns, 
+        columns, 
         this.formMode === 'view' ? 'edit' : this.formMode
       );
       

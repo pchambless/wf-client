@@ -1,5 +1,5 @@
 import React from 'react';
-import CrudLayout from '../../../layouts/CrudLayout';
+import CrudLayout from '../../../components/crud/CrudLayout';
 import columnMap from './columns';
 
 const BrandsPage = () => {

@@ -24,7 +24,7 @@ export const columns = [
       hideInForm: true
     },
     {
-      group: 0,
+      group: 2,
       ordr: 1,
       field: "ingrOrdr",
       dbCol: "ingredient_order",
@@ -35,7 +35,7 @@ export const columns = [
       required: true,
     },
     {
-      group: 0,
+      group: 1,
       ordr: 2,
       field: "ingrTypeSel",
       dbCol: "", // This isn't directly in the product_recipes table
@@ -47,7 +47,7 @@ export const columns = [
       hideInTable: true
     },
     {
-      group: 0,
+      group: 2,
       ordr: 3,
       field: "ingrSel",
       dbCol: "ingredient_id",
@@ -63,7 +63,6 @@ export const columns = [
       clearOnParentChange: true
     },
     {
-      group: 0,
       ordr: 4,
       field: "ingrName",
       dbCol: "",  // Derived field from view
@@ -74,7 +73,7 @@ export const columns = [
       hideInTable: false
     },
     {
-      group: 1,
+      group: 3,
       ordr: 5,
       field: "Qty",
       dbCol: "quantity",
@@ -85,7 +84,7 @@ export const columns = [
       setVar: ":Qty"
     },
     {
-      group: 1,
+      group: 3,
       ordr: 6,
       field: "measID",
       dbCol: "global_measure_unit_id", // Corrected to match actual DB column
@@ -98,7 +97,6 @@ export const columns = [
       hideInTable: true
     },
     {
-      group: 1,
       ordr: 7,
       field: "qtyMeas",
       dbCol: "",  // Derived field from view
@@ -109,7 +107,7 @@ export const columns = [
       hideInTable: false
     },
     {
-      group: 2,
+      group: 4,
       ordr: 8,
       field: "Comments",
       dbCol: "comments",

@@ -1,51 +1,44 @@
-// Define key configuration properties at the top for better readability
-const dbTable = 'ingredient_types';
-const pageTitle = 'Ingredient Types';
-const idField = 'ingrTypeID';
-const listEvent = 'ingrTypeList';
-const parentIdField = 'acctID'; // Assuming this is the parent ID field
+import ColMapBuild from '../../../utils/ColMapBuild';
+import createLogger from '../../../utils/logger';
 
-// Define the columns array
-export const columns = [
-    {
-        field: "ingrTypeID", // idField
-        dbCol: "id", 
-        label: "Type ID",
-        dataType: "INT",
-        hideInTable: true, 
-        hideInForm: false 
-    },
-    {
-        field: "acctID",  // parentIdField
-        dbCol: "account_id",
-        label: "Account ID",
-        dataType: "INT",
-        hideInTable: true,
-        hideInForm: true
-    },
-    {
-        group: 1, 
-        ordr: 1,
-        field: "ingrTypeName",
-        dbCol: "name",
-        label: "Type Name",
-        width: 200,
-        dataType: "STRING",
-        displayType: "text",
-        required: true,
-    }
-];
+const log = createLogger('IngredientTypes.columns');
 
-// Export a complete columnMap object as default
-const columnMap = {
-  dbTable,
-  pageTitle,
-  idField,
-  columns,
-  listEvent,
-  parentIdField,
-};
+// Create the column map using builder pattern
+const builder = new ColMapBuild('IngredientTypes')
+  .setIdField('ingrTypeID', 'id')
+  .setTable('ingredient_types')
+  .setListEvent('ingrTypeList')
+  .setParentIdField('acctID', 'account_id')
+  
+  // Basic fields - Group 1
+  .addTextColumn('ingrTypeName', 'name', 'Type Name', {
+    group: 1,
+    ordr: 1,
+    required: true,
+    width: 180
+  })
+  
+  .addTextColumn('ingrTypeDesc', 'description', 'Description', {
+    group: 2,
+    ordr: 2,
+    multiLine: true,
+    width: 240
+  });
 
-// Export both the column map object and the legacy export for backward compatibility
-export const IngrTypes = columnMap;
+// For debugging during development
+if (process.env.NODE_ENV !== 'production') {
+  log.info('IngredientTypes column map:');
+  builder.debug();
+}
+
+// Build and export the final column map
+const columnMap = builder.build();
+
+console.log('Structure comparison:', {
+  'config exists': !!columnMap.config,
+  'listEvent in config': columnMap.config?.listEvent,
+  'listEvent directly': columnMap.listEvent
+});
+
+log.info('Final columnMap:', columnMap);
 export default columnMap;

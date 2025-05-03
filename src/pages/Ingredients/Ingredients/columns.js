@@ -1,92 +1,60 @@
-// Define key configuration properties at the top for better readability
-const dbTable = 'ingredients';
-const pageTitle = 'Ingredients';
-const idField = 'ingrID'; 
-const listEvent = 'ingrList';
-const parentIdField = 'ingrTypeID';
+import ColMapBuild from '../../../utils/ColMapBuild';
+import createLogger from '../../../utils/logger';
 
-// Export columns as an array for backwards compatibility
-export const columns = [
-  {
-    field: "ingrID",  // idField
-    dbCol: "id",
-    label: "ingrID",
-    dataType: "INT",
-    hideInTable: true,
-    hideInForm: true
-  },
-  {
-    field: "ingrTypeID",  // parentIdField
-    dbCol: "ingredient_type_id",
-    label: "integrTypeID",
-    dataType: "INT",
-    hideInTable: true,
-    hideInForm: true
-  },
-  {
+const log = createLogger('Ingredients.columns');
+
+// Create the column map using builder pattern
+const builder = new ColMapBuild('Ingredients')
+  // ID fields now automatically create columns
+  .setIdField('ingrID', 'id')
+  .setTable('ingredients')
+  .setListEvent('ingrList')
+  .setParentIdField('ingrTypeID', 'ingredient_type_id')
+  
+  // Basic fields - Group 1
+  .addTextColumn('ingrName', 'name', 'Name', {
     group: 1,
     ordr: 1,
-    field: "ingrName",
-    dbCol: "name",
-    label: "Name",
-    width: 150,
-    dataType: "STRING",
-    displayType: "text",
     required: true,
-  },
-  {
+    width: 150
+  })
+  
+  .addTextColumn('ingrCode', 'code', 'Code', {
     group: 1,
     ordr: 2,
-    field: "ingrCode",
-    dbCol: "code",
-    label: "Code",
-    width: 70,
-    dataType: "STRING",
-    displayType: "text",
     required: true,
-
-  },
-  {
+    width: 70
+  })
+  
+  // Location/storage fields - Group 2
+  .addTextColumn('ingrDfltLoc', 'location', 'Default Loc.', {
     group: 2,
     ordr: 3,
-    field: "ingrDfltLoc",
-    dbCol: "location",
-    label: "Default Loc.",
-    width: 120,
-    dataType: "STRING",
-    displayType: "text",
-    required: true
-  },
-  {
+    required: true,
+    width: 120
+  })
+  
+  .addNumberColumn('ingrDfltBestBy', 'best_by_days', 'Best By Days', {
     group: 2,
     ordr: 4,
-    field: "ingrDfltBestBy",
-    dbCol: "best_by_days",
-    label: "Best By Days",
-    width: 70,
-    dataType: "INT",
-    displayType: "number",
-    required: true
-  },
-  {
+    required: true,
+    width: 70
+  })
+  
+  // Description - Group 3
+  .addTextColumn('ingrDesc', 'description', 'Description', {
     group: 3,
     ordr: 7,
-    field: "ingrDesc",
-    dbCol: "description",
-    label: "Description",
-    displayType: "multiline",
-    dataType: "STRING",
-  }
-];
+    multiLine: true
+  });
 
-// Export a complete columnMap object as default
-const columnMap = {
-  dbTable,
-  pageTitle,
-  idField,
-  columns,
-  parentIdField,
-  listEvent
-};
+// Build and export the final column map
+const columnMap = builder.build();
+
+// For debugging during development
+log.debug('Ingredients column map built:', columnMap);
 
 export default columnMap;
+
+// Force log to console during development
+log.info('columnMap:', columnMap);

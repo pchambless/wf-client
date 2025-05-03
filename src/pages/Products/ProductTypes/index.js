@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
-import CrudLayout from '../../../layouts/CrudLayout';
+import CrudLayout from '../../../components/crud/CrudLayout';
 import { columns } from './columns';
 import NavigationHeader from '../../../components/navigation/NavigationHeader';
 import { useBreadcrumbs } from '../../../contexts/BreadcrumbContext';

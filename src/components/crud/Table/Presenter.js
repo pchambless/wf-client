@@ -53,23 +53,26 @@ class TablePresenter {
     }
   }
   
+  /**
+   * Get the ID field name from columnMap
+   * @param {Object} columnMap - The column configuration
+   * @returns {string} The field name to use as ID
+   */
   getIdField(columnMap) {
-    // Check if idField is explicitly defined in columnMap
+    // Only use explicit idField property
     if (columnMap.idField) {
       return columnMap.idField;
     }
     
-    // Fall back to traditional where:1 approach
-    const idColumn = columnMap.columns.find(col => col.where === 1);
-    if (!idColumn) {
-      this.log.warn('No ID column found (where: 1)');
-      return 'id'; // Fallback to 'id'
-    }
-    return idColumn.field;
+    // Log warning if not found
+    this.log.warn('No idField defined in columnMap, using default "id"');
+    return 'id'; // Fallback to standard "id"
   }
 
   /**
-   * Get formatted columns from columnMap
+   * Convert columnMap columns to DataGrid-compatible columns
+   * @param {Object} columnMap - The column map configuration
+   * @returns {Array} - The formatted columns for DataGrid
    */
   getColumns(columnMap) {
     // Use instance columnMap if none provided
@@ -80,61 +83,71 @@ class TablePresenter {
       return [];
     }
     
-    // Filter and format columns
-    let columns = colMap.columns
-      .filter(col => !this.shouldHideInTable(col))
-      .map(col => ({
-        field: col.field,
-        headerName: col.label || col.field || 'Unnamed',
-        width: col.dataType === 'DATE' ? 100 : (col.width || 100),
-        ...col
-      }));
+    // Log each column and its hideInTable status
+    this.log.debug('Column filtering - before:', 
+      colMap.columns.map(col => ({
+        field: col.field, 
+        label: col.label,
+        hideInTable: col.hideInTable
+      }))
+    );
     
-    this.log.debug('Processed columns:', {
-      total: colMap.columns.length,
-      visible: columns.length
+    // Filter visible columns - STRICT boolean comparison
+    const visibleColumns = colMap.columns.filter(col => {
+      return !this.shouldHideInTable(col);
     });
     
-    return columns;
+    this.log.info('Column filtering - after:', 
+      visibleColumns.map(col => ({
+        field: col.field, 
+        label: col.label
+      }))
+    );
+    
+    // Format columns for DataGrid
+    return visibleColumns.map(col => {
+      // Create DataGrid column definition
+      return {
+        field: col.field,
+        headerName: col.label || col.field, // Use label for column header
+        width: col.width || 150,
+        // Pass other properties needed by DataGrid
+        dataType: col.dataType,
+        type: this.mapDataTypeToGridType(col.dataType),
+        editable: false,
+        sortable: true
+      };
+    });
   }
 
   /**
-   * Check if column should be hidden in table based on requirements
+   * Map our data types to DataGrid column types
+   */
+  mapDataTypeToGridType(dataType) {
+    switch (dataType) {
+      case 'INT':
+      case 'FLOAT':
+      case 'NUMBER':
+        return 'number';
+      case 'DATE':
+        return 'date';
+      case 'BOOLEAN':
+        return 'boolean';
+      default:
+        return 'string';
+    }
+  }
+
+  /**
+   * Determines if a column should be hidden in table view
+   * @param {Object} col - Column definition
+   * @returns {boolean} - True if column should be hidden
    */
   shouldHideInTable(col) {
-    // Explicit hideInTable property takes precedence if present
-    if (col.hideInTable !== undefined) {
-      return col.hideInTable;
-    }
-    
-    // Otherwise use legacy rules:
-    // Hidden Columns: ColumnMap.MultiLine: true, ColumnMap.selList is populated, columnMap.group <=0
-    const shouldHide = (
-      // Group <= 0 (system/hidden fields)
-      (col.group <= 0) || 
-      
-      // SelList is populated (i.e., not undefined, null, false, or empty string)
-      (col.selList) || 
-       
-      // Multiline is true
-      (col.multiline === true) || 
-      
-      // Explicit hide flag (additional check beyond requirements)
-      (col.hide === true)
-    );
-    
-    // Debug column filtering decision
-    if (shouldHide) {
-      this.log.debug(`Hiding column ${col.field || 'unknown'} in TABLE because:`, {
-        groupZeroOrLess: col.group !== undefined && col.group <= 0,
-        hasSelList: col.selList !== undefined && col.selList !== null && 
-                  col.selList !== false && col.selList !== '',
-        isMultiline: col.multiline === true,
-        isExplicitlyHidden: col.hide === true
-      });
-    }
-    
-    return shouldHide;
+    // More flexible check for hideInTable flag
+    return col.hideInTable === true || 
+           col.hideInTable === 'true' || 
+           col.hideInTable === 1;
   }
 
   mapRowToColumnValues(rowData, columnMap) {

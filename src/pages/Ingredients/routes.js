@@ -5,6 +5,7 @@ import Ingredients from './Ingredients';
 import IngredientBatches from './IngredientBatches';
 import { Box, Typography } from '@mui/material';
 import createLogger from '../../utils/logger';
+import { withMainLayout } from '../../layouts/MainLayout';
 
 // Add logging to debug component exports
 const log = createLogger('IngredientRoutes');
@@ -51,7 +52,7 @@ const routes = [
   {
     path: "/ingredients/types",
     element: typeof IngredientTypes === 'function' 
-      ? <IngredientTypes /> 
+      ? withMainLayout(IngredientTypes)()
       : <ErrorPlaceholder message={`IngredientTypes component is not valid (type: ${typeof IngredientTypes})`} />
   },
   
@@ -65,7 +66,7 @@ const routes = [
   {
     path: "/ingredients/types/:ingrTypeID/ingredients",
     element: typeof Ingredients === 'function'
-      ? <Ingredients />
+      ? withMainLayout(Ingredients)()
       : <ErrorPlaceholder message={`Ingredients component is not valid (type: ${typeof Ingredients}, constructor: ${Ingredients?.constructor?.name})`} />
   },
   

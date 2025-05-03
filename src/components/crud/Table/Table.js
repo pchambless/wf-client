@@ -23,7 +23,7 @@ const Table = ({ tableConfig }) => {
   } = tableConfig || {};
   
   // Add debug logging for the received data
-  log.debug('Table rendering with data:', { 
+  log.info('Table rendering with data:', { 
     hasData: Array.isArray(data) && data.length > 0,
     count: Array.isArray(data) ? data.length : 0,
     columnCount: columns.length
@@ -31,8 +31,30 @@ const Table = ({ tableConfig }) => {
 
   // Create enhanced columns with delete button if onDelete provided
   const enhancedColumns = useMemo(() => {
+    // Safety check: ensure columns is an array
+    const safeColumns = Array.isArray(columns) ? columns : [];
+    
+    // Extra safety - filter out any columns that should be hidden
+    const visibleColumns = safeColumns
+      .filter(col => {
+        // Check for hideInTable flag in any form
+        return !(col.hideInTable === true || 
+                 col.hideInTable === 'true' || 
+                 col.hideInTable === 1);
+      })
+      .map(col => ({
+        ...col,
+        // Explicitly set headerName to label (or field as fallback)
+        headerName: col.label || col.field || 'Column'
+      }));
+    
+    // Log what's happening
+    log.info('Table columns with headers:', 
+      visibleColumns.map(c => ({ field: c.field, headerName: c.headerName }))
+    );
+    
     // Leave columns unchanged if no onDelete handler
-    if (!onDelete) return columns;
+    if (!onDelete) return visibleColumns;
     
     // Add delete button column
     const deleteColumn = {
@@ -66,7 +88,7 @@ const Table = ({ tableConfig }) => {
     };
     
     // Return with delete column first
-    return [deleteColumn, ...columns];
+    return [deleteColumn, ...visibleColumns];
   }, [columns, onDelete]);
 
   // Format cell values based on data type
@@ -93,11 +115,13 @@ const Table = ({ tableConfig }) => {
     return value;
   };
   
-  // Add cell rendering to columns
-  const columnsWithFormatting = enhancedColumns.map(column => ({
-    ...column,
-    renderCell: column.renderCell || getCustomCellRender(column)
-  }));
+  // Also add a safety check before mapping
+  const columnsWithFormatting = Array.isArray(enhancedColumns) 
+    ? enhancedColumns.map(column => ({
+        ...column,
+        renderCell: column.renderCell || getCustomCellRender(column)
+      }))
+    : [];
 
   return (
     <Box sx={{ width: '100%', height: 400 }}>

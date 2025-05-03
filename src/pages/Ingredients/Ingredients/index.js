@@ -1,101 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Button } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CrudLayout from '../../../layouts/CrudLayout';
-import columnMap from './columns';
-import { setVar } from '../../../utils/externalStore';
-import createLogger from '../../../utils/logger';
-import NavigationHeader from '../../../components/navigation/NavigationHeader';
 import { useBreadcrumbs } from '../../../contexts/BreadcrumbContext';
+import CrudLayout from '../../../components/crud/CrudLayout';
+import columnMap from './columns';
+import createLogger from '../../../utils/logger';
+import { setVar } from '../../../utils/externalStore';
 
-const log = createLogger('Ingredients Page');
+const log = createLogger('Ingredients');
 
-const Ingredients = ({ typeDetails: propTypeDetails }) => {
+const Ingredients = () => {
   const navigate = useNavigate();
-  const { typeId } = useParams();
-  const [typeDetails, setTypeDetails] = useState(propTypeDetails || null);
+  const { ingrTypeID } = useParams(); // Use actual field name in params
+  const { setCrumbTrail, addEntityCrumb } = useBreadcrumbs();
   
-  // Move hook call to top level of component
-  const { addCrumb, navigateToCrumb, addEntityCrumb } = useBreadcrumbs();
-  
-  // Set param for data loading and update breadcrumbs
+  // Set the ingredient type filter if provided
   useEffect(() => {
-    if (!typeId) return;
-    
-    setVar(':ingrTypeID', typeId);
-    
-    // If we already have the type details from props, use them
-    if (propTypeDetails) {
-      setTypeDetails(propTypeDetails);
-      
-      // Update breadcrumbs with the type details
-      addCrumb({
-        label: propTypeDetails.name || propTypeDetails.ingrTypeName || `Type ${typeId}`,
-        path: `/ingredients/types/${typeId}/ingredients`
-      });
+    if (ingrTypeID) {
+      log.info(`Setting ingredient type filter: ${ingrTypeID}`);
+      setVar(':ingrTypeID', ingrTypeID); // Format for external store with colon
     }
-  }, [typeId, propTypeDetails, addCrumb]);
+  }, [ingrTypeID]);
   
-  // Update breadcrumbs based on typeDetails
+  // Setup breadcrumbs based on whether we have a type filter
   useEffect(() => {
-    if (typeDetails) {
-      addEntityCrumb(
-        typeDetails, 
-        'ingredientType', 
-        `/ingredients/types/${typeId}/ingredients`
-      );
-    }
-  }, [typeDetails, typeId, addEntityCrumb]);
-  
-  // Navigate to batches page
-  const handleRowSelection = (row) => {
-    if (row?.ingrID) {
-      // Add entity crumb before navigation
-      addEntityCrumb(
-        row, 
-        'ingredient', 
-        `/ingredients/types/${typeId}/ingredients/${row.ingrID}/batches`
-      );
-      
-      // Then navigate
-      navigate(`/ingredients/types/${typeId}/ingredients/${row.ingrID}/batches`);
-    }
-  };
-  
-  // Back button handler - now uses navigateToCrumb from the component scope
-  const handleBack = () => {
-    // Navigate back to ingredient types page
-    navigate('/ingredients/types');
+    setCrumbTrail([
+      { label: 'Dashboard', path: '/welcome' },
+      { label: 'Ingredient Types', path: '/ingredients/types' },
+      ingrTypeID ? { label: 'Ingredients', path: `/ingredients/${ingrTypeID}` } : null
+    ].filter(Boolean));
     
-    // Update breadcrumbs - navigate to the Types crumb which truncates the trail
-    navigateToCrumb('/ingredients/types');
-    
-    log.debug('Navigated back to Ingredient Types, breadcrumb trail truncated');
-  };
+    // Log the column map for debugging
+    log.info('ColumnMap (JSON):\n' + 
+      JSON.stringify(columnMap, null, 2));
+  }, [setCrumbTrail, ingrTypeID]);
   
   return (
-    <>
-      <NavigationHeader 
-        title={`Ingredients: ${typeDetails?.name || typeDetails?.ingrTypeName || '...'}`}
-      />
-      
-      <Box sx={{ mb: 2 }}>
-        <Button 
-          startIcon={<ArrowBackIcon />} 
-          onClick={handleBack}
-          variant="outlined"
-        >
-          Back to Types
-        </Button>
-      </Box>
-      
-      <CrudLayout
-        columnMap={columnMap}
-        listEvent="ingrList"
-        onRowSelection={handleRowSelection}
-      />
-    </>
+    <CrudLayout
+      columnMap={columnMap}
+      listEvent={columnMap.listEvent}
+      navigate={navigate}
+      addEntityCrumb={addEntityCrumb}
+    />
   );
 };
 
