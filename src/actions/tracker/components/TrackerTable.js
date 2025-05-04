@@ -3,21 +3,25 @@ import {
   Table, TableBody, TableCell, TableContainer, 
   TableHead, TableRow, Paper, Typography 
 } from '@mui/material';
-import { subscribe } from '../../../utils/externalStore';
+import { usePollVar } from '../../../utils/externalStore';
 import { ActionColumns } from './columns/actionsColumns';
-import { Presenter } from './Presenter';
-
-const tracker = Presenter.getInstance();
 
 const TrackerTable = () => {
   const [actions, setActions] = useState([]);
-
+  
+  // Use Redux hook to watch for history updates
+  const actionHistory = usePollVar(':actionHistory', null);
+  
   useEffect(() => {
-    const unsubscribe = subscribe(':actionHistory', () => {
-      setActions(tracker.getHistory());
-    });
-    return () => unsubscribe();
-  }, []);
+    // If you have a tracker or similar service to get history:
+    try {
+      // Assuming there's a tracker.getHistory() method - replace with actual method
+      const history = window.tracker?.getHistory?.() || [];
+      setActions(history);
+    } catch (err) {
+      console.error('Failed to load action history:', err);
+    }
+  }, [actionHistory]); // Re-run whenever actionHistory changes
 
   return (
     <TableContainer component={Paper} sx={{ mt: 2 }}>

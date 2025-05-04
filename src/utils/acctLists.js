@@ -13,7 +13,7 @@ export const fetchAndCacheVndrList = async (execEvent) => {
   try {
     const result = await execEvent('vndrList');
     log('Fetched vendor list');
-    setVar('vndrList', result); // Cache the result
+    setVars('vndrList', result); // Cache the result
     return result;
   } catch (error) {
     log('Error fetching vendor list:', error);
@@ -31,7 +31,7 @@ export const fetchAndCacheBrndList = async (execEvent) => {
   try {
     const result = await execEvent('brndList');
     log('Fetched brand list');
-    setVar('brndList', result); // Cache the result
+    setVars('brndList', result); // Cache the result
     return result;
   } catch (error) {
     log('Error fetching brand list:', error);
@@ -49,7 +49,7 @@ export const fetchAndCacheWrkrList = async (execEvent) => {
   try {
     const result = await execEvent('wrkrList');
     log('Fetched worker list');
-    setVar('wrkrList', result); // Cache the result
+    setVars('wrkrList', result); // Cache the result
     return result;
   } catch (error) {
     log('Error fetching worker list:', error);
@@ -67,7 +67,7 @@ export const fetchAndCacheUserAcctList = async (execEvent) => {
   try {
     const result = await execEvent('userAcctList');
     log('Fetched user account list');
-    setVar('userAcctList', result); // Cache the result
+    setVars('userAcctList', result); // Cache the result
     return result;
   } catch (error) {
     log('Error fetching user account list:', error);
@@ -85,7 +85,7 @@ export const fetchAndCacheMeasList = async (execEvent) => {
   try {
     const result = await execEvent('measList');
     log('Fetched measurement list');
-    setVar('measList', result); // Cache the result
+    setVars('measList', result); // Cache the result
     return result;
   } catch (error) {
     log('Error fetching measurement list:', error);
@@ -122,11 +122,11 @@ export const fetchLoginLists = async (execEvent) => {
 
 export const clearCachedLists = () => {
   log('Clearing cached lists');
-  setVar('vndrList', null);
-  setVar('brndList', null);
-  setVar('wrkrList', null);
-  setVar('userAcctList', null);
-  setVar('measList', null);
+  setVars('vndrList', null);
+  setVars('brndList', null);
+  setVars('wrkrList', null);
+  setVars('userAcctList', null);
+  setVars('measList', null);
 };
 
 export const getCachedList = (selList) => {

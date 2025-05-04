@@ -1,229 +1,383 @@
-import React, { forwardRef, useState, useEffect, useRef, useCallback } from 'react';
-import { Box, Button } from '@mui/material';
+import React, { forwardRef, useState, useEffect, useCallback } from 'react';
+import { 
+  Box, Button, TextField, FormControl, InputLabel, 
+  Select, MenuItem, Grid, CircularProgress, Divider 
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import SaveIcon from '@mui/icons-material/Save';
-import { FormFieldRenderer } from '../FormField';
-import { FormPresenter } from './Presenter';
 import createLogger from '../../../utils/logger';
-import { useActionTrigger } from '../../../utils/externalStore';
+import { setVars, usePollVar, triggerAction, useActionTrigger } from '../../../utils/externalStore';
 import { SELECTION } from '../../../actions/actionStore';
 
 const log = createLogger('Form');
 
-const Form = forwardRef(({ columnMap, onSubmit, formMode: propFormMode }, ref) => {
+// ---- FORM FIELD COMPONENTS ----
+
+const FormField = ({ field, value, onChange, disabled }) => {
+  switch (field.displayType) {
+    case 'multiLine':
+      return (
+        <TextField
+          fullWidth
+          multiline
+          minRows={3}
+          maxRows={8}
+          label={field.label}
+          value={value || ''}
+          onChange={(e) => onChange(field.field, e.target.value)}
+          required={field.required}
+          disabled={disabled || field.calculated}
+          sx={{ '& .MuiInputBase-root': { minHeight: '100px' } }}
+        />
+      );
+      
+    case 'select':
+      return (
+        <FormControl fullWidth required={field.required} disabled={disabled}>
+          <InputLabel>{field.label}</InputLabel>
+          <Select
+            value={value || ''}
+            onChange={(e) => onChange(field.field, e.target.value)}
+            label={field.label}
+          >
+            <MenuItem value=""><em>None</em></MenuItem>
+            {(field.selList || []).map(item => (
+              <MenuItem 
+                key={item.value || item.id} 
+                value={item.value || item.id}
+              >
+                {item.label || item.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      );
+      
+    case 'number':
+      return (
+        <TextField
+          fullWidth
+          type="number"
+          label={field.label}
+          value={value || ''}
+          onChange={(e) => onChange(field.field, e.target.value)}
+          required={field.required}
+          disabled={disabled || field.calculated}
+        />
+      );
+      
+    default:
+      return (
+        <TextField
+          fullWidth
+          label={field.label}
+          value={value || ''}
+          onChange={(e) => onChange(field.field, e.target.value)}
+          required={field.required}
+          disabled={disabled || field.calculated}
+        />
+      );
+  }
+};
+
+// ---- FIELD UTILITIES ----
+
+// Group fields by their group property
+const groupFields = (fields) => {
+  const groups = {};
+  
+  fields.forEach(field => {
+    const group = field.group || 0;
+    if (!groups[group]) groups[group] = [];
+    groups[group].push(field);
+  });
+  
+  // Sort fields within each group by their order
+  Object.keys(groups).forEach(group => {
+    groups[group].sort((a, b) => (a.ordr || 0) - (b.ordr || 0));
+  });
+  
+  // Return sorted group keys and the groups object
+  return {
+    groupKeys: Object.keys(groups).sort((a, b) => Number(a) - Number(b)),
+    groups
+  };
+};
+
+// Get form fields from columnMap
+const getFormFields = (columnMap) => {
+  if (!columnMap?.columns) return [];
+  
+  return columnMap.columns
+    .filter(col => typeof col === 'object' && !col.hideInForm)
+    .sort((a, b) => {
+      // Sort by group first, then by order
+      const groupA = a.group || 0;
+      const groupB = b.group || 0;
+      if (groupA !== groupB) return groupA - groupB;
+      
+      const orderA = a.ordr || 0;
+      const orderB = b.ordr || 0;
+      return orderA - orderB;
+    });
+};
+
+// Process calculated fields
+const calculateDerivedValues = (formData, fields) => {
+  const newData = { ...formData };
+  
+  // Find fields with realTimeCalculation flag
+  const calculatedFields = fields.filter(f => f.realTimeCalculation);
+  
+  // Apply calculations
+  calculatedFields.forEach(field => {
+    if (typeof field.calculateFn === 'function') {
+      try {
+        newData[field.field] = field.calculateFn(newData);
+      } catch (err) {
+        log.warn(`Error calculating ${field.field}:`, err);
+      }
+    }
+  });
+  
+  return newData;
+};
+
+// ---- MAIN FORM COMPONENT ----
+
+const Form = forwardRef(({ 
+  columnMap, 
+  formName = 'currentForm',
+  onSubmit,
+  formMode: propFormMode
+}, ref) => {
   const theme = useTheme();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fields, setFields] = useState([]);
   const [formData, setFormData] = useState({});
   
-  // Create presenter once
-  const presenterRef = useRef(null);
-  if (!presenterRef.current) {
-    presenterRef.current = new FormPresenter(columnMap);
-  }
-  const presenter = presenterRef.current;
+  // Get form state from Redux if available, otherwise use props
+  const storeFormMode = usePollVar(`form.${formName}.mode`, propFormMode || 'view');
+  const storeFormData = usePollVar(`form.${formName}.data`, {});
   
-  // Update presenter's columnMap if it changes and REFRESH FIELDS
+  // Use Redux state if available, otherwise use local state
+  const currentFormMode = storeFormMode || propFormMode || 'view';
+  const currentFormData = Object.keys(storeFormData).length > 0 ? storeFormData : formData;
+  
+  // Update fields when columnMap changes
   useEffect(() => {
-    // Always update presenter with latest columnMap
-    presenter.columnMap = columnMap;
-    
-    // Set the current form mode in the presenter
-    if (propFormMode) {
-      presenter.setFormMode(propFormMode);
-    }
-    
-    // CRITICAL: Re-fetch fields when columnMap changes - key to solving our issue
     if (columnMap && columnMap.columns) {
       try {
-        const formFields = presenter.getFields();
+        const formFields = getFormFields(columnMap);
         setFields(formFields);
         
-        log.debug('Form fields updated due to columnMap change:', {
+        log.debug('Form fields updated from columnMap:', {
           fieldCount: formFields.length,
-          fieldTypes: formFields.map(f => ({ id: f.id, type: f.type, group: f.group })),
           columnMapName: columnMap.name || 'unnamed'
         });
-        
-        // Clear form data when tab changes to avoid showing wrong field values
-        setFormData({});
       } catch (err) {
         log.error('Error updating fields from columnMap:', err);
       }
     }
-  }, [presenter, columnMap, propFormMode]);
+  }, [columnMap]);
   
-  // INITIALIZATION - Run this once
-  const initialized = useRef(false);
+  // Listen for row selection
+  const rowSelection = useActionTrigger(SELECTION.ROW_SELECT);
+  
+  // When a row is selected, update form data
   useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
+    if (!rowSelection) return;
     
-    async function initializeForm() {
-      setLoading(true);
-      try {
-        // Use presenter to get fields
-        const formFields = presenter.getFields();
-        setFields(formFields);
-        
-        log.debug('Form initialized with fields:', formFields.length);
-      } catch (error) {
-        log.error('Error initializing form:', error);
-      } finally {
-        setLoading(false);
+    const { row } = rowSelection;
+    if (row) {
+      log.debug('Setting form data from row selection', { 
+        fields: Object.keys(row).length 
+      });
+      
+      // Update Redux store
+      setVars({
+        [`form.${formName}.mode`]: 'edit',
+        [`form.${formName}.data`]: row
+      });
+      
+      // Also update local state for non-Redux fallback
+      setFormData(row);
+    }
+  }, [rowSelection, formName]);
+  
+  // Calculate derived values when dependencies change
+  useEffect(() => {
+    const calculatedData = calculateDerivedValues(currentFormData, fields);
+    
+    // Only update if something changed
+    if (JSON.stringify(calculatedData) !== JSON.stringify(currentFormData)) {
+      if (Object.keys(storeFormData).length > 0) {
+        // Update Redux store
+        setVars({ [`form.${formName}.data`]: calculatedData });
+      } else {
+        // Update local state
+        setFormData(calculatedData);
       }
     }
-    
-    initializeForm();
-  }, [presenter]); 
+  }, [currentFormData, fields, formName, storeFormData]);
   
-  // ROW SELECTION - Listen for table row clicks
-  const rowSelectAction = useActionTrigger(SELECTION.ROW_SELECT);
-
-  useEffect(() => {
-    // Early bail-out if we don't have an action
-    if (!rowSelectAction) {
-      return;
-    }
+  // Set form mode
+  const setFormMode = useCallback((mode) => {
+    log.debug(`Setting form mode to "${mode}"`);
+    setVars({ [`form.${formName}.mode`]: mode });
+  }, [formName]);
+  
+  // Set form data
+  const setFormDataFn = useCallback((data) => {
+    log.debug('Setting form data', { fields: Object.keys(data) });
     
-    log.debug('Row selection action received:', rowSelectAction);
+    // Update Redux store
+    setVars({ [`form.${formName}.data`]: data });
     
-    // IMPORTANT: In your case, rowSelectAction IS the payload
-    // Your action store is returning the payload directly, not {type, payload}
-    const actionData = rowSelectAction; 
+    // Also update local state for non-Redux fallback
+    setFormData(data);
+  }, [formName]);
+  
+  // Update form data (partial)
+  const updateFormData = useCallback((updates) => {
+    const newData = { ...currentFormData, ...updates };
     
-    log.debug('Processing row data:', {
-      id: actionData.id,
-      rowData: actionData.row ? Object.keys(actionData.row) : 'none',
-      columnValues: actionData.columnValues ? Object.keys(actionData.columnValues) : 'none'
+    // Run calculations on the updated data
+    const calculatedData = calculateDerivedValues(newData, fields);
+    
+    // Update Redux store
+    setVars({ [`form.${formName}.data`]: calculatedData });
+    
+    // Also update local state for non-Redux fallback
+    setFormData(calculatedData);
+  }, [currentFormData, fields, formName]);
+  
+  // Reset form
+  const resetForm = useCallback(() => {
+    setVars({
+      [`form.${formName}.mode`]: 'view',
+      [`form.${formName}.data`]: {}
     });
     
-    // Process the row data with FormPresenter
-    const processedData = presenter.processRowData(actionData);
-    
-    // Log and update form state
-    log.debug('Form data processed:', {
-      fieldCount: Object.keys(processedData).length,
-      fields: Object.keys(processedData)
-    });
-    
-    setFormData(processedData);
-  }, [rowSelectAction, presenter]);
-
-  // Add this at the component level to see what's going on
-  useEffect(() => {
-    if (rowSelectAction) {
-      log.debug('Row action structure:', {
-        hasPayload: Boolean(rowSelectAction?.payload),
-        isDirectData: Boolean(rowSelectAction?.id || rowSelectAction?.row),
-        keys: Object.keys(rowSelectAction)
-      });
-    }
-  }, [rowSelectAction]);
+    // Also reset local state
+    setFormData({});
+  }, [formName]);
   
-  // FORM SUBMISSION
+  // Form submission
   const handleSubmit = useCallback(async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // Set form mode before submitting
-      presenter.setFormMode(propFormMode || 'add');
-      
-      // Use presenter to submit form
-      const result = await presenter.submitForm(formData);
-      if (result && result.success) {
-        log.info('Form submitted successfully');
-        onSubmit?.(result);
-        return true;
+      if (onSubmit) {
+        const result = await onSubmit(currentFormData, currentFormMode);
+        log.debug('Form submission complete', { result });
+        return result;
       }
-      return false;
+      return { success: true, data: currentFormData };
     } catch (err) {
       log.error('Form submission failed:', err);
       setError(err.message);
-      return false;
+      return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
-  }, [presenter, formData, onSubmit, propFormMode]);
+  }, [currentFormData, onSubmit, currentFormMode]);
   
-  // INPUT CHANGES
-  const handleInputChange = useCallback((field, value) => {
-    setFormData(prev => ({...prev, [field]: value}));
-  }, []);
+  // Handle field changes
+  const handleChange = useCallback((field, value) => {
+    updateFormData({ [field]: value });
+  }, [updateFormData]);
   
-  // Expose methods to parent components via ref
+  // Group fields for rendering
+  const { groupKeys, groups } = groupFields(fields);
+  
+  // Expose methods via ref
   React.useImperativeHandle(ref, () => ({
-    getFormData: () => formData,
-    setFormData: (data, mode) => {
-      log.debug('setFormData called with mode:', mode);
-      setFormData(prev => ({...prev, ...data}));
-      // Update form mode if provided
-      if (mode) {
-        log.debug(`Setting form mode to: ${mode}`);
-        // Update form mode if passed
-      }
-    },
+    getFormData: () => currentFormData,
+    setFormData: setFormDataFn,
+    setFormMode,
     handleSubmit,
-    // Add refresh method to match the API expected by CrudLayout
+    resetForm,
     refresh: (newMode) => {
-      log.debug(`Form refresh called with mode: ${newMode || 'none'}`);
-      // If a new mode is provided, update it
+      log.debug('Form refresh requested', { newMode });
+      
       if (newMode) {
-        log.debug(`Setting form mode to: ${newMode}`);
-        // Any mode-specific logic would go here
+        setFormMode(newMode);
+        
+        // Reset form data when switching to add mode
+        if (newMode === 'add') {
+          setFormDataFn({});
+        }
       }
       
-      // Reset form data if we're switching to 'add' mode
-      if (newMode === 'add') {
-        setFormData({});
+      // Re-calculate any derived values
+      const calculatedData = calculateDerivedValues(currentFormData, fields);
+      if (JSON.stringify(calculatedData) !== JSON.stringify(currentFormData)) {
+        setFormDataFn(calculatedData);
       }
       
-      // Re-fetch fields from the current columnMap
-      const formFields = presenter.getFields();
-      setFields(formFields);
-      
-      log.debug('Form refreshed with fields:', {
-        count: formFields.length,
-        mode: newMode || 'current'
-      });
+      // Trigger a UI refresh
+      triggerAction('FORM_REFRESH', { formName, timestamp: Date.now() });
     }
-  }), [formData, handleSubmit, presenter]);
+  }), [currentFormData, setFormDataFn, setFormMode, handleSubmit, resetForm, formName, fields]);
   
-  // RENDER THE FORM
   return (
     <Box 
-      className="form-container" 
       sx={{
-        // Reduce padding to make the form more compact
-        padding: theme.spacing(1),
+        padding: theme.spacing(2),
         backgroundColor: theme.palette.background.paper,
         borderRadius: theme.shape.borderRadius,
         boxShadow: theme.shadows[1],
       }}
     >
-      <FormFieldRenderer 
-        visibleFields={fields}
-        formData={formData}
-        handleInputChange={handleInputChange}
-        loading={loading}
-        error={error}
-      />
+      {/* Render fields by group */}
+      {groupKeys.map(groupKey => (
+        <Box key={groupKey} sx={{ mb: 2 }}>
+          {/* Show group divider if it's not the first group and has a non-zero key */}
+          {groupKey !== '0' && groupKey !== groupKeys[0] && (
+            <Divider sx={{ my: 2 }} />
+          )}
+          
+          {/* Grid layout for this group's fields */}
+          <Grid container spacing={2}>
+            {groups[groupKey].map(field => (
+              <Grid 
+                item 
+                key={field.field}
+                xs={12} 
+                md={field.displayType === 'multiLine' ? 12 : 6}
+              >
+                <FormField
+                  field={field}
+                  value={currentFormData[field.field] || ''}
+                  onChange={handleChange}
+                  disabled={currentFormMode === 'view'}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+      ))}
       
-      {propFormMode !== 'view' && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+      {currentFormMode !== 'view' && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
           <Button
             onClick={handleSubmit}
             disabled={loading}
             variant="contained"
             color="primary"
-            startIcon={<SaveIcon />}
-            // Make button smaller
-            size="small"
+            startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
           >
             {loading ? 'Saving...' : 'Save'}
           </Button>
+        </Box>
+      )}
+      
+      {error && (
+        <Box sx={{ mt: 2, color: 'error.main' }}>
+          {error}
         </Box>
       )}
     </Box>

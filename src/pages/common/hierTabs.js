@@ -31,7 +31,7 @@ const HierTabs = ({
     if (tabConfig[activeTab]) {
       // FIXED: Just use the tab label directly for cleaner titles
       const title = tabConfig[activeTab].label;
-      setVar(':pageTitle', title);
+      setVars(':pageTitle', title);
       log.debug(`Set page title: ${title}`, { activeTab });
       
       // Reset active row when changing tabs to clear the form
@@ -68,7 +68,7 @@ const HierTabs = ({
     // Update title - FIXED to use just the tab label
     if (tabConfig[newValue]) {
       const title = tabConfig[newValue].label;
-      setVar(':pageTitle', title);
+      setVars(':pageTitle', title);
       log.debug(`Set page title: ${title}`);
     }
     

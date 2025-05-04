@@ -1,5 +1,5 @@
 import createLogger from '../../../utils/logger';
-import { getVar, setVar } from '../../../utils/externalStore'; // Add getVar import
+import { getVar, setVars } from '../../../utils/externalStore'; // Add getVar import
 import { execEvent } from '../../../stores/eventStore'; // Add execEvent import
 import crudDML from '../../../utils/DML/crudDML';
 
@@ -147,7 +147,7 @@ export class FormPresenter {
         if (Array.isArray(result) && result.length > 0) {
           // Store in external store with standard naming
           const storeName = `:${listName}`;
-          setVar(storeName, result);
+          setVars(storeName, result);
           
           this.log.info(`Loaded reference list ${listName}:`, {
             count: result.length,

@@ -3,6 +3,8 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Box, IconButton, Tooltip } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import createLogger from '../../../utils/logger';
+import { triggerAction, setVars } from '../../../utils/externalStore';
+import { SELECTION } from '../../../actions/actionStore';
 
 const log = createLogger('Table.Component');
 
@@ -123,6 +125,36 @@ const Table = ({ tableConfig }) => {
       }))
     : [];
 
+  // In your onRowClick handler:
+  const handleRowClick = (params) => {
+    const { row } = params;
+    if (!row) return;
+    
+    // Use the locally defined prepareRowForForm function
+    const formData = prepareRowForForm(row);
+    
+    // Dispatch both actions to Redux
+    triggerAction(SELECTION.ROW_SELECT, { row: formData });
+    
+    // Also update form data and mode directly
+    setVars({
+      'form.currentForm.data': formData,
+      'form.currentForm.mode': 'edit'
+    });
+    
+    // Call the original onRowClick if provided
+    if (typeof onRowClick === 'function') {
+      onRowClick(params);
+    }
+  };
+
+  // Simple function to prepare row data for the form
+  const prepareRowForForm = (rowData) => {
+    // No complex transformations needed - just use the row data directly
+    // This eliminates the need for the value property on columns
+    return { ...rowData };
+  };
+
   return (
     <Box sx={{ width: '100%', height: 400 }}>
       {error && (
@@ -146,7 +178,7 @@ const Table = ({ tableConfig }) => {
         rows={data}
         columns={columnsWithFormatting}
         getRowId={(row) => row[idField] || Math.random()}
-        onRowClick={onRowClick ? (params) => onRowClick(params.row) : undefined}
+        onRowClick={onRowClick ? (params) => handleRowClick(params) : undefined}
         loading={loading}
         disableColumnFilter
         disableColumnMenu

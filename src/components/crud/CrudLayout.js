@@ -130,8 +130,9 @@ class CrudLayoutPresenter extends MinViableProd {
           formDataKeys: formData ? Object.keys(formData) : []
         });
         
+        // Change to 'edit' instead of 'view'
         this.setState({
-          formMode: 'view',
+          formMode: 'edit',  // Changed from 'view' to 'edit'
           selectedRow: formData
         }, () => {
           if (this.formRef.current) {
@@ -149,9 +150,9 @@ class CrudLayoutPresenter extends MinViableProd {
       source: 'table'
     }, crudContext);
     
-    // Update local state
+    // Update local state - changed to 'edit' mode
     this.setState({
-      formMode: 'view',
+      formMode: 'edit',  // Changed from 'view' to 'edit'
       selectedRow: row
     }, () => {
       // Refresh the form with the selected data

@@ -169,28 +169,15 @@ class ColMapBuild {
   }
   
   addTextColumn(field, dbCol, label, options = {}) {
-    const group = options.group || 1;
-    const order = options.ordr || this.getNextOrder(group);
-    const multiLine = options.multiLine || options.multiline || false;
-    const displayType = multiLine ? 'multiLine' : (options.displayType || 'text');
+    // Default to 'text' displayType unless multiLine is true
+    const displayType = options.multiLine ? 'multiLine' : 'text';
     
-    this.columns.push({
-      group,
-      ordr: order,
-      field,
-      dbCol: dbCol || field,
-      label,
-      width: options.width || 200,
-      dataType: "STRING",
-      displayType,
-      required: options.required || false,
-      // Smart defaults with override
-      hideInTable: options.hideInTable !== undefined ? 
-        options.hideInTable : this.getDefaultHideInTable(displayType),
-      hideInForm: options.hideInForm !== undefined ? 
-        options.hideInForm : false,
+    this.addColumn(field, dbCol, label, {
+      dataType: 'STRING',
+      displayType, // Use the calculated displayType
       ...options
     });
+    
     return this;
   }
   
@@ -295,12 +282,37 @@ class ColMapBuild {
     return this;
   }
   
-  // Any other column
-  addColumn(column) {
+  // Rename the current addColumn method to be clear about its purpose
+  addRawColumn(column) {
     this.columns.push(column);
     return this;
   }
-  
+
+  // Add a proper addColumn method that takes full parameters
+  addColumn(field, dbCol, label, options = {}) {
+    const group = options.group || 1;
+    const order = options.ordr || this.getNextOrder(group);
+    
+    this.columns.push({
+      group,
+      ordr: order,
+      field,
+      dbCol: dbCol || field,
+      label,
+      width: options.width || 150,
+      dataType: options.dataType || "STRING",
+      displayType: options.displayType || "text",
+      required: options.required || false,
+      hideInTable: options.hideInTable !== undefined ? 
+        options.hideInTable : this.getDefaultHideInTable(options.displayType || "text"),
+      hideInForm: options.hideInForm !== undefined ? 
+        options.hideInForm : false,
+      ...options
+    });
+    
+    return this;
+  }
+
   // Add this method to your class
   addRealTimeCalculatedColumn(field, label, dependencies, calculateFn, options = {}) {
     const colDef = {
@@ -344,7 +356,8 @@ class ColMapBuild {
    */
   addNumberColumn(field, dbCol, label, options = {}) {
     this.addColumn(field, dbCol, label, {
-      type: 'number',
+      dataType: 'NUMBER',
+      displayType: 'number',
       ...options
     });
     

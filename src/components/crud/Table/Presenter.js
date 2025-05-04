@@ -157,40 +157,28 @@ class TablePresenter {
     }
     
     const mappedData = {};
-    let errorFound = false;
     
-    // Process all columns, not just those with existing value values
+    // Process all columns
     columnMap.columns.forEach(col => {
       // Skip if no field defined
       if (!col.field) return;
       
       // Check if the row has data for this field
       if (rowData[col.field] !== undefined) {
-        // If value exists (even empty string), use it as target
-        if ('value' in col) {
-          // Empty value means use the field name itself
-          const targetField = col.value || col.field;
-          mappedData[targetField] = rowData[col.field];
-          
-          // Apply any transformations if needed
-          if (col.transform) {
-            try {
-              mappedData[targetField] = col.transform(mappedData[targetField]);
-            } catch (error) {
-              this.log.error(`Transform error for ${col.field}:`, error);
-            }
+        // Use the column's 'value' property if it exists, otherwise use 'field'
+        const targetField = 'value' in col ? (col.value || col.field) : col.field;
+        mappedData[targetField] = rowData[col.field];
+        
+        // Apply any transformations if needed
+        if (col.transform && typeof col.transform === 'function') {
+          try {
+            mappedData[targetField] = col.transform(mappedData[targetField]);
+          } catch (error) {
+            this.log.error(`Transform error for ${col.field}:`, error);
           }
-        } else {
-          // Column is missing value property completely
-          errorFound = true;
-          this.log.error(`Column '${col.field}' is missing value attribute`);
         }
       }
     });
-    
-    if (errorFound) {
-      this.log.warn('Some columns were missing value attributes, check configuration');
-    }
     
     this.log.debug('Mapped row to column values:', {
       rowFields: Object.keys(rowData).length,
@@ -198,6 +186,35 @@ class TablePresenter {
     });
     
     return mappedData;
+  }
+
+  // Add a method to prepare a row for form display
+  prepareRowForForm(rowData, columnMap) {
+    if (!rowData || !columnMap?.columns) {
+      this.log.warn('Cannot prepare row: missing data or columns');
+      return rowData; // Return original data as fallback
+    }
+    
+    // Create a cleaned version with just the needed fields
+    const formData = {};
+    
+    // Process all valid column objects
+    columnMap.columns.forEach(col => {
+      // Skip if not a proper column object
+      if (!col || typeof col !== 'object' || !col.field) return;
+      
+      // Copy field value directly to form data
+      if (rowData[col.field] !== undefined) {
+        formData[col.field] = rowData[col.field];
+      }
+    });
+    
+    this.log.debug('Prepared row for form:', {
+      originalFields: Object.keys(rowData).length,
+      formFields: Object.keys(formData).length
+    });
+    
+    return formData;
   }
 }
 

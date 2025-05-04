@@ -4,7 +4,7 @@ import { useBreadcrumbs } from '../../../contexts/BreadcrumbContext';
 import CrudLayout from '../../../components/crud/CrudLayout';
 import columnMap from './columns';
 import createLogger from '../../../utils/logger';
-import { setVar } from '../../../utils/externalStore';
+import { setVars } from '../../../utils/externalStore';
 
 const log = createLogger('Ingredients');
 
@@ -17,7 +17,7 @@ const Ingredients = () => {
   useEffect(() => {
     if (ingrTypeID) {
       log.info(`Setting ingredient type filter: ${ingrTypeID}`);
-      setVar(':ingrTypeID', ingrTypeID); // Format for external store with colon
+      setVars(':ingrTypeID', ingrTypeID); // Format for external store with colon
     }
   }, [ingrTypeID]);
   

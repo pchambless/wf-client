@@ -4,25 +4,25 @@ import {
   TableHead, TableRow, Paper, Box, Button 
 } from '@mui/material';
 import tracker from '../../../tracker';
-import { subscribe } from '../../../utils/externalStore';
+import { usePollVar, triggerAction } from '../../../utils/externalStore';
 import { MetricsColumns } from './columns/metricsColumns';
 
 const MetricsTable = () => {
   const [metrics, setMetrics] = useState([]);
-
+  
+  // Use Redux hook to watch for metrics updates
+  const actionMetrics = usePollVar(':actionMetrics', null);
+  
+  // Load metrics whenever the metrics variable changes
   useEffect(() => {
-    const loadMetrics = () => {
-      const currentMetrics = tracker.getMetrics();
-      setMetrics(currentMetrics);
-    };
-
-    loadMetrics();
-    const unsubscribe = subscribe(':actionMetrics', loadMetrics);
-    return () => unsubscribe();
-  }, []);
-
+    const currentMetrics = tracker.getMetrics();
+    setMetrics(currentMetrics || []);
+  }, [actionMetrics]); // Re-run when actionMetrics changes
+  
   const handleClearMetrics = () => {
     tracker.clearMetrics();
+    // Trigger an update after clearing
+    triggerAction(':actionMetrics', { cleared: true, timestamp: Date.now() });
   };
 
   return (
@@ -56,7 +56,7 @@ const MetricsTable = () => {
               <TableRow key={metric.id || `metric-${index}`}>
                 <TableCell>{metric.name || 'Unknown'}</TableCell>
                 <TableCell>{new Date(metric.timestamp).toLocaleString() || 'Invalid Date'}</TableCell>
-                {/* Other cells */}
+                {/* Add other cells based on your metrics structure */}
               </TableRow>
             ))}
           </TableBody>

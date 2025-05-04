@@ -60,7 +60,7 @@ Primary key fields are explicitly defined in tab configuration:
 
 The system follows a consistent pattern for resolving events:
 
-1. When a row is selected in a table, the ID field is stored using `setVar(":idField", value)`
+1. When a row is selected in a table, the ID field is stored using `setVars(":idField", value)`
 2. The `execEvent()` function uses these stored variables to resolve parameters
 3. No parameters are attached to event names; they're resolved from stored variables
 

@@ -1,4 +1,4 @@
-import { setVar, getVar } from '../utils/externalStore';
+import { setVars, getVar } from '../utils/externalStore';
 import createLogger from '../utils/logger';
 import * as constants from './core/constants';
 import { registerActionHandlers } from './actionHandlers';
@@ -55,7 +55,7 @@ export const triggerAction = (action, payload, context = {}) => {
   
   // Store action in external store for reactive components
   if (shouldStoreInExternalStore) {
-    setVar(`%${action}`, enhancedPayload);
+    setVars(`%${action}`, enhancedPayload);
   }
   
   // Dispatch to handlers

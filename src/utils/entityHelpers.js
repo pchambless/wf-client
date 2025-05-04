@@ -18,7 +18,7 @@ const entityVarMap = {
 // Set entity ID in the external store
 export const setEntityId = (entityType, id) => {
   const varName = entityVarMap[entityType] || `${entityType}ID`; // Remove redundant colon
-  setVar(varName, id);
+  setVars(varName, id);
   return varName;
 };
 

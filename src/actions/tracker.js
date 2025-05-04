@@ -1,4 +1,4 @@
-import { setVar, getVar } from '../utils/externalStore';
+import { setVars, getVar } from '../utils/externalStore';
 import createLogger from '../utils/logger';
 
 const log = createLogger('ActionTracker');
@@ -49,8 +49,8 @@ class ActionTracker {
     this._updateMetrics(actionRecord);
     
     // Create new objects for Redux via externalStore
-    setVar(':actionHistory', [...this._history]);
-    setVar(':actionMetrics', Object.values({...this._metrics}));
+    setVars(':actionHistory', [...this._history]);
+    setVars(':actionMetrics', Object.values({...this._metrics}));
     
     // Provide more detailed logging
     const componentInfo = payload.component ? `[${payload.component}] ` : '';
@@ -106,12 +106,12 @@ class ActionTracker {
   
   clearMetrics() {
     this._metrics = {};
-    setVar(':actionMetrics', []);
+    setVars(':actionMetrics', []);
   }
   
   clearHistory() {
     this._history = [];
-    setVar(':actionHistory', []);
+    setVars(':actionHistory', []);
   }
 
   // Improved wrapFunction that provides better action names
@@ -188,7 +188,7 @@ export const trackAction = (actionType, payload) => {
   };
   
   actionHistory.push(actionData);
-  setVar(':actionHistory', actionHistory);
+  setVars(':actionHistory', actionHistory);
   
   log.debug(`Tracked action: ${actionType} `, actionData);
 };

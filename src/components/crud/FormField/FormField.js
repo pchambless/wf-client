@@ -8,7 +8,8 @@ import {
   Switch,
   Typography,
   RadioGroup,
-  Radio
+  Radio,
+  Box
 } from '@mui/material';
 import Select from '../../page/Select'; // Import the custom Select component
 import createLogger from '../../../utils/logger';
@@ -250,4 +251,38 @@ const FormField = ({ field, value, onChange, disabled = false }) => {
   }
 };
 
+// Look for how fields are arranged in the form:
+
+// Inside your main form container:
+const FormContainer = ({ fields, values, handleFieldChange, disabled }) => (
+  <Box 
+    component="form"
+    sx={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+      gap: 2,
+      width: '100%'
+    }}
+  >
+    {fields.map(field => (
+      <Box
+        key={field.field}
+        sx={{
+          // This will make multiline fields take entire row
+          // when combined with the gridColumn CSS in the Renderer
+          gridColumn: field.displayType === 'multiLine' ? '1 / -1' : 'auto'
+        }}
+      >
+        <FormField
+          field={field}
+          value={values[field.field]}
+          onChange={handleFieldChange}
+          disabled={disabled}
+        />
+      </Box>
+    ))}
+  </Box>
+);
+
 export default FormField;
+export { FormContainer };

@@ -57,7 +57,7 @@ export function AppStateProvider({ children }) {
     return {
       // Variable functions
       getVar: (key) => state.variables[key],
-      setVar: (key, value) => dispatch({ 
+      setVars: (key, value) => dispatch({ 
         type: SET_VARIABLE, key, value 
       }),
       clearAll: () => dispatch({ type: CLEAR_ALL }),

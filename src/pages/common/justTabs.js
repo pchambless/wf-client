@@ -25,7 +25,7 @@ const JustTabs = ({
   useEffect(() => {
     if (tabConfig[activeTab]) {
       const title = `${pageTitle} - ${tabConfig[activeTab].label}`;
-      setVar(':pageTitle', title);
+      setVars(':pageTitle', title);
       log.debug(`Set page title: ${title}`, { activeTab });
     }
   }, [activeTab, pageTitle, tabConfig]);

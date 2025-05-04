@@ -4,7 +4,7 @@ import { Box, Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CrudLayout from '../../../components/crud/CrudLayout';
 import { columns } from './columns';
-import { setVar } from '../../../utils/externalStore';
+import { setVars } from '../../../utils/externalStore';
 import createLogger from '../../../utils/logger';
 import NavigationHeader from '../../../components/navigation/NavigationHeader';
 import { useBreadcrumbs } from '../../../contexts/BreadcrumbContext';
@@ -20,7 +20,7 @@ const ProductBatches = () => {
   useEffect(() => {
     if (productId) {
       log.debug(`Setting :prodID=${productId} for batch list`);
-      setVar(':prodID', productId);
+      setVars(':prodID', productId);
     }
   }, [productId]);
   
