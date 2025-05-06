@@ -56,5 +56,3 @@ log.debug('Ingredients column map built:', columnMap);
 
 export default columnMap;
 
-// Force log to console during development
-log.info('columnMap:', columnMap);

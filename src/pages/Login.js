@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/wf-icon.png';
 import createLogger from '../utils/logger';
-import { setVars } from '../utils/externalStore';
-import { Box, Button, Container, TextField, Typography, Avatar, CssBaseline, CircularProgress } from '@mui/material';
+import { setVars, getVar } from '../utils/externalStore';
+import { Box, Button, Container, TextField, Typography, Avatar, CssBaseline, CircularProgress, Alert } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
 // Import only what we need from stores
 import { 
   execEvent,
-  initEventTypeService,
   initAccountStore  // Add this import
 } from '../stores';
 
@@ -19,29 +18,21 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(true);
-  const [initError, setInitError] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Single initialization useEffect
+  // Replace with this simpler useEffect that just deals with authentication status:
   useEffect(() => {
-    const initializeApp = async () => {
-      try {
-        // Initialize EventStore first
-        const success = await initEventTypeService();
-        if (!success) {
-          throw new Error('Event type initialization failed');
-        }
-        
-        setLoading(false);
-      } catch (error) {
-        log.error('Application initialization failed:', error);
-        setInitError(true);
-        setLoading(false);
-      }
-    };
-
-    initializeApp();
-  }, []);
+    // Check if user is already authenticated
+    const isAuth = getVar(':isAuth');
+    if (isAuth === '1') {
+      log.debug('User already authenticated, redirecting to welcome');
+      navigate('/welcome', { replace: true });
+    } else {
+      // No need to load event types, just set loading to false
+      setLoading(false);
+    }
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -106,41 +97,9 @@ const Login = () => {
     } catch (error) {
       log.error('Login failed:', error);
       setVars({ ':isAuth': '0' });
+      setError('Login failed. Please try again.');
     }
   };
-
-  // Display screens for different states
-  if (initError) {
-    return (
-      <Container component="main" maxWidth="xs">
-        <Box sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}>
-          <Avatar sx={{ m: 1, bgcolor: 'error.main' }}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5" color="error">
-            Initialization Error
-          </Typography>
-          <Typography variant="body1" sx={{ mt: 2, textAlign: 'center' }}>
-            Failed to initialize the application. Please check your connection and refresh the page.
-          </Typography>
-          <Button
-            fullWidth
-            variant="contained"
-            color="primary"
-            sx={{ mt: 3, mb: 2 }}
-            onClick={() => window.location.reload()}
-          >
-            Reload Page
-          </Button>
-        </Box>
-      </Container>
-    );
-  }
 
   if (loading) {
     return (
@@ -200,6 +159,7 @@ const Login = () => {
               Whatsfresh Today?
             </Typography>
           </Box>
+          {error && <Alert severity="error">{error}</Alert>}
           <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt: 1 }}>
             <TextField
               margin="normal"

@@ -70,6 +70,17 @@ const setVars = (vars) => {
   store.dispatch(storeSlice.actions.setVariables(vars));
 };
 
+// Optional improvement to externalStore.js
+// Add a more descriptive name and docstring:
+const setVarsObject = (variablesObject) => {
+  store.dispatch(storeSlice.actions.setVariables(variablesObject));
+};
+
+// Or create an alternate version that accepts key-value pairs:
+const setVar = (key, value) => {
+  store.dispatch(storeSlice.actions.setVariables({ [key]: value }));
+};
+
 const getVar = (variableName) => {
   const state = store.getState();
   return variableName in state ? state[variableName] : null;
@@ -122,6 +133,8 @@ const useActionEffect = (actionName, effect, dependencies = []) => {
 // 🔹 Exports
 export { 
   setVars,
+  setVarsObject,
+  setVar,
   getVar,
   clearAllVars,
   usePollVar,

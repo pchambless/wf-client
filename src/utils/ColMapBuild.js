@@ -363,6 +363,18 @@ class ColMapBuild {
     
     return this;
   }
+
+  // Add this method to your ColMapBuild class
+  setSelects(selectsConfig) {
+    this.columnMap.selects = {
+      sel1: { visible: false }, // Default all to hidden
+      sel2: { visible: false },
+      sel3: { visible: false },
+      ...selectsConfig  // Override with provided config
+    };
+    
+    return this;
+  }
   
   build() {
     return {

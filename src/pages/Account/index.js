@@ -1,9 +1,9 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Paper, Typography } from '@mui/material';
-import Container from '../../layouts/Container';
+import MainLayout from '../../components/layout/MainLayout'; // Changed import
 import { accountConfig } from './config';
-import TabNavigation from '../../components/navigation/TabNavigation';
+
 
 const AccountPage = () => {
   // Create tabs based on account config
@@ -13,13 +13,11 @@ const AccountPage = () => {
   }));
 
   return (
-    <Container showHeader={false}>
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Typography variant="h4" gutterBottom>Account Management</Typography>
-        <TabNavigation tabs={tabs} />
-        <Outlet /> {/* This will render nested routes */}
-      </Paper>
-    </Container>
+    // No need for showHeader prop since the header is part of MainLayout now
+    <Paper sx={{ p: 2, mb: 2 }}>
+      <Typography variant="h4" gutterBottom>Account Management</Typography>
+      <Outlet /> {/* This will render nested routes */}
+    </Paper>
   );
 };
 

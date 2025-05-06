@@ -242,6 +242,12 @@ class CrudLayoutPresenter extends MinViableProd {
       );
     }
 
+    // Add better error handling if columnMap is a function
+    if (typeof this.props.columnMap === 'function') {
+      this.log.error('ColumnMap was passed as a function instead of an object. Please call the function to get the actual column map.');
+    }
+
+
     return (
       <Box display="flex" flexDirection="column" gap={2}>
         <Grid container spacing={2}>

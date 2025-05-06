@@ -22,6 +22,23 @@ export const themeOptions = {
       disabled: 'rgba(92,90,90,0.54)',
       hint: '#00796b',
     },
+    sections: {
+      ingredients: {
+        light: '#f8bbd0', // Light pink
+        main: '#f48fb1',  // Medium pink
+        dark: '#ec407a'   // Dark pink for active items
+      },
+      products: {
+        light: '#bbdefb', // Light blue
+        main: '#90caf9',  // Medium blue
+        dark: '#42a5f5'   // Dark blue for active items
+      },
+      batches: {
+        light: '#c8e6c9', // Light green
+        main: '#a5d6a7',  // Medium green
+        dark: '#66bb6a'   // Dark green for active items
+      }
+    },
   },
   typography: {
     h2: {
@@ -44,62 +61,100 @@ export const themeOptions = {
       fontSize: 19,
     },
   },
-  props: {
-    MuiList: {
-      dense: true,
-    },
-    MuiMenuItem: {
-      dense: true,
-    },
-    MuiTable: {
-      size: 'small',
-    },
-    MuiAppBar: {
-      color: 'transparent',
-    },
-    MuiButton: {
-      size: 'small',
-    },
-    MuiButtonGroup: {
-      size: 'small',
-    },
-    MuiCheckbox: {
-      size: 'small',
-    },
-    MuiFab: {
-      size: 'small',
-    },
-    MuiFormControl: {
-      margin: 'dense',
-      size: 'small',
-    },
-    MuiFormHelperText: {
-      margin: 'dense',
-    },
-    MuiIconButton: {
-      size: 'small',
-    },
-    MuiInputBase: {
-      margin: 'dense',
-    },
-    MuiInputLabel: {
-      margin: 'dense',
-    },
-    MuiRadio: {
-      size: 'small',
-    },
-    MuiSwitch: {
-      size: 'small',
-    },
-    MuiTextField: {
-      margin: 'dense',
-      size: 'small',
-    },
-  },
   direction: 'rtl',
   spacing: 8,
   components: {
+    MuiList: {
+      defaultProps: {
+        dense: true,
+      },
+    },
+    MuiMenuItem: {
+      defaultProps: {
+        dense: true,
+      },
+    },
+    MuiTable: {
+      defaultProps: {
+        size: 'small',
+      },
+    },
+    MuiAppBar: {
+      defaultProps: {
+        color: 'transparent',
+      },
+    },
+    MuiButton: {
+      defaultProps: {
+        size: 'small',
+      },
+    },
+    MuiButtonGroup: {
+      defaultProps: {
+        size: 'small',
+      },
+    },
+    MuiCheckbox: {
+      defaultProps: {
+        size: 'small',
+      },
+    },
+    MuiFab: {
+      defaultProps: {
+        size: 'small',
+      },
+    },
+    MuiFormControl: {
+      defaultProps: {
+        margin: 'dense',
+        size: 'small',
+      },
+      styleOverrides: {
+        root: {
+          marginBottom: '8px',
+          '&.form-field-container': {
+            height: 'auto',
+            minHeight: '40px'
+          }
+        }
+      },
+    },
+    MuiFormHelperText: {
+      defaultProps: {
+        margin: 'dense',
+      },
+    },
+    MuiIconButton: {
+      defaultProps: {
+        size: 'small',
+      },
+    },
+    MuiInputBase: {
+      defaultProps: {
+        margin: 'dense',
+      },
+    },
+    MuiInputLabel: {
+      defaultProps: {
+        margin: 'dense',
+      },
+    },
+    MuiRadio: {
+      defaultProps: {
+        size: 'small',
+      },
+    },
+    MuiSwitch: {
+      defaultProps: {
+        size: 'small',
+      },
+    },
     MuiTextField: {
+      defaultProps: {
+        variant: 'outlined',
+        size: 'small',
+        margin: 'dense',
+      },
       styleOverrides: {
         root: {
           marginBottom: '4px', // Reduce vertical spacing
@@ -135,11 +190,6 @@ export const themeOptions = {
           }
         }
       },
-      defaultProps: {
-        variant: 'outlined',
-        size: 'small',
-        margin: 'dense'
-      }
     },
     MuiAutocomplete: {
       styleOverrides: {
@@ -149,17 +199,6 @@ export const themeOptions = {
             padding: '10px',
           },
         },
-      },
-    },
-    MuiFormControl: {
-      styleOverrides: {
-        root: {
-          marginBottom: '8px',
-          '&.form-field-container': {
-            height: 'auto',
-            minHeight: '40px'
-          }
-        }
       },
     },
     MuiDataGrid: {

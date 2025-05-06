@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';  // Remove unused Route, Routes, Navigate
 import { Provider } from 'react-redux';
 import store from './utils/externalStore';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -19,12 +19,8 @@ import {
 } from '@mui/material';
 import theme from './theme';
 
-// Import pages
-import Login from './pages/Login';
-import Welcome from './pages/Welcome';
-import ingredientRoutes from './pages/Ingredients/routes';
-import productRoutes from './pages/Products/routes';
-import { accountRoutes, defaultAccountRoute } from './pages/Account/routes';
+// Updated routes import
+import AppRoutes from './routes'; // Import your new main routes component
 
 const log = createLogger('App');
 
@@ -98,56 +94,9 @@ const App = () => {
           <CssBaseline />
           <ErrorBoundary>
             <ActionHandlerProvider options={{ executeHandlers: true, logOnly: false }}>
-              <BreadcrumbProvider> {/* Add BreadcrumbProvider here */}
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/welcome" element={<Welcome />} />
-                  
-                
-                  {/* Add all the nested Account routes */}
-                  {accountRoutes.map((route, index) => (
-                    <Route 
-                      key={`account-route-${index}`}
-                      path={route.path}
-                      element={<route.component />}
-                    />
-                  ))}
-                  
-                  {/* Add the default redirect */}
-                  <Route
-                    path="/account"
-                    element={<Navigate to={defaultAccountRoute.redirect} replace />}
-                    exact={defaultAccountRoute.exact}
-                  />
-                  
-                  {/* Map through ingredient routes instead of trying to render as a component */}
-                  {ingredientRoutes.map((route, index) => (
-                    <Route 
-                      key={`ingredient-route-${index}`}
-                      path={route.path}
-                      element={route.element}
-                    />
-                  ))}
-
-                  {/* Map through product routes similar to ingredients */}
-                  {productRoutes.map((route, index) => (
-                    <Route 
-                      key={`product-route-${index}`}
-                      path={route.path}
-                      element={route.element}
-                    />
-                  ))}
-
-                  {/* Add simple redirect for the products base path */}
-                  <Route
-                    path="/products"
-                    element={<Navigate to={productRoutes[0]?.path} replace />}
-                    exact
-                  />
-
-                  {/* Make sure this is your LAST route */}
-                  <Route path="*" element={<Navigate to="/login" />} />
-                </Routes>
+              <BreadcrumbProvider>
+                {/* Replace all the Routes with your new AppRoutes component */}
+                <AppRoutes />
                 <ModalContainer />
               </BreadcrumbProvider>
             </ActionHandlerProvider>

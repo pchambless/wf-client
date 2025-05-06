@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
-import { useEntityNames } from './useEntityNames';
+import { useEntityNames } from './useEntityNames';  // Matches the named export
 
 export const useBreadcrumbs = () => {
   const [breadcrumbs, setBreadcrumbs] = useState([]);
@@ -71,7 +71,7 @@ export const useBreadcrumbs = () => {
     };
     
     generateBreadcrumbs();
-  }, [location.pathname, params]);
+  }, [location.pathname, params, getEntityName]);
   
   return { breadcrumbs };
 };

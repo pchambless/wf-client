@@ -1,11 +1,10 @@
 import React from 'react';
 import { Navigate, useParams } from 'react-router-dom';
-import IngredientTypes from './IngredientTypes';
-import Ingredients from './Ingredients';
-import IngredientBatches from './IngredientBatches';
+import IngredientTypes from '../pages/Ingredients/IngredientTypes';
+import Ingredients from '../pages/Ingredients/Ingredients';
+import IngredientBatches from '../pages/Ingredients/IngredientBatches';
 import { Box, Typography } from '@mui/material';
-import createLogger from '../../utils/logger';
-import { withMainLayout } from '../../layouts/MainLayout';
+import createLogger from '../utils/logger';
 
 // Add logging to debug component exports
 const log = createLogger('IngredientRoutes');
@@ -14,10 +13,7 @@ const log = createLogger('IngredientRoutes');
 log.debug('Component checking:', {
   isIngredientTypesComponent: typeof IngredientTypes === 'function',
   isIngredientsComponent: typeof Ingredients === 'function',
-  isIngredientBatchesComponent: typeof IngredientBatches === 'function',
-  ingredients: Ingredients,
-  ingredientsTypeof: typeof Ingredients,
-  ingredientsConstructor: Ingredients?.constructor?.name
+  isIngredientBatchesComponent: typeof IngredientBatches === 'function'
 });
 
 // Create Error Placeholder to use instead of invalid components
@@ -34,8 +30,10 @@ const AccountRedirect = () => {
   return <Navigate to={`/ingredients/${acctID}/types`} replace />;
 };
 
-// Use regular components directly without HOC that's causing issues
-const routes = [
+/**
+ * Ingredient management routes
+ */
+export const ingredientRoutes = [
   // Base redirect
   {
     path: "/ingredients",
@@ -45,29 +43,32 @@ const routes = [
   // Base redirect with account ID
   {
     path: "/ingredients/:acctID",
-    element: <AccountRedirect />  // Special component needed (explained below)
+    element: <AccountRedirect />
   },
 
   // Level 1: List of ingredient types
   {
     path: "/ingredients/types",
     element: typeof IngredientTypes === 'function' 
-      ? withMainLayout(IngredientTypes)()
-      : <ErrorPlaceholder message={`IngredientTypes component is not valid (type: ${typeof IngredientTypes})`} />
+      ? <IngredientTypes />
+      : <ErrorPlaceholder message={`IngredientTypes component is not valid`} />,
+    label: "Ingredient Types"
   },
   
-  // Level 1: List of ingredient types with account ID
+  // Ingredient types with account ID
   {
     path: "/ingredients/:acctID/types",
-    element: <IngredientTypes />
+    element: <IngredientTypes />,
+    label: "Ingredient Types"
   },
-
+  
   // Level 2: Ingredients for a specific type
   {
     path: "/ingredients/types/:ingrTypeID/ingredients",
     element: typeof Ingredients === 'function'
-      ? withMainLayout(Ingredients)()
-      : <ErrorPlaceholder message={`Ingredients component is not valid (type: ${typeof Ingredients}, constructor: ${Ingredients?.constructor?.name})`} />
+      ? <Ingredients />
+      : <ErrorPlaceholder message={`Ingredients component is not valid`} />,
+    label: "Ingredients"
   },
   
   // Level 3: Batches for a specific ingredient
@@ -75,8 +76,15 @@ const routes = [
     path: "/ingredients/types/:ingrTypeID/ingredients/:ingrID/batches",
     element: typeof IngredientBatches === 'function'
       ? <IngredientBatches />
-      : <ErrorPlaceholder message={`IngredientBatches component is not valid (type: ${typeof IngredientBatches})`} />
+      : <ErrorPlaceholder message={`IngredientBatches component is not valid`} />,
+    label: "Ingredient Batches"
+  },
+  
+  // Direct route to ingredient batches
+  {
+    path: "/ingredients/batches",
+    element: typeof IngredientBatches === 'function'
+      ? <IngredientBatches isGlobalView={true} />
+      : <ErrorPlaceholder message={`IngredientBatches component is not valid`} />
   }
 ];
-
-export default routes;

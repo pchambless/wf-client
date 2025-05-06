@@ -1,37 +1,24 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useBreadcrumbs } from '../../../contexts/BreadcrumbContext';
+import React from 'react';
 import CrudLayout from '../../../components/crud/CrudLayout';
-import columnMap from './columns';
+import getColumnMap from './columns';
 import createLogger from '../../../utils/logger';
 
 const log = createLogger('IngredientTypes');
 
 const IngredientTypes = () => {
-  const navigate = useNavigate();
-  const { setCrumbTrail, addEntityCrumb } = useBreadcrumbs();
+  // Call the function to get the column map object
+  const columnMap = getColumnMap();
   
-  useEffect(() => {
-    setCrumbTrail([
-      { label: 'Dashboard', path: '/welcome' },
-      { label: 'Ingredients', path: '/ingredients/types' }
-    ]);
-  }, [setCrumbTrail]);
-
-  useEffect(() => {
-    // Use logger for the JSON representation too
-    log.info('ColumnMap (JSON):\n' + 
-      JSON.stringify(columnMap, null, 2));
-  }, []);
+  log.debug('ColumnMap loaded:', !!columnMap);
   
   return (
     <CrudLayout
       columnMap={columnMap}
-      listEvent={columnMap.listEvent}  // Explicitly pass listEvent
-      navigate={navigate}
-      addEntityCrumb={addEntityCrumb}
+      pageTitle="Ingredient Types"
+      listEvent={columnMap.listEvent}
     />
   );
 };
 
+// Export without withMainLayout
 export default IngredientTypes;

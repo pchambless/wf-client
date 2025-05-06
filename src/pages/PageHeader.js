@@ -26,14 +26,18 @@ const PageHeader = () => {
     }
   }, [pageTitle, log]);
 
-  const accountList = useMemo(() => {
-    const list = getVar(':userAcctList') || [];
-    log.info('Account list loaded:', {
-      count: list.length,
-      accounts: list.map(a => ({ id: a.acctID, name: a.acctName }))
-    });
-    return list;
-  }, [log]);
+  // Use usePollVar for reactive data binding
+  const accountList = usePollVar(':userAcctList', []);
+
+  // Log only when the list changes
+  useEffect(() => {
+    if (accountList?.length > 0) {
+      log.info('Account list loaded:', {
+        count: accountList.length,
+        accounts: accountList.map(a => ({ id: a.acctID, name: a.acctName }))
+      });
+    }
+  }, [accountList, log]);
 
   const currentAccount = useMemo(() => getVar(':acctID'), []);
 

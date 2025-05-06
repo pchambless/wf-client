@@ -55,7 +55,7 @@ export const triggerAction = (action, payload, context = {}) => {
   
   // Store action in external store for reactive components
   if (shouldStoreInExternalStore) {
-    setVars(`%${action}`, enhancedPayload);
+    setVars({ [`%${action}`]: enhancedPayload });
   }
   
   // Dispatch to handlers
