@@ -1,6 +1,8 @@
-import { setVars, getVar, usePollVar } from '../utils/externalStore';
+import { setVars, getVar, clearAccountData, usePollVar } from '../utils/externalStore';
+import { triggerAction } from '../actions/actionStore';
 import createLogger from '../utils/logger';
 import { execEvent } from './eventStore';
+import { APP_SETTINGS } from '../config/settings'; // Make sure this path is correct
 
 const log = createLogger('AccountStore');
 
@@ -14,21 +16,17 @@ const LIST_NAMES = [
   'measList'
 ];
 
-// App settings with defaults
-const APP_SETTINGS = {
-  pageTitle: "WhatsFresh" // Note: No apostrophe as requested
-};
-
-// Initialize private state variables for lists only
+// Initialize private state variables for lists
 LIST_NAMES.forEach(name => {
   global[name] = [];
 });
 
 // Generic list management function
-const manageList = async (listName) => {
+const manageList = async (listName, accountId) => {
   try {
     log.debug(`Loading ${listName}`);
-    const items = await execEvent(listName);
+    const acctID = accountId || getVar(':acctID');
+    const items = await execEvent(listName, { acctID });
     
     if (Array.isArray(items)) {
       global[listName] = items;
@@ -46,7 +44,7 @@ const manageList = async (listName) => {
 };
 
 // Get reference data by name function
-const getRefDataByName = (listName) => {
+export const getRefDataByName = (listName) => {
   if (!LIST_NAMES.includes(listName)) {
     log.warn(`Invalid list name: ${listName}`);
     return [];
@@ -54,41 +52,32 @@ const getRefDataByName = (listName) => {
   return getVar(`:${listName}`) || [];
 };
 
-// Account management functions
-const getCurrentAccount = () => getVar(':acctID');
-const setCurrentAccount = (accountId) => setVars({ ':acctID': accountId });
-const getAccountList = () => getVar(':userAcctList') || [];
-const setAccountList = (list) => setVars({ ':userAcctList': list });
-
-// Simplified initAccountStore - just loads lists
-const initAccountStore = async () => {
-  log.info('Initializing account store');
+// Data loading functions - these are moved from initAccountStore
+export const loadAccountData = async (accountId) => {
+  log.info('Loading account data', { accountId });
+  
+  if (!accountId) {
+    log.error('No account ID provided, cannot load data');
+    return false;
+  }
   
   try {
-    // Set default page title
-    setPageTitle();
-    
-    // Load all lists in parallel
+    // Load all data for this account in parallel
     const results = await Promise.all(
-      LIST_NAMES.map(name => manageList(name))
+      LIST_NAMES.map(listName => manageList(listName, accountId))
     );
-
-    // Log results
-    results.forEach((items, index) => {
-      log.debug(`${LIST_NAMES[index]} loaded:`, {
-        count: Array.isArray(items) ? items.length : 0
-      });
-    });
-
-    return results.every(result => Array.isArray(result));
+    
+    const success = results.every(Boolean);
+    log.info(`Data loading ${success ? 'completed' : 'partially failed'}`);
+    return success;
   } catch (error) {
-    log.error('Error initializing account store:', error);
+    log.error('Failed to load account data:', error);
     return false;
   }
 };
 
 // Enhanced hook with reactive data polling
-const useAccountStore = () => {
+export const useAccountStore = () => {
   // Replace non-reactive useState implementation with usePollVar
   const ingrTypeList = usePollVar(':ingrTypeList', []);
   const prodTypeList = usePollVar(':prodTypeList', []);
@@ -111,9 +100,9 @@ const useAccountStore = () => {
   };
 };
 
-// Add individual hooks for common use cases
-const useCurrentAccount = () => usePollVar(':acctID', '');
-const useAccountList = () => usePollVar(':userAcctList', []);
+// Export hooks for common use cases
+export const useCurrentAccount = () => usePollVar(':acctID', '');
+export const useAccountList = () => usePollVar(':userAcctList', []);
 
 // Export list getters/setters
 const exports = {};
@@ -121,8 +110,53 @@ LIST_NAMES.forEach(name => {
   const getName = `get${name.charAt(0).toUpperCase() + name.slice(1)}`;
   const setName = `set${name.charAt(0).toUpperCase() + name.slice(1)}`;
   exports[getName] = () => getVar(`:${name}`) || [];
-  exports[setName] = () => manageList(name);
+  exports[setName] = (accountId) => manageList(name, accountId);
 });
+
+// Add the initialization flag here
+let isInitializing = false;
+
+export const initAccountStore = async (forceReload = false) => {
+  // Check if already initializing
+  if (isInitializing && !forceReload) {
+    log.warn('Account store initialization already in progress');
+    return false;
+  }
+  
+  isInitializing = true;
+  const accountId = getVar(':acctID');
+  
+  log.info('Initializing account store', { accountId });
+  
+  try {
+    // Clear previous account data
+    clearAccountData();
+    
+    if (!accountId) {
+      log.error('No account ID found, cannot initialize');
+      return false;
+    }
+    
+    // Initialize all data for this account in sequence
+    await Promise.all([
+      execEvent('ingrTypeList', { acctID: accountId }),
+      execEvent('prodTypeList', { acctID: accountId }),
+      execEvent('vndrList', { acctID: accountId }),
+      execEvent('brndList', { acctID: accountId }),
+      execEvent('wrkrList', { acctID: accountId }),
+      execEvent('measList', { acctID: accountId })
+    ]);
+    
+    // Signal completion with the specific account ID
+    triggerAction('ACCOUNT_INITIALIZED', { accountId });
+    return true;
+  } catch (error) {
+    log.error('Failed to initialize account store:', error);
+    return false;
+  } finally {
+    isInitializing = false;
+  }
+};
 
 // Add a function to check if lists are loaded
 export const ensureListsLoaded = async () => {
@@ -237,15 +271,16 @@ export const {
   getMeasList, setMeasList
 } = exports;
 
-// Export everything else - REMOVE ensureListsLoaded from this list
+// Define missing account functions
+const getCurrentAccount = () => getVar(':acctID');
+const setCurrentAccount = (accountId) => setVars({ ':acctID': accountId });
+const getAccountList = () => getVar(':userAcctList') || [];
+const setAccountList = (list) => setVars({ ':userAcctList': list });
+
+// Then keep your export statement at the bottom
 export {
   getCurrentAccount,
   setCurrentAccount,
   getAccountList,
-  setAccountList,
-  getRefDataByName,
-  initAccountStore,
-  useAccountStore,
-  useCurrentAccount,  // New export
-  useAccountList      // New export
+  setAccountList
 };

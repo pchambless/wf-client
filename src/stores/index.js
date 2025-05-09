@@ -25,7 +25,7 @@ export {
   getMeasList,
   setMeasList,
   getRefDataByName,
-  initAccountStore,
+  initAccountStore,  // This is the single source of truth
   useAccountStore
 } from './accountStore';
 
@@ -57,3 +57,6 @@ export {
   usePageStore,
   initPageStore
 } from './pageStore';
+
+// From formStore
+export { default as FormStore } from './formStore';
