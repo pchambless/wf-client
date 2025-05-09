@@ -1,7 +1,7 @@
 import { setVars } from '../../utils/externalStore';
 import { triggerAction } from '../actionStore';
 import { SELECTION, NAVIGATION } from '../core/constants';
-import { initAccountStore } from '../../stores/accountStore';
+import accountStore from '../../stores/accountStore'; // Import the store directly
 import createLogger from '../../utils/logger';
 
 const log = createLogger('ActionHandlers.Selection');
@@ -26,6 +26,7 @@ const selectionHandlers = {
           code: `setVars({ ':acctID': payload.item.id })`,
           implementation: (payload) => {
             log.info('Setting current account:', payload.item.id);
+            accountStore.setCurrentAcctID(payload.item.id);
             setVars({ ':acctID': payload.item.id });
           }
         },
@@ -34,7 +35,7 @@ const selectionHandlers = {
           code: `initAccountStore()`,
           implementation: async () => {
             log.info('Reinitializing account store');
-            await initAccountStore();
+            await accountStore.initializeAcctData(true);
           }
         },
         {

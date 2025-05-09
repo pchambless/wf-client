@@ -2,11 +2,11 @@ import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CrudLayout from '../../../components/crud/CrudLayout';
+import CrudLayout from '../../../components/1-page/c-crud/CrudLayout';
 import { columns } from './columns';
 import { setVars } from '../../../utils/externalStore';
 import createLogger from '../../../utils/logger';
-import NavigationHeader from '../../../components/navigation/NavigationHeader';
+import NavigationHeader from '../../../components/1-page/b-navigation/cc-PageHeader/NavigationHeader';
 import { useBreadcrumbs } from '../../../contexts/BreadcrumbContext';
 
 const log = createLogger('ProductBatches');

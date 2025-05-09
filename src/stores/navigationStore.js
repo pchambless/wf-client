@@ -1,21 +1,54 @@
-import { create } from 'zustand';
-import createLogger from '../utils/logger';
+import { makeAutoObservable } from 'mobx';
 
-const log = createLogger('navigationStore');
+class NavigationStore {
+  // Current navigation
+  currentPath = '';
+  currentPage = '';
+  pageTitle = '';
+  
+  // Breadcrumbs state
+  breadcrumbs = [];
+  
+  // Tabs state from pageStore
+  tabConfig = null;
+  activeTabIndex = 0;
+  selectedTabItems = {};
+  
+  constructor() {
+    makeAutoObservable(this);
+  }
+  
+  // Navigation methods
+  setCurrentPage(page, path) {
+    this.currentPage = page;
+    this.currentPath = path;
+  }
+  
+  // Breadcrumb methods
+  setBreadcrumbs(breadcrumbs) {
+    this.breadcrumbs = breadcrumbs;
+  }
+  
+  addBreadcrumb(crumb) {
+    this.breadcrumbs.push(crumb);
+  }
+  
+  // Tab methods
+  setTabConfig(config) {
+    this.tabConfig = config;
+  }
+  
+  setActiveTabIndex(index) {
+    this.activeTabIndex = index;
+  }
+  
+  setSelectedTabItem(tabId, item) {
+    this.selectedTabItems[tabId] = item;
+  }
+  
+  clearSelectedTabItems() {
+    this.selectedTabItems = {};
+  }
+}
 
-const useNavigationStore = create((set) => ({
-  breadcrumbs: [],
-  pageTitle: '',
-
-  setBreadcrumbs: (breadcrumbs) => {
-    const uniqueBreadcrumbs = breadcrumbs
-      .filter((item, index, array) => 
-        array.findIndex(t => t.text === item.text) === index)
-      .filter(item => item.text !== 'Home');
-    set({ breadcrumbs: uniqueBreadcrumbs });
-  },
-
-  setPageTitle: (title) => set({ pageTitle: title })
-}));
-
-export { useNavigationStore };
+export const navigationStore = new NavigationStore();

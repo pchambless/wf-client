@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import MainLayout from '../components/layout/MainLayout';
+import MainLayout from '../components/1-page/a-layout/MainLayout';
 import Login from '../pages/Login';
 import { dashboardRoutes as importedDashboardRoutes } from './dashboard';
 import { ingredientRoutes as importedIngredientRoutes } from './ingredients';

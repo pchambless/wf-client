@@ -5,11 +5,11 @@ import createLogger from '../utils/logger';
 import { setVars, getVar } from '../utils/externalStore';
 import { Box, Button, Container, TextField, Typography, Avatar, CssBaseline, CircularProgress, Alert } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { initAcctData } from '@utils/accountManager';
 
 // Import only what we need from stores
 import { 
-  execEvent,
-  initAccountStore  // Add this import
+  execEvent
 } from '../stores';
 
 const log = createLogger('Login');
@@ -61,7 +61,7 @@ const Login = () => {
 
       const { userID, lastName, firstName, roleID, userEmail, dfltAcctID } = user;
       
-      // Set user data
+      // Set ALL user data directly here in Login.js
       setVars({ 
         ':userID': userID, 
         ':roleID': roleID, 
@@ -69,30 +69,23 @@ const Login = () => {
         ':lastName': lastName, 
         ':firstName': firstName, 
         ':isAuth': "1",
-        ':acctID': dfltAcctID,
-        ':pageTitle': "WhatsFresh" // Set page title here
+        ':acctID': dfltAcctID  // Use the ID directly as returned from API
       });
 
-      // Get user's account list
+      // Get and set user's account list
       log.debug('Loading user account list');
       const accounts = await execEvent('userAcctList');
-
-      if (!Array.isArray(accounts) || accounts.length === 0) {
-        log.error('Invalid or empty account list received');
-        throw new Error('No accounts available');
-      }
-
       setVars({ ':userAcctList': accounts });
 
-      // Load all reference lists
-      log.info('Loading reference data lists...');
-      const listsLoaded = await initAccountStore();
-      if (!listsLoaded) {
-        log.warn('Some reference lists failed to load');
-      }
+      // Now call accountManager just to initialize account data
+      const success = await initAcctData(dfltAcctID);
 
-      log.info('Login successful, navigating to welcome page');
-      navigate('/welcome', { replace: true });
+      if (success) {
+        log.info('Login successful, navigating to welcome page');
+        navigate('/welcome');
+      } else {
+        throw new Error('Failed to initialize account data');
+      }
       
     } catch (error) {
       log.error('Login failed:', error);

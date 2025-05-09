@@ -1,5 +1,5 @@
-import createLogger from '../../utils/logger';
-import { setVars } from '../../utils/externalStore';
+import createLogger from '@utils/logger';
+import { setVars } from '@utils/externalStore';
 import { 
   execEvent,
   initEventTypeService,

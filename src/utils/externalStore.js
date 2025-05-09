@@ -16,7 +16,12 @@ const storeSlice = createSlice({
         state[key] = value;
       });
     },
-    clearVariables: () => ({})
+    clearVariables: () => ({}),
+    clearSpecificVariables: (state, action) => {
+      action.payload.forEach((key) => {
+        delete state[key];
+      });
+    },
   },
 });
 
@@ -66,19 +71,17 @@ const store = configureStore({
 });
 
 // 🔹 Core API Functions
+// Keep only this version:
 const setVars = (vars) => {
+  // Add safety check to prevent character-by-character setting
+  if (typeof vars !== 'object' || vars === null) {
+    log.error('setVars requires an object parameter', { 
+      receivedType: typeof vars 
+    });
+    return;
+  }
+  
   store.dispatch(storeSlice.actions.setVariables(vars));
-};
-
-// Optional improvement to externalStore.js
-// Add a more descriptive name and docstring:
-const setVarsObject = (variablesObject) => {
-  store.dispatch(storeSlice.actions.setVariables(variablesObject));
-};
-
-// Or create an alternate version that accepts key-value pairs:
-const setVar = (key, value) => {
-  store.dispatch(storeSlice.actions.setVariables({ [key]: value }));
 };
 
 const getVar = (variableName) => {
@@ -89,6 +92,21 @@ const getVar = (variableName) => {
 const clearAllVars = () => {
   store.dispatch(storeSlice.actions.clearVariables());
   log.info('All variables cleared');
+};
+
+// Add this function to clear account-specific data without removing the account list
+const clearAccountData = () => {
+  const state = store.getState();
+  const preserveKeys = [':userAcctList', ':token'];
+  
+  // Create a list of keys to clear (excluding preserved ones)
+  const keysToClear = Object.keys(state).filter(key => 
+    !preserveKeys.includes(key) && key !== 'form' && !key.startsWith('ui.')
+  );
+  
+  // Clear these keys
+  store.dispatch(storeSlice.actions.clearSpecificVariables(keysToClear));
+  log.info('Account-specific data cleared');
 };
 
 // 🔹 Memoized Selectors for Performance
@@ -133,10 +151,9 @@ const useActionEffect = (actionName, effect, dependencies = []) => {
 // 🔹 Exports
 export { 
   setVars,
-  setVarsObject,
-  setVar,
   getVar,
   clearAllVars,
+  clearAccountData,
   usePollVar,
   triggerAction,
   useActionTrigger,

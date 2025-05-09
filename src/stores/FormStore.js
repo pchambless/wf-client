@@ -17,9 +17,9 @@ class FormStore {
     this.pageMap = pageMap;
     this.formData = { ...initialData };
     
-    // Process the columnMap into form fields
-    if (pageMap?.columnMap) {
-      this.fields = this.processColumnMap(pageMap.columnMap);
+    // Process the columnMap into form fields directly
+    if (this.pageMap?.columnMap) {
+      this.fields = this.processColumnMap(this.pageMap.columnMap);
     }
     
     // Make all properties observable
@@ -242,6 +242,7 @@ class FormStore {
     
     return { groups, groupKeys: groupKeys.sort() };
   }
+  
 }
 
 export default FormStore;

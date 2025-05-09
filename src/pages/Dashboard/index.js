@@ -1,7 +1,7 @@
 import React from 'react';
 import { Grid, Paper, Typography } from '@mui/material';
 import { dashboardConfig } from './config';
-import createLogger from '../../utils/logger';
+import createLogger from '@utils/logger';
 
 const log = createLogger('Dashboard');
 

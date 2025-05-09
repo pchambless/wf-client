@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoginPresenter } from './Presenter';
 import { LoginView } from './View';
-import createLogger from '../../utils/logger';
+import createLogger from '@utils/logger';
 
 const Login = () => {
   const [loading, setLoading] = useState(true);

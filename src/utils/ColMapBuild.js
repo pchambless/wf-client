@@ -364,16 +364,44 @@ class ColMapBuild {
     return this;
   }
 
-  // Add this method to your ColMapBuild class
+  // Update your setSelects method to be more complete:
+
   setSelects(selectsConfig) {
-    this.columnMap.selects = {
-      sel1: { visible: false }, // Default all to hidden
+    // Initialize select configurations if not already done
+    this.config.selects = this.config.selects || {
+      sel1: { visible: false },
       sel2: { visible: false },
-      sel3: { visible: false },
-      ...selectsConfig  // Override with provided config
+      sel3: { visible: false }
     };
     
+    // Apply the provided configurations
+    Object.keys(selectsConfig).forEach(key => {
+      this.config.selects[key] = {
+        ...this.config.selects[key],
+        ...selectsConfig[key]
+      };
+    });
+    
     return this;
+  }
+
+  // Add a convenience method for setting up parent-child relationships
+  setHierarchy(levelConfig) {
+    // Example: 
+    // .setHierarchy({
+    //   sel1: { listEvent: 'ingrTypeList', valueField: 'id', labelField: 'name' },
+    //   sel2: { listEvent: 'ingrList', parentField: 'ingredient_type_id' }
+    // })
+    
+    this.config.hierarchy = levelConfig;
+    
+    // Automatically set up selects based on hierarchy
+    const selectsConfig = {};
+    Object.keys(levelConfig).forEach(key => {
+      selectsConfig[key] = { visible: true };
+    });
+    
+    return this.setSelects(selectsConfig);
   }
   
   build() {

@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Grid, Paper, Typography } from '@mui/material';
 import Container from '../Container';
-import createLogger from '../../utils/logger';
-import { execEvent } from '../../stores';
+import createLogger from '@utils/logger';
+import { execEvent } from '@stores';
 
 const log = createLogger('BatchMappingPage');
 

@@ -4,7 +4,7 @@ import IngredientTypes from '../pages/Ingredients/IngredientTypes';
 import Ingredients from '../pages/Ingredients/Ingredients';
 import IngredientBatches from '../pages/Ingredients/IngredientBatches';
 import { Box, Typography } from '@mui/material';
-import createLogger from '../utils/logger';
+import createLogger from '@utils/logger';
 
 // Add logging to debug component exports
 const log = createLogger('IngredientRoutes');

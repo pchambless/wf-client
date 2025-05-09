@@ -1,5 +1,5 @@
 import React from 'react';
-import CrudLayout from '../../../components/crud/CrudLayout';
+import CrudLayout from '../../../components/1-page/c-crud/CrudLayout';
 import columnMap from './columns';
 
 const WorkersPage = () => {

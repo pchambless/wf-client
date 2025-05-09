@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBreadcrumbs } from '../../../contexts/BreadcrumbContext';
-import CrudLayout from '../../../components/crud/CrudLayout';
+import CrudLayout from '@crud/CrudLayout';
 import columnMap from './columns';
-import createLogger from '../../../utils/logger';
-import { setVars } from '../../../utils/externalStore';
+import createLogger from '@utils/logger';
+import { setVars } from '@utils/externalStore';
 
 const log = createLogger('Ingredients');
 

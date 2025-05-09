@@ -5,7 +5,7 @@ import { BrowserRouter as Router } from 'react-router-dom';  // Remove unused Ro
 import { Provider } from 'react-redux';
 import store from './utils/externalStore';
 import ErrorBoundary from './components/ErrorBoundary';
-import Modal from './components/modal/Modal';
+import Modal from './components/3-common/a-modal/Modal';
 import { useModalStore } from './stores/modalStore';
 import createLogger, { configureLogger } from './utils/logger';
 import { disableBrowserFetchLogs } from './utils/fetchLogHelper';

@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
-import CrudLayout from '../../../components/crud/CrudLayout';
+import CrudLayout from '../../../components/1-page/c-crud/CrudLayout';
 import { columns } from './columns';
-import NavigationHeader from '../../../components/navigation/NavigationHeader';
+import NavigationHeader from '../../../components/1-page/b-navigation/cc-PageHeader/NavigationHeader';
 import { useBreadcrumbs } from '../../../contexts/BreadcrumbContext';
 import createLogger from '../../../utils/logger';
 

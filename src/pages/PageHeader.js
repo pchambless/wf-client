@@ -1,7 +1,7 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useCallback, useState } from 'react';
 import { AppBar, Toolbar, Typography, Select, MenuItem, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { getVar, setVars, clearAllVars, usePollVar } from '../utils/externalStore';
+import { getVar, setVars, clearAllVars, usePollVar, clearAccountData, triggerAction } from '../utils/externalStore';
 import logo from '../assets/wf-icon.png';
 import LogoutIcon from '@mui/icons-material/Logout';
 import createLogger from '../utils/logger';
@@ -10,6 +10,8 @@ import { initAccountStore } from '../stores';
 const PageHeader = () => {
   const navigate = useNavigate();
   const log = useMemo(() => createLogger('PageHeader'), []);
+  
+  const [isLoading, setIsLoading] = useState(false);
   
   // Use usePollVar with a default value and reasonable interval
   // This eliminates the need for manual polling and state management
@@ -39,31 +41,48 @@ const PageHeader = () => {
     }
   }, [accountList, log]);
 
-  const currentAccount = useMemo(() => getVar(':acctID'), []);
+  const currentAccount = usePollVar(':acctID');
 
-  const handleAccountChange = async (event) => {
+  const handleAccountChange = useCallback(async (event) => {
     const newAccountId = event.target.value;
     log.info('Switch account', { from: currentAccount, to: newAccountId });
 
+    // Prevent repeated initialization by disabling UI temporarily
+    setIsLoading(true);
+
     try {
+      // 1. Clear any existing data for the old account
+      // Use a special method that doesn't clear the account list itself
+      clearAccountData(); // Create this function in externalStore.js
+      
+      // 2. Set the new account ID first
       setVars({ 
         ':acctID': newAccountId,
         ':pageTitle': 'What\'s Fresh'
       });
-
+      
       log.info('Initializing data for new account');
+      
+      // 3. Use a debounced initialization with a loading indicator
       const success = await initAccountStore();
-
+      
       if (!success) {
         throw new Error('Failed to initialize account data');
       }
-
+      
+      // 4. Force a refresh of data that depends on the account
+      triggerAction('ACCOUNT_CHANGED', { accountId: newAccountId });
+      
       log.info('Account switched successfully, navigating to welcome page');
       navigate('/welcome', { replace: true });
     } catch (error) {
       log.error('Error switching accounts:', error);
+      // Revert to previous account if there's an error
+      setVars({ ':acctID': currentAccount });
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [currentAccount, log, navigate]);
 
   const handleLogout = () => {
     log.info('Logging out');

@@ -1,5 +1,5 @@
 import React from 'react';
-import { PageHeader, PageContent } from '../components/layout';
+import { PageHeader, PageContent } from '../components/1-page/a-layout';
 import { 
   Typography, 
   Grid, 
