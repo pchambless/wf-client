@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import createLogger from '../utils/logger';
-import { clearAllVars, setVars, getVar } from '../utils/externalStore';
+import { clearAllVars, setVars, getVar } from '../utils/externalStoreDel';
 
 const GlobalContext = createContext();
 

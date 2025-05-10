@@ -4,7 +4,7 @@ import { Box, Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CrudLayout from '../../../components/1-page/c-crud/CrudLayout';
 import { columns } from './columns';
-import { setVars } from '../../../utils/externalStore';
+import { setVars } from '../../../utils/externalStoreDel';
 import createLogger from '../../../utils/logger';
 import NavigationHeader from '../../../components/1-page/b-navigation/cc-PageHeader/NavigationHeader';
 import { useBreadcrumbs } from '../../../contexts/BreadcrumbContext';

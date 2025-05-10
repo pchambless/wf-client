@@ -1,5 +1,5 @@
 import createLogger from '@utils/logger';
-import { getVar, setVars } from '@utils/externalStore'; // Add getVar import
+import { getVar, setVars } from '@utils/externalStoreDel'; // Add getVar import
 import { execEvent } from '@stores/eventStore'; // Add execEvent import
 import crudDML from '@utils/DML/crudDML';
 

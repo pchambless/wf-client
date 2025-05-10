@@ -2,7 +2,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 import ButtonGroupNav from './ButtonGroupNav';
 import SelectWidgetGroup from '../../navigation/SelectWidgetGroup';
-import { usePollVar } from '../../../utils/externalStore';
+import { usePollVar } from '../../../utils/externalStoreDel';
 import createLogger from '../../../utils/logger';
 
 const log = createLogger('NavContainer');

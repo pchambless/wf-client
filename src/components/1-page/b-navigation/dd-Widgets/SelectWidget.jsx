@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { FormControl, InputLabel, Select, MenuItem, Box, CircularProgress } from '@mui/material';
-import { usePollVar, setVars, triggerAction } from '@utils/externalStore';
+import { usePollVar, setVars, triggerAction } from '@utils/externalStoreDel';
 import createLogger from '@utils/logger';
 
 const log = createLogger('SelectWidget');

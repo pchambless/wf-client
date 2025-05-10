@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '../components/1-page/a-layout/MainLayout';
-import Login from '../pages/Login';
+import Login from '../pages/Login/index';
 import { dashboardRoutes as importedDashboardRoutes } from './dashboard';
 import { ingredientRoutes as importedIngredientRoutes } from './ingredients';
 import { productRoutes as importedProductRoutes } from './products';

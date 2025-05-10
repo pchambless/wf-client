@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/wf-icon.png';
 import createLogger from '../utils/logger';
-import { setVars, getVar } from '../utils/externalStore';
+import { setVars, getVar } from '../utils/externalStoreDel';
 import { Box, Button, Container, TextField, Typography, Avatar, CssBaseline, CircularProgress, Alert } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { initAcctData } from '@utils/accountManager';

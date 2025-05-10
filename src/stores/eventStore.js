@@ -1,6 +1,6 @@
 import createLogger from '../utils/logger';
 import { fetchEventList, execEventType } from '../api/api';
-import { getVar } from '../utils/externalStore';
+import accountStore from './accountStore';
 
 const log = createLogger('EventStore');
 const executionCache = new Map();
@@ -30,11 +30,98 @@ export const getEventTypeConfig = (eventType) => {
   return config;
 };
 
-// Execute event with parameter resolution
-export const execEvent = async (eventConfig, params = {}) => {
+// Resolve all parameters at once
+function resolveParams(requiredParams, params = {}, varMap = {}) {
+  const result = {};
+  const missing = [];
+  
+  // Debug logs to see what's coming in
+  console.log('Resolving params:', {
+    requiredParams,
+    providedParams: params,
+    varMap: Object.keys(varMap)
+  });
+  
+  for (const param of requiredParams) {
+    // Debug each parameter resolution attempt
+    console.log(`Resolving parameter: ${param}`);
+    console.log(`Direct params has ${param}?`, param in params);
+    console.log(`Direct params keys:`, Object.keys(params));
+    
+    // Check direct params
+    if (param in params) {
+      result[param] = params[param];
+      console.log(`Found in direct params: ${param} = ${params[param]}`);
+      continue;
+    }
+    
+    // Check varMap (same checks as above)
+    if (param in varMap) {
+      const valueOrFn = varMap[param];
+      result[param] = typeof valueOrFn === 'function' ? valueOrFn() : valueOrFn;
+      console.log(`Found in varMap: ${param}`);
+      continue;
+    }
+    
+    // Check accountStore common params
+    if (param === ':acctID') {
+      result[param] = accountStore.currentAcctID;
+      console.log(`Resolved from accountStore: ${param} = ${accountStore.currentAcctID}`);
+      continue;
+    }
+    if (param === ':userID') {
+      result[param] = accountStore.currentUser?.userID;
+      console.log(`Resolved from accountStore: ${param} = ${accountStore.currentUser?.userID}`);
+      continue;
+    }
+    if (param === ':userEmail') {
+      result[param] = accountStore.currentUser?.userEmail;
+      console.log(`Resolved from accountStore: ${param} = ${accountStore.currentUser?.userEmail}`);
+      continue;
+    }
+    if (param === ':firstName') {
+      result[param] = accountStore.currentUser?.firstName;
+      console.log(`Resolved from accountStore: ${param} = ${accountStore.currentUser?.firstName}`);
+      continue;
+    }
+    if (param === ':lastName') {
+      result[param] = accountStore.currentUser?.lastName;
+      console.log(`Resolved from accountStore: ${param} = ${accountStore.currentUser?.lastName}`);
+      continue;
+    }
+    if (param === ':roleID') {
+      result[param] = accountStore.currentUser?.roleID;
+      console.log(`Resolved from accountStore: ${param} = ${accountStore.currentUser?.roleID}`);
+      continue;
+    }
+    
+    // Check entity selections
+    const key = param.startsWith(':') ? param.substring(1) : param;
+    const selectedValue = accountStore.getSelectedEntity(key);
+    if (selectedValue !== undefined) {
+      result[param] = selectedValue;
+      console.log(`Resolved from entity selection: ${param} = ${selectedValue}`);
+      continue;
+    }
+    
+    // Parameter not found
+    console.log(`Could not resolve parameter: ${param}`);
+    missing.push(param);
+  }
+  
+  console.log('Parameter resolution results:', {
+    resolved: Object.keys(result),
+    missing
+  });
+  
+  return { resolved: result, missing };
+}
+
+// Execute event with caller-provided variable map
+export const execEvent = async (eventConfig, params = {}, varMap = {}) => {
   const cacheKey = JSON.stringify({ event: eventConfig, params });
   
-  // Check cache first
+  // Check cache first - no changes needed here
   if (executionCache.has(cacheKey)) {
     log.debug('Using cached execution:', eventConfig);
     return executionCache.get(cacheKey);
@@ -43,12 +130,12 @@ export const execEvent = async (eventConfig, params = {}) => {
   // Create promise for this execution
   const executionPromise = new Promise(async (resolve, reject) => {
     try {
-      // Get event config and validate
+      // Get event config and validate - no changes needed here
       let config;
       try {
         config = getEventTypeConfig(eventConfig);
       } catch (error) {
-        // Enhanced error message for missing event type with suggestions
+        // Enhanced error message handling
         const availableEvents = eventTypes.map(e => e.eventType);
         const suggestions = availableEvents
           .filter(e => e.includes(eventConfig.replace('By', '')))
@@ -62,27 +149,23 @@ export const execEvent = async (eventConfig, params = {}) => {
         throw new Error(errorMsg);
       }
 
-      // Resolve parameters once with full context
+      // Resolve all parameters in one step
       const requiredParams = config.params || [];
-      const resolvedParams = {};
+      const { resolved, missing } = resolveParams(requiredParams, params, varMap);
       
-      for (const param of requiredParams) {
-        const value = getVar(param);
-        if (value === undefined) {
-          log.error('Missing parameter:', { event: eventConfig, param });
-          throw new Error(`Missing required parameter: ${param}`);
-        }
-        resolvedParams[param] = value;
+      if (missing.length > 0) {
+        log.error('Missing parameters:', { event: eventConfig, missing });
+        throw new Error(`Missing required parameters: ${missing.join(', ')}`);
       }
-
+      
       // Single debug log with full execution context
       log.debug('Execute event:', { 
         type: eventConfig,
-        params: resolvedParams,
+        params: resolved,
         config: config.name
       });
       
-      const response = await execEventType(eventConfig, resolvedParams);
+      const response = await execEventType(eventConfig, resolved);
       
       // Clear cache after debounce
       setTimeout(() => {

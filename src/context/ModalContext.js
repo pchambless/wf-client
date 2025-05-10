@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useMemo, useCallback, useEffect, useRef } from 'react';
-import { getVar } from '../utils/externalStore';
+import { getVar } from '../utils/externalStoreDel';
 import Modal from '../components/3-common/a-modal/Modal'; // Import the renamed Modal component
 
 const ModalContext = createContext();

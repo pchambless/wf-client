@@ -3,7 +3,7 @@ import { FormControl } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import createLogger from '../../utils/logger';
-import { getVar } from '../../utils/externalStore';
+import { getVar } from '../../utils/externalStoreDel';
 
 const Select = ({ 
   placeholder, 

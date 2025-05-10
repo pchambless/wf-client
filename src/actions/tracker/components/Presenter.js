@@ -1,5 +1,5 @@
 import createLogger from '../../../utils/logger';
-import { getVar } from '../../../utils/externalStore';
+import { getVar } from '../../../utils/externalStoreDel';
 
 const log = createLogger('ActionTracker'); // Create but use sparingly
 

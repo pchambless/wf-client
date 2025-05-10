@@ -3,7 +3,7 @@ import {
   Table, TableBody, TableCell, TableContainer, 
   TableHead, TableRow, Paper, Typography 
 } from '@mui/material';
-import { usePollVar } from '../../../utils/externalStore';
+import { usePollVar } from '../../../utils/externalStoreDel';
 import { ActionColumns } from './columns/actionsColumns';
 
 const TrackerTable = () => {

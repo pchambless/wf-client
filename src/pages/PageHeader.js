@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect, useCallback, useState } from 'react';
 import { AppBar, Toolbar, Typography, Select, MenuItem, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { getVar, setVars, clearAllVars, usePollVar, clearAccountData, triggerAction } from '../utils/externalStore';
+import { getVar, setVars, clearAllVars, usePollVar, clearAccountData, triggerAction } from '../utils/externalStoreDel';
 import logo from '../assets/wf-icon.png';
 import LogoutIcon from '@mui/icons-material/Logout';
 import createLogger from '../utils/logger';

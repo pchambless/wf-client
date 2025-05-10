@@ -1,4 +1,4 @@
-import { setVars, getVar } from '../utils/externalStore';
+import { setVars, getVar } from '../utils/externalStoreDel';
 import createLogger from '../utils/logger';
 import * as constants from './core/constants';
 import { registerActionHandlers } from './actionHandlers';

@@ -1,4 +1,4 @@
-import { setVars } from '../../utils/externalStore';
+import { setVars } from '../../utils/externalStoreDel';
 import { triggerAction } from '../actionStore';
 import { SELECTION, NAVIGATION } from '../core/constants';
 import accountStore from '../../stores/accountStore'; // Import the store directly

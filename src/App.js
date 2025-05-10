@@ -3,7 +3,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { BrowserRouter as Router } from 'react-router-dom';  // Remove unused Route, Routes, Navigate
 import { Provider } from 'react-redux';
-import store from './utils/externalStore';
+import store from './utils/externalStoreDel';
 import ErrorBoundary from './components/ErrorBoundary';
 import Modal from './components/3-common/a-modal/Modal';
 import { useModalStore } from './stores/modalStore';

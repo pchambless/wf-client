@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, FormControl, Select, MenuItem, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { usePollVar } from '@utils/externalStore';
+import { usePollVar } from '@utils/externalStoreDel';
 import { setAccount } from '@utils/accountManager';
 import createLogger from '@utils/logger';
 

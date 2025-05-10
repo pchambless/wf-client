@@ -1,5 +1,5 @@
 import createLogger from '../utils/logger';
-import { setVar, getVar } from './externalStore';
+import { setVar, getVar } from './externalStoreDel';
 
 const log = createLogger('acctLists');
 

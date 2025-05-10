@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import SidebarNav from '@sidebar/SidebarNav';
-import { usePollVar } from '@utils/externalStore';
+import { usePollVar } from '@utils/externalStoreDel';
 import createLogger from '@utils/logger';
 import { setAccount } from '@utils/accountManager';
 

@@ -4,7 +4,7 @@ import { useBreadcrumbs } from '../../../contexts/BreadcrumbContext';
 import CrudLayout from '@crud/CrudLayout';
 import columnMap from './columns';
 import createLogger from '@utils/logger';
-import { setVars } from '@utils/externalStore';
+import { setVars } from '@utils/externalStoreDel';
 
 const log = createLogger('Ingredients');
 

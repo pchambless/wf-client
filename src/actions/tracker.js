@@ -1,4 +1,4 @@
-import { setVars, getVar } from '../utils/externalStore';
+import { setVars, getVar } from '../utils/externalStoreDel';
 import createLogger from '../utils/logger';
 
 const log = createLogger('ActionTracker');

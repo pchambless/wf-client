@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { getVar } from '../utils/externalStore';
+import { getVar } from '../utils/externalStoreDel';
 import createLogger from '../utils/logger';
 
 const log = createLogger('ProtectedRoute');

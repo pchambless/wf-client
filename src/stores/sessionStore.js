@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { setVars, getVar, clearAllVars } from '../utils/externalStore';
+import { setVars, getVar, clearAllVars } from '../utils/externalStoreDel';
 import createLogger from '../utils/logger';
 
 const log = createLogger('SessionStore');

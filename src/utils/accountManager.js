@@ -1,5 +1,4 @@
-import { getVar, setVars, clearAccountData } from './externalStore';
-import accountStore from '../stores/accountStore'; // Import the store itself
+import accountStore from '../stores/accountStore';
 import { setPageTitle } from '../stores/pageStore';
 import { triggerAction } from '../actions/actionStore';
 import createLogger from './logger';
@@ -10,7 +9,7 @@ const log = createLogger('AccountManager');
  * Set or switch account - handles both initial account and account switching
  */
 export const setAccount = async (accountId) => {
-  const currentAccount = getVar(':acctID');
+  const currentAccount = accountStore.currentAcctID;
   const isInitialSetup = !currentAccount;
   
   if (accountId === currentAccount) {
@@ -28,12 +27,12 @@ export const setAccount = async (accountId) => {
   try {
     // Clear any existing account data first (if not initial setup)
     if (!isInitialSetup) {
-      clearAccountData();
+      // Replace clearAccountData with accountStore method
+      accountStore.clearAcctData();
     }
     
-    // Set the account ID in both MobX and external store
+    // Set the account ID using just the MobX store
     accountStore.setCurrentAcctID(accountId);
-    setVars({ ':acctID': accountId });
     
     // Reset page title to default
     setPageTitle();
@@ -58,7 +57,6 @@ export const setAccount = async (accountId) => {
     
     // Revert to previous account if this wasn't initial setup
     if (!isInitialSetup && currentAccount) {
-      setVars({ ':acctID': currentAccount });
       accountStore.setCurrentAcctID(currentAccount);
     }
     
@@ -70,8 +68,9 @@ export const setAccount = async (accountId) => {
  * Get formatted account info for display
  */
 export const getCurrentAccountInfo = () => {
-  const acctID = getVar(':acctID');
-  const acctList = getVar(':userAcctList') || [];
+  // Get data from MobX store instead of getVar
+  const acctID = accountStore.currentAcctID;
+  const acctList = accountStore.userAcctList || [];
   
   // Ensure consistent type comparison
   const account = acctList.find(a => 
@@ -108,17 +107,8 @@ export const setupUserAccount = async (userData, accountList, defaultAccountId) 
     accountStore.setUserAcctList(accountList);
     accountStore.setCurrentAcctID(defaultAccountId);
     
-    // Set vars for backward compatibility
-    setVars({ 
-      ':userID': userData.userID, 
-      ':roleID': userData.roleID, 
-      ':userEmail': userData.userEmail,
-      ':lastName': userData.lastName, 
-      ':firstName': userData.firstName, 
-      ':isAuth': "1",
-      ':acctID': String(defaultAccountId),
-      ':userAcctList': accountList
-    });
+    // Remove setVars call - everything is now in accountStore
+    // (and potentially other stores for different state domains)
     
     // Now fully initialize the account
     const success = await accountStore.initializeAcctData(true);

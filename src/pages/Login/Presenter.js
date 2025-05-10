@@ -1,12 +1,9 @@
-import createLogger from '@utils/logger';
-import { setVars } from '@utils/externalStore';
+import createLogger from '../../utils/logger';
+import accountStore from '../../stores/accountStore';
+import navigationStore from '../../stores/navigationStore';
 import { 
   execEvent,
-  initEventTypeService,
-  setCurrentAccount,
-  initConfigStore,
-  initAccountStore,
-  initFormStore
+  initEventTypeService
 } from '../../stores';
 
 export class LoginPresenter {
@@ -32,39 +29,61 @@ export class LoginPresenter {
   }
 
   async initApplicationState(user, accounts) {
-    const { userID, lastName, firstName, roleID, userEmail, dfltAcctID } = user;
-
     try {
-      // Set page title as part of application initialization
-      setVars({
-        ':pageTitle': "WhatsFresh",
-        ':userID': userID,
-        ':lastName': lastName,
-        ':firstName': firstName,
-        ':roleID': roleID,
-        ':userEmail': userEmail,
-        ':acctID': dfltAcctID,
-        ':isAuth': '1'
-      });
-   
-      // Initialize config store
-      await initConfigStore();
+      // Set up navigation first
+      navigationStore.setPageTitle("WhatsFresh");
       
-      // Set current account
-      setCurrentAccount(dfltAcctID);
+      // Update account store with user data - this replaces setVars
+      accountStore.setUserData(user);
+      accountStore.setUserAcctList(accounts);
       
-      // Initialize account store
-      const accountInitSuccess = await initAccountStore(dfltAcctID);
-      if (!accountInitSuccess) {
-        throw new Error('Failed to initialize account store');
-      }
+      // Load reference data
+      await this.loadReferenceData();
       
-      // Initialize form store
-      await initFormStore();
-
       return true;
     } catch (error) {
       this.log.error('Error initializing application state:', error);
+      throw error;
+    }
+  }
+  
+  async loadReferenceData() {
+    try {
+      if (!accountStore.currentAcctID) {
+        throw new Error('No account ID available for loading reference data');
+      }
+      
+      // Load account-specific reference data
+      const acctID = accountStore.currentAcctID;
+      
+      const [
+        ingrTypes, 
+        prodTypes,
+        measures,
+        brands,
+        vendors,
+        workers
+      ] = await Promise.all([
+        execEvent('ingrTypeList', { ':acctID': acctID }),
+        execEvent('prodTypeList', { ':acctID': acctID }),
+        execEvent('measList'),
+        execEvent('brndList', { ':acctID': acctID }),
+        execEvent('vndrList', { ':acctID': acctID }),
+        execEvent('wrkrList', { ':acctID': acctID })
+      ]);
+      
+      // Update store with results
+      accountStore.setIngrTypeList(ingrTypes);
+      accountStore.setProdTypeList(prodTypes);
+      accountStore.setMeasList(measures);
+      accountStore.setBrndList(brands);
+      accountStore.setVndrList(vendors);
+      accountStore.setWrkrList(workers);
+      
+      this.log.info('Reference data loaded successfully');
+      return true;
+    } catch (error) {
+      this.log.error('Failed to load reference data', error);
       throw error;
     }
   }
@@ -72,10 +91,16 @@ export class LoginPresenter {
   async handleLogin(credentials) {
     this.log.info('Login attempt started');
     try {
-      // Check if EventTypeService is initialized
-      const response = await execEvent('login', credentials);
+      this.log.info('Sending login request...');
+      
+      // Using direct params for credential passing
+      const result = await execEvent('userLogin', {
+        ':userEmail': credentials.email,
+        ':enteredPassword': credentials.password
+      });
+      
       this.log.info('Login response received');
-      return response;
+      return result;
     } catch (error) {
       this.log.error('Login failed:', error);
       throw error;

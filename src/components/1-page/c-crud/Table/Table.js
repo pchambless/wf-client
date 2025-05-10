@@ -3,7 +3,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Box, IconButton, Tooltip } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import createLogger from '@utils/logger';
-import { triggerAction, setVars } from '@utils/externalStore';
+import { triggerAction, setVars } from '@utils/externalStoreDel';
 import { SELECTION } from '@actions/actionStore';
 
 const log = createLogger('Table.Component');

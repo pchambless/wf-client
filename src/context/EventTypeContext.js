@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { execEventType } from '../api/api';
 import createLogger from '../utils/logger';
-import { getVar } from '../utils/externalStore';
+import { getVar } from '../utils/externalStoreDel';
 import { useGlobalContext } from '../context/GlobalContext'; 
 
 const EventTypeContext = createContext();

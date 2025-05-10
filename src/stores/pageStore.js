@@ -1,5 +1,5 @@
 import createLogger from '../utils/logger';
-import { getVar, setVars } from '../utils/externalStore';
+import { getVar, setVars } from '../utils/externalStoreDel';
 
 const log = createLogger('PageStore');
 

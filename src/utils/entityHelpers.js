@@ -1,4 +1,4 @@
-import { setVar, getVar } from './externalStore';
+import { setVar, getVar } from './externalStoreDel';
 
 // Map entity types to their variable names
 const entityVarMap = {

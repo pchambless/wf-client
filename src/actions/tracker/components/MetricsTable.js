@@ -4,7 +4,7 @@ import {
   TableHead, TableRow, Paper, Box, Button 
 } from '@mui/material';
 import tracker from '../../../tracker';
-import { usePollVar, triggerAction } from '../../../utils/externalStore';
+import { usePollVar, triggerAction } from '../../../utils/externalStoreDel';
 import { MetricsColumns } from './columns/metricsColumns';
 
 const MetricsTable = () => {

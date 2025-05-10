@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import IngredientTypes from '../pages/Ingredients/IngredientTypes';
 import Ingredients from '../pages/Ingredients/Ingredients';
 import IngredientBatches from '../pages/Ingredients/IngredientBatches';
@@ -16,7 +16,7 @@ log.debug('Component checking:', {
   isIngredientBatchesComponent: typeof IngredientBatches === 'function'
 });
 
-// Create Error Placeholder to use instead of invalid components
+// Error placeholder component
 const ErrorPlaceholder = ({ message }) => (
   <Box sx={{ p: 3, border: '1px solid red', borderRadius: 1 }}>
     <Typography color="error" variant="h6">Component Error</Typography>
@@ -24,67 +24,40 @@ const ErrorPlaceholder = ({ message }) => (
   </Box>
 );
 
-// Create this component to handle the parameterized redirect
-const AccountRedirect = () => {
-  const { acctID } = useParams();
-  return <Navigate to={`/ingredients/${acctID}/types`} replace />;
-};
-
 /**
- * Ingredient management routes
+ * Ingredient management routes - CLEAN IMPLEMENTATION
  */
 export const ingredientRoutes = [
-  // Base redirect
+  // Core path 3: Ingredient Batches
   {
-    path: "/ingredients",
-    element: <Navigate to="/ingredients/types" replace />
-  },
-  
-  // Base redirect with account ID
-  {
-    path: "/ingredients/:acctID",
-    element: <AccountRedirect />
-  },
-
-  // Level 1: List of ingredient types
-  {
-    path: "/ingredients/types",
-    element: typeof IngredientTypes === 'function' 
-      ? <IngredientTypes />
-      : <ErrorPlaceholder message={`IngredientTypes component is not valid`} />,
-    label: "Ingredient Types"
-  },
-  
-  // Ingredient types with account ID
-  {
-    path: "/ingredients/:acctID/types",
-    element: <IngredientTypes />,
-    label: "Ingredient Types"
-  },
-  
-  // Level 2: Ingredients for a specific type
-  {
-    path: "/ingredients/types/:ingrTypeID/ingredients",
-    element: typeof Ingredients === 'function'
-      ? <Ingredients />
-      : <ErrorPlaceholder message={`Ingredients component is not valid`} />,
-    label: "Ingredients"
-  },
-  
-  // Level 3: Batches for a specific ingredient
-  {
-    path: "/ingredients/types/:ingrTypeID/ingredients/:ingrID/batches",
+    path: "/ingredients/:ingrID/batches",
     element: typeof IngredientBatches === 'function'
       ? <IngredientBatches />
       : <ErrorPlaceholder message={`IngredientBatches component is not valid`} />,
     label: "Ingredient Batches"
   },
   
-  // Direct route to ingredient batches
+  // Core path 2: Ingredients for a specific type
   {
-    path: "/ingredients/batches",
-    element: typeof IngredientBatches === 'function'
-      ? <IngredientBatches isGlobalView={true} />
-      : <ErrorPlaceholder message={`IngredientBatches component is not valid`} />
+    path: "/ingredients/:ingrTypeID/ingredients",
+    element: typeof Ingredients === 'function'
+      ? <Ingredients />
+      : <ErrorPlaceholder message={`Ingredients component is not valid`} />,
+    label: "Ingredients"
+  },
+  
+  // Core path 1: Ingredient Types with account ID
+  {
+    path: "/ingredients/:acctID",
+    element: typeof IngredientTypes === 'function'
+      ? <IngredientTypes />
+      : <ErrorPlaceholder message={`IngredientTypes component is not valid`} />,
+    label: "Ingredient Types"
+  },
+  
+  // Base route - redirect to welcome
+  {
+    path: "/ingredients",
+    element: <Navigate to="/welcome" replace />
   }
 ];
