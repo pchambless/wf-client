@@ -1,7 +1,7 @@
 // accountStore.js - Clean MobX implementation with correct naming
 import { makeAutoObservable } from 'mobx';
 import React from 'react';
-import createLogger from '../utils/logger';
+import createLogger from '@utils/logger';
 
 const log = createLogger('AccountStore');
 const STORAGE_KEY = 'whatsfresh_account_state';
@@ -106,8 +106,9 @@ class AccountStore {
     log.debug('Entity selected', { entityType, id });
   }
   
+  // Get a selected entity by type
   getSelectedEntity(entityType) {
-    return this.entitySelections[entityType];
+    return this.entitySelections?.[entityType] || null;
   }
   
   // Logout - clear sensitive data
@@ -141,6 +142,8 @@ class AccountStore {
   setBrndList(data) { this.brndList = data || []; }
   setVndrList(data) { this.vndrList = data || []; }
   setWrkrList(data) { this.wrkrList = data || []; }
+  
+ 
 }
 
 const accountStore = new AccountStore();

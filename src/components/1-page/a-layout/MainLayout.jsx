@@ -1,69 +1,75 @@
-import React, { useState } from 'react';
-import { Box, useMediaQuery, useTheme } from '@mui/material';
-import { Outlet } from 'react-router-dom';
-import Sidebar from '@components/1-page/b-navigation/bb-Sidebar/Sidebar';
-import AppBar from '@appbar/AppBar';
-import Breadcrumbs from '@pageheader/Breadcrumbs';
+import React, { Suspense } from 'react';
+import { Box, Typography, Container, CircularProgress } from '@mui/material';
+import { Outlet, useLocation } from 'react-router-dom';
+import AppBar from '@navigation/AppBar';
+import { navigationConfig } from '@config/navigationConfig';
+import Sidebar from '@navigation/bb-Sidebar';
 
-/**
- * MainLayout provides the application shell with sidebar, header, and content area
- * All routes that require the standard application layout should be nested under this component
- */
+const SIDEBAR_WIDTH = 240;
+
 const MainLayout = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
-  
-  const handleToggleSidebar = () => {
-    setSidebarOpen(prev => !prev);
-  };
-  
-  const handleCloseSidebar = () => {
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
-  };
+  const location = useLocation();
   
   return (
     <Box sx={{ 
-      display: 'flex', 
-      minHeight: '100vh',
-      bgcolor: 'background.default'
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      width: '100vw',
+      overflow: 'hidden',
+      position: 'relative',
+      bgcolor: '#f5f5f5',
     }}>
-      {/* Sidebar */}
-      <Sidebar 
-        open={sidebarOpen} 
-        onClose={handleCloseSidebar} 
-      />
+      {/* App Bar - fixed at top */}
+      <Box sx={{ width: '100%', height: '64px', zIndex: 1100 }}>
+        <AppBar />
+      </Box>
       
-      {/* Main content area */}
+      {/* Content area with sidebar and main content */}
       <Box sx={{ 
-        flexGrow: 1, 
-        p: 0,
-        ...(sidebarOpen && {
-          marginLeft: { xs: 0, md: '0px' },
-        }),
+        display: 'flex', 
+        flexGrow: 1,
+        height: 'calc(100vh - 64px)',
+        overflow: 'hidden'
       }}>
-        {/* App header */}
-        <AppBar 
-          sidebarOpen={sidebarOpen} 
-          onToggleSidebar={handleToggleSidebar} 
-        />
+        {/* Sidebar */}
+        <Box sx={{ 
+          width: SIDEBAR_WIDTH, 
+          flexShrink: 0,
+          height: '100%',
+          overflow: 'auto',
+          borderRight: '1px solid #e0e0e0',
+          bgcolor: 'background.paper'
+        }}>
+          <Suspense fallback={<CircularProgress />}>
+            {navigationConfig ? (
+              <Sidebar 
+                open={true}
+                onClose={() => {}}
+                navigation={navigationConfig}
+                currentPath={location.pathname}
+              />
+            ) : (
+              <Typography color="error">
+                Navigation config is missing!
+              </Typography>
+            )}
+          </Suspense>
+        </Box>
         
-        {/* Replace BreadcrumbDisplay with the correct component */}
-        <Breadcrumbs />
-        
-        {/* Page content - renders child routes */}
-        <Box 
-          component="main" 
-          sx={{ 
-            flexGrow: 1, 
-            px: 1,  // Reduce horizontal padding to just 1 unit (8px)
-            py: 1,   // Reduce vertical padding
-            pt: 0    // Keep top padding at 0
-          }}
-        >
-          <Outlet />
+        {/* Main content area */}
+        <Box sx={{ 
+          flexGrow: 1,
+          height: '100%',
+          overflow: 'auto',
+          p: 3,
+          bgcolor: '#ffffff',
+          boxShadow: 'inset 0 0 10px rgba(0,0,0,0.1)'
+        }}>
+          {/* The outlet for nested routes */}
+          <Container maxWidth="xl">
+            <Outlet />
+          </Container>
         </Box>
       </Box>
     </Box>

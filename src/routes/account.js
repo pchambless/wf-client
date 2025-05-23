@@ -1,8 +1,9 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import BrandsPage from '../pages/Account/Brands';
-import VendorsPage from '../pages/Account/Vendors';
-import WorkersPage from '../pages/Account/Workers';
+import { ROUTES } from '../config/RouteConstants';
+import BrandsPage from '@pages/4-Account/01-Brands';
+import VendorsPage from '@pages/4-Account/02-Vendors';
+import WorkersPage from '@pages/4-Account/03-Workers';
 import createLogger from '../utils/logger';
 
 const log = createLogger('AccountRoutes');
@@ -15,35 +16,36 @@ log.debug('Component checking:', {
 });
 
 /**
- * Account management routes
+ * Account management routes - using RouteConstants as source of truth
  */
 export const accountRoutes = [
+  // Brands
   {
-    path: '/account/brands',
-    element: <BrandsPage />,
-    label: 'Brands',
-    listEvent: 'brndList'
+    ...ROUTES.BRANDS,
+    element: <BrandsPage />
   },
+  
+  // Vendors
   {
-    path: '/account/vendors',
-    element: <VendorsPage />,
-    label: 'Vendors',
-    listEvent: 'vndrList'
+    ...ROUTES.VENDORS,
+    element: <VendorsPage />
   },
+  
+  // Workers
   {
-    path: '/account/workers',
-    element: <WorkersPage />,
-    label: 'Workers',
-    listEvent: 'wrkrList'
+    ...ROUTES.WORKERS,
+    element: <WorkersPage />
   },
+  
   // Default redirect
   {
     path: '/account',
-    element: <Navigate to="/account/brands" replace />
+    element: <Navigate to={ROUTES.BRANDS.path} replace />
   },
+  
   // Catch-all for account section
   {
     path: '/account/*',
-    element: <Navigate to="/account/brands" replace />
+    element: <Navigate to={ROUTES.BRANDS.path} replace />
   }
 ];

@@ -1,4 +1,6 @@
 // Central barrel file for exporting all store functions
+// Import modalStore from new location
+import { modalStore } from '@modal';
 
 // From eventStore
 export {
@@ -16,14 +18,12 @@ export {
   AccountContext
 } from './accountStore';
 
-// From modalStore
-export {
-  openModal,
-  closeModal,
-  showError,
-  showConfirmation,
-  useModalStore
-} from './modalStore';
+
+
+// Export modalStore directly without trying to access non-existent methods
+export { 
+  modalStore,
+};
 
 // From pageStore
 export {
@@ -45,5 +45,3 @@ export {
   initPageStore
 } from './pageStore';
 
-// From formStore
-export { default as FormStore } from './FormStore';

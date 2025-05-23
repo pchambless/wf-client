@@ -1,40 +1,36 @@
 import React, { useState } from 'react';
+import { observer } from 'mobx-react-lite';
 import { Box, Typography, FormControl, Select, MenuItem, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { usePollVar } from '@utils/externalStoreDel';
-import { setAccount } from '@utils/accountManager';
+import accountStore from '@stores/accountStore';
 import createLogger from '@utils/logger';
 
 const log = createLogger('AccountSelector');
 
-const AccountSelector = ({ onClose }) => {
+const AccountSelector = observer(({ onClose }) => {
   const navigate = useNavigate();
-  const accountList = usePollVar(':userAcctList', []);
-  const currentAccount = usePollVar(':acctID');
   const [isLoading, setIsLoading] = useState(false);
   
+  // Access accounts directly from MobX store
+  const accountList = accountStore.userAcctList || [];
+  const currentAccount = accountStore.currentAcctID;
+  
+  // Handle account switching
   const handleAccountChange = async (event) => {
     const newAccountId = event.target.value;
+    log.debug(`Changing account to: ${newAccountId}`);
     setIsLoading(true);
     
     try {
-      const success = await setAccount(newAccountId);
-      if (success) {
-        navigate('/welcome', { replace: true });
-        if (onClose) onClose();
-      }
+      accountStore.setCurrentAcctID(newAccountId);
+      navigate('/welcome', { replace: true });
+      if (onClose) onClose();
     } catch (error) {
       log.error('Error switching accounts:', error);
     } finally {
       setIsLoading(false);
     }
   };
-  
-  // Find current account name
-  const currentAccountName = React.useMemo(() => {
-    const account = accountList.find(a => Number(a.acctID) === Number(currentAccount));
-    return account ? account.acctName : "Unknown Account";
-  }, [accountList, currentAccount]);
 
   return (
     <Box sx={{ p: 2 }}>
@@ -58,7 +54,12 @@ const AccountSelector = ({ onClose }) => {
                 </Box>
               );
             }
-            return currentAccountName;
+            
+            // Find current account name
+            const account = accountList.find(a => 
+              String(a.acctID) === String(currentAccount)
+            );
+            return account ? account.acctName : "Select Account";
           }}
         >
           {accountList.map(account => (
@@ -70,6 +71,6 @@ const AccountSelector = ({ onClose }) => {
       </FormControl>
     </Box>
   );
-};
+});
 
 export default AccountSelector;

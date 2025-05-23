@@ -1,17 +1,22 @@
 import React from 'react';
-import Welcome from '../pages/Welcome';
+import { ROUTES } from '@config/RouteConstants';
+import Dashboard from '@pages/1-Dashboard';
 import createLogger from '../utils/logger';
 
 const log = createLogger('DashboardRoutes');
 
-// Make sure this is exported as a named export
+/**
+ * Dashboard routes - using RouteConstants as source of truth
+ */
 export const dashboardRoutes = [
   {
-    path: '/welcome',
-    element: <Welcome />,
-    label: 'Dashboard'
+    ...ROUTES.DASHBOARD,
+    element: <Dashboard />
   }
 ];
 
-// For debugging, add this
-log.debug('Dashboard routes loaded:', dashboardRoutes);
+// For debugging
+log.debug('Dashboard routes loaded:', {
+  routeCount: dashboardRoutes.length,
+  paths: dashboardRoutes.map(r => r.path)
+});

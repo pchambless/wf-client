@@ -11,7 +11,8 @@ const PageHeader = ({
   icon: Icon,
   actions,
   helpText,
-  onHelp
+  onHelp,
+  selectors  // New prop for selectors
 }) => {
   return (
     <Box sx={{ mb: 3 }}>
@@ -65,6 +66,13 @@ const PageHeader = ({
       )}
       
       <Divider />
+      
+      {/* Add selectors below the divider if provided */}
+      {selectors && (
+        <Box sx={{ mt: 2, mb: 1 }}>
+          {selectors}
+        </Box>
+      )}
     </Box>
   );
 };

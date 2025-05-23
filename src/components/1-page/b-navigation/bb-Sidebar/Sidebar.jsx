@@ -1,58 +1,40 @@
 import React from 'react';
-import { 
-  Box, 
-  Drawer, 
-  useMediaQuery, 
-  useTheme, 
-  Divider 
-} from '@mui/material';
-import SidebarHeader from '@sidebar/components/SidebarHeader';
-import SidebarContent from '@sidebar/SidebarContent';
+import { Drawer, useMediaQuery, useTheme } from '@mui/material';
+import SidebarContent from './SidebarContent';
+import createLogger from '@utils/logger';
 
-const DRAWER_WIDTH = 280;
+const log = createLogger('Sidebar.MobX');
 
 const Sidebar = ({ open, onClose }) => {
+  log.info('Rendering');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
+  const drawerProps = isMobile
+    ? {
+        variant: 'temporary',
+        anchor: 'left',
+        sx: { '& .MuiDrawer-paper': { width: 280 } }
+      }
+    : {
+        variant: 'persistent',
+        anchor: 'left',
+        sx: { 
+          '& .MuiDrawer-paper': { 
+            width: 280,
+            borderRight: `1px solid ${theme.palette.divider}`,
+            boxSizing: 'border-box'
+          }
+        }
+      };
+  
   return (
     <Drawer
-      variant={isMobile ? "temporary" : "persistent"}
       open={open}
       onClose={onClose}
-      sx={{
-        width: DRAWER_WIDTH,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: DRAWER_WIDTH,
-          boxSizing: 'border-box',
-        },
-      }}
+      {...drawerProps}
     >
-      {/* Top section with logo and title */}
-      <SidebarHeader />
-      
-      <Divider />
-      
-      {/* Main sidebar content */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column',
-        height: '100%',
-        overflow: 'hidden'
-      }}>
-        <SidebarContent onClose={isMobile ? onClose : undefined} />
-        
-        {/* Footer with user info */}
-        <Box sx={{ mt: 'auto', p: 2, borderTop: 1, borderColor: 'divider' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box>
-              {/* User display from store */}
-              User: {/* Get from store */}
-            </Box>
-          </Box>
-        </Box>
-      </Box>
+      <SidebarContent onClose={onClose} />
     </Drawer>
   );
 };

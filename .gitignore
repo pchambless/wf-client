@@ -32,3 +32,24 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Generated files
+/migration-tools/output/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Logs
+*.log
+/logs/
+
+# IDE-specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# SQL data samples that might contain sensitive data
+/migration-tools/samples/

@@ -1,63 +1,52 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import IngredientTypes from '../pages/Ingredients/IngredientTypes';
-import Ingredients from '../pages/Ingredients/Ingredients';
-import IngredientBatches from '../pages/Ingredients/IngredientBatches';
-import { Box, Typography } from '@mui/material';
 import createLogger from '@utils/logger';
+import { ROUTES } from '../config/RouteConstants'; 
 
-// Add logging to debug component exports
+// Update imports to use the new numbered path structure
+import IngredientTypes from '@pages/2-Ingredient/01-Types';
+import Ingredients from '@pages/2-Ingredient/02-Ingredients';
+import IngredientBatches from '@pages/2-Ingredient/03-Batches';
+
+
 const log = createLogger('IngredientRoutes');
 
-// Debug log the components to ensure they're properly exported
 log.debug('Component checking:', {
   isIngredientTypesComponent: typeof IngredientTypes === 'function',
   isIngredientsComponent: typeof Ingredients === 'function',
   isIngredientBatchesComponent: typeof IngredientBatches === 'function'
 });
 
-// Error placeholder component
-const ErrorPlaceholder = ({ message }) => (
-  <Box sx={{ p: 3, border: '1px solid red', borderRadius: 1 }}>
-    <Typography color="error" variant="h6">Component Error</Typography>
-    <Typography>{message}</Typography>
-  </Box>
-);
-
 /**
- * Ingredient management routes - CLEAN IMPLEMENTATION
+ * Ingredient management routes - using RouteConstants as source of truth
  */
 export const ingredientRoutes = [
-  // Core path 3: Ingredient Batches
+  // Primary route - ingredient types (spread all properties from constants)
   {
-    path: "/ingredients/:ingrID/batches",
-    element: typeof IngredientBatches === 'function'
-      ? <IngredientBatches />
-      : <ErrorPlaceholder message={`IngredientBatches component is not valid`} />,
-    label: "Ingredient Batches"
+    ...ROUTES.INGREDIENT_TYPES,
+    element: <IngredientTypes />
   },
   
-  // Core path 2: Ingredients for a specific type
+  // Ingredients by type
   {
-    path: "/ingredients/:ingrTypeID/ingredients",
-    element: typeof Ingredients === 'function'
-      ? <Ingredients />
-      : <ErrorPlaceholder message={`Ingredients component is not valid`} />,
-    label: "Ingredients"
+    ...ROUTES.INGREDIENTS,
+    element: <Ingredients />
   },
   
-  // Core path 1: Ingredient Types with account ID
+  // Ingredient batches
   {
-    path: "/ingredients/:acctID",
-    element: typeof IngredientTypes === 'function'
-      ? <IngredientTypes />
-      : <ErrorPlaceholder message={`IngredientTypes component is not valid`} />,
-    label: "Ingredient Types"
+    ...ROUTES.INGREDIENT_BATCHES,
+    element: <IngredientBatches />
   },
   
-  // Base route - redirect to welcome
+  // Redirects - keep these as they're not in RouteConstants
   {
     path: "/ingredients",
-    element: <Navigate to="/welcome" replace />
+    element: <Navigate to={ROUTES.INGREDIENT_TYPES.path} replace />
+  },
+  
+  {
+    path: "/ingredients/smart",
+    element: <Navigate to={ROUTES.INGREDIENT_TYPES.path} replace />
   }
 ];

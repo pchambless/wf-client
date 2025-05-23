@@ -5,8 +5,7 @@ import { BrowserRouter as Router } from 'react-router-dom';  // Remove unused Ro
 import { Provider } from 'react-redux';
 import store from './utils/externalStoreDel';
 import ErrorBoundary from './components/ErrorBoundary';
-import Modal from './components/3-common/a-modal/Modal';
-import { useModalStore } from './stores/modalStore';
+import { Modal, useModalStore } from '@modal'; // Import both from @modal
 import createLogger, { configureLogger } from './utils/logger';
 import { disableBrowserFetchLogs } from './utils/fetchLogHelper';
 import { ActionHandlerProvider } from './actions/ActionHandlerContext';
@@ -97,10 +96,12 @@ const App = () => {
               <BreadcrumbProvider>
                 {/* Replace all the Routes with your new AppRoutes component */}
                 <AppRoutes />
-                <ModalContainer />
               </BreadcrumbProvider>
             </ActionHandlerProvider>
           </ErrorBoundary>
+          
+          {/* IMPORTANT: Modal must be at root level */}
+          <ModalContainer />
         </ThemeProvider>
       </Router>
     </Provider>

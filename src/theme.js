@@ -231,6 +231,24 @@ export const themeOptions = {
             display: 'none',  // Hide pagination
           },
         },
+        cell: {
+          '&.sticky-actions-cell': {
+            position: 'sticky !important',
+            right: 0,
+            backgroundColor: 'background.paper',
+            zIndex: 3,
+            boxShadow: '-2px 0 4px rgba(0,0,0,0.1)'
+          }
+        },
+        columnHeader: {
+          '&.sticky-actions-header': {
+            position: 'sticky !important',
+            right: 0,
+            backgroundColor: 'background.paper',
+            zIndex: 3,
+            boxShadow: '-2px 0 4px rgba(0,0,0,0.1)'
+          }
+        }
       },
       defaultProps: {
         density: 'compact',
@@ -261,6 +279,7 @@ export const themeOptions = {
   },
 };
 
+// Create the actual theme from themeOptions
 const theme = createTheme(themeOptions);
 
 export default theme;

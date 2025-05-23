@@ -1,100 +1,40 @@
-import React, { createContext, useState, useContext, useMemo, useCallback, useEffect, useRef } from 'react';
-import { getVar } from '../utils/externalStoreDel';
-import Modal from '../components/3-common/a-modal/Modal'; // Import the renamed Modal component
+import React, { createContext, useContext } from 'react';
+import { modalStore } from '../components/3-common/a-modal';
+import createLogger from '@utils/logger';
 
+const log = createLogger('ModalContext');
+
+// Create context just for compatibility
 const ModalContext = createContext();
 
 export const ModalProvider = ({ children }) => {
-  const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [modalConfig, setModalConfig] = useState({});
-  const [pendingModalType, setPendingModalType] = useState(null);
-  const [pendingAdditionalProps, setPendingAdditionalProps] = useState({});
-  const previousFocusRef = useRef(null);
-
-  const mapping = useMemo(() => ({
-    deleteConfirm: {
-      title: 'Confirm Deletion',
-      type: 'message',
-      message: 'Are you sure you want to delete this item?'
-    },
-    textMessage: {
-      title: 'Text Message',
-      type: 'message',
-      message: 'This is a text message modal.'
-    },
-    error: {
-      title: 'Error',
-      type: 'message',
-      message: 'An error occurred.'
-    }
-  }), []);
-
-  const closeModal = useCallback(() => {
-    console.log('ModalContext: Closing modal');
-    setModalIsOpen(false);
-    setModalConfig({});
-    setPendingModalType(null);
-    setPendingAdditionalProps({});
-    if (previousFocusRef.current) {
-      previousFocusRef.current.focus();
-    }
-  }, []);
-
-  const openModal = useCallback((modalType, additionalProps = {}) => {
-    const userAuthenticated = getVar(':isAuth') === '1';
-    console.log('ModalContext: Opening modal', { modalType, userAuthenticated, additionalProps });
-
-    if (userAuthenticated) {
-      previousFocusRef.current = document.activeElement;
-      setPendingModalType(modalType);
-      setPendingAdditionalProps(additionalProps);
-    } else {
-      console.log('ModalContext: User not authenticated, modal not opened');
-    }
-  }, []);
-
-  useEffect(() => {
-    if (pendingModalType) {
-      console.log('ModalContext: Processing pending modal', { pendingModalType, pendingAdditionalProps });
-      const config = mapping[pendingModalType];
-      if (config) {
-        const newConfig = { ...config, ...pendingAdditionalProps };
-        setModalConfig(newConfig);
-        console.log('ModalContext: Modal config set:', newConfig);
-        setModalIsOpen(true);
-      } else {
-        console.error(`ModalContext: Unknown modal type: ${pendingModalType}`);
-      }
-      setPendingModalType(null);
-      setPendingAdditionalProps({});
-    }
-  }, [pendingModalType, pendingAdditionalProps, mapping]);
-
-  console.log('ModalProvider rendering', { modalIsOpen, modalConfig });
-
-  const renderModal = () => {
-    if (!modalIsOpen || !modalConfig.type) {
-      console.log('ModalContext: No modal to render');
-      return null;
-    }
-
-    console.log('ModalContext: Rendering modal of type:', modalConfig.type);
-
-    return (
-      <Modal
-        isOpen={modalIsOpen}
-        onRequestClose={closeModal}
-        content={modalConfig}
-      />
-    );
+  log.warn('ModalProvider is deprecated. Use <Modal/> component directly in App.js');
+  
+  // Forward all operations to modalStore
+  const openModal = (modalType, additionalProps = {}) => {
+    log.info('Forwarding to modalStore:', { modalType });
+    modalStore.openModal(modalType, additionalProps);
   };
 
+  const closeModal = () => {
+    modalStore.closeModal();
+  };
+
+  // Provide backward compatibility
   return (
-    <ModalContext.Provider value={{ modalIsOpen, modalConfig, openModal, closeModal }}>
+    <ModalContext.Provider value={{ 
+      modalIsOpen: modalStore.isOpen, 
+      modalConfig: modalStore.config,
+      openModal, 
+      closeModal 
+    }}>
       {children}
-      {renderModal()}
+      {/* No need to render Modal here as it should be in App.js */}
     </ModalContext.Provider>
   );
 };
 
-export const useModalContext = () => useContext(ModalContext);
+export const useModalContext = () => {
+  log.warn('useModalContext is deprecated. Import useModal from components/3-common/a-modal');
+  return useContext(ModalContext);
+};

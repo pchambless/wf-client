@@ -1,6 +1,7 @@
 import React from 'react';
 import { TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import createLogger from '@utils/logger';
+import { safeProp } from '@utils/mobxHelpers';
 
 // Use logger consistently
 const logger = createLogger('FormField.Renderer');
@@ -102,5 +103,21 @@ class FormFieldRenderer {
     );
   }
 }
+
+const Renderer = ({ field, value, error, onChange, disabled }) => {
+  // Get the appropriate renderer for this field type
+  const FieldRenderer = getRendererForType(field.type);
+  
+  // Pass safe props to the specific renderer
+  return (
+    <FieldRenderer
+      field={field} // Already safe from FormField
+      value={value} // Already safe from FormField
+      error={error} // Already safe from FormField
+      onChange={onChange}
+      disabled={disabled}
+    />
+  );
+};
 
 export default FormFieldRenderer;

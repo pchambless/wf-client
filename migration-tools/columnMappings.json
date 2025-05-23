@@ -1,0 +1,444 @@
+{
+  "generated": "2025-05-21T00:09:10.414Z",
+  "entities": {
+    "acctList": {
+      "tableName": "accounts",
+      "columns": {}
+    },
+    "brndList": {
+      "tableName": "brands",
+      "columns": {
+        "brndID": {
+          "dbColumn": "id",
+          "sourceColumn": "id",
+          "primaryKey": true
+        },
+        "brndName": {
+          "dbColumn": "`name`",
+          "sourceColumn": "`name`",
+          "displayType": "text"
+        },
+        "brndComments": {
+          "dbColumn": "comments",
+          "sourceColumn": "comments",
+          "displayType": "multiline",
+          "multiLine": true
+        },
+        "brndURL": {
+          "dbColumn": "`url`",
+          "sourceColumn": "`url`",
+          "displayType": "text"
+        },
+        "acctID": {
+          "dbColumn": "account_id",
+          "sourceColumn": "account_id",
+          "isParentId": true
+        }
+      }
+    },
+    "ingrBtchList": {
+      "tableName": "global_measure_units",
+      "columns": {
+        "btchID": {
+          "dbColumn": "id",
+          "sourceColumn": "id",
+          "primaryKey": true
+        },
+        "btchNbr": {
+          "dbColumn": "batch_number",
+          "sourceColumn": "batch_number",
+          "displayType": "text"
+        },
+        "vndrID": {
+          "dbColumn": "vendor_id",
+          "sourceColumn": "vendor_id",
+          "selList": "vndrList"
+        },
+        "brndID": {
+          "dbColumn": "brand_id",
+          "sourceColumn": "brand_id",
+          "selList": "brndList"
+        },
+        "purchDate": {
+          "dbColumn": "purchase_date",
+          "sourceColumn": "'%Y-%m-%d')",
+          "fromDirective": true,
+          "displayType": "date"
+        },
+        "unitQty": {
+          "dbColumn": "unit_quantity",
+          "sourceColumn": "unit_quantity",
+          "displayType": "number"
+        },
+        "unitPrice": {
+          "dbColumn": "unit_price",
+          "sourceColumn": "unit_price",
+          "displayType": "float"
+        },
+        "purchQty": {
+          "dbColumn": "purchase_quantity",
+          "sourceColumn": "purchase_quantity",
+          "displayType": "number"
+        },
+        "measID": {
+          "dbColumn": "global_measure_unit_id",
+          "sourceColumn": "global_measure_unit_id",
+          "selList": "measList"
+        },
+        "lotNbr": {
+          "dbColumn": "lot_number",
+          "sourceColumn": "lot_number",
+          "displayType": "text"
+        },
+        "bestByDate": {
+          "dbColumn": "best_by_date",
+          "sourceColumn": "best_by_date,'%Y-%m-%d')",
+          "fromDirective": true,
+          "displayType": "date"
+        },
+        "purch_dtl": {
+          "dbColumn": "global_measure_unit_id))",
+          "sourceColumn": "global_measure_unit_id))",
+          "dbIgnore": true,
+          "displayType": "multiline",
+          "multiLine": true
+        },
+        "comments": {
+          "dbColumn": "comments",
+          "sourceColumn": "comments",
+          "displayType": "multiline",
+          "multiLine": true
+        },
+        "ingrID": {
+          "dbColumn": "ingredient_id",
+          "sourceColumn": "ingredient_id",
+          "isParentId": true
+        }
+      }
+    },
+    "ingrList": {
+      "tableName": "ingredients",
+      "columns": {
+        "ingrID": {
+          "dbColumn": "id",
+          "sourceColumn": "id",
+          "primaryKey": true
+        },
+        "ingrName": {
+          "dbColumn": "`name`",
+          "sourceColumn": "`name`",
+          "displayType": "text"
+        },
+        "ingrActive": {
+          "dbColumn": "`active`",
+          "sourceColumn": "`active`",
+          "dbIgnore": true,
+          "displayType": "text"
+        },
+        "ingrCode": {
+          "dbColumn": "`code`",
+          "sourceColumn": "`code`",
+          "displayType": "text"
+        },
+        "ingrDesc": {
+          "dbColumn": "`description`",
+          "sourceColumn": "`description`",
+          "displayType": "multiline",
+          "multiLine": true
+        },
+        "measID": {
+          "dbColumn": "default_measure_unit",
+          "sourceColumn": "default_measure_unit",
+          "selList": "measList"
+        },
+        "vndrID": {
+          "dbColumn": "default_vendor",
+          "sourceColumn": "default_vendor",
+          "selList": "vndrList"
+        },
+        "ingrGrmsPerOz": {
+          "dbColumn": "grams_per_ounce",
+          "sourceColumn": "grams_per_ounce",
+          "displayType": "number"
+        },
+        "ingrTypeID": {
+          "dbColumn": "ingredient_type_id",
+          "sourceColumn": "ingredient_type_id",
+          "isParentId": true
+        }
+      }
+    },
+    "ingrTypeList": {
+      "tableName": "ingredient_types",
+      "columns": {
+        "ingrTypeID": {
+          "dbColumn": "id",
+          "sourceColumn": "id",
+          "primaryKey": true
+        },
+        "ingrTypeName": {
+          "dbColumn": "name",
+          "sourceColumn": "name",
+          "displayType": "text"
+        },
+        "ingrTypeDesc": {
+          "dbColumn": "description",
+          "sourceColumn": "description",
+          "displayType": "multiline",
+          "multiLine": true
+        },
+        "acctID": {
+          "dbColumn": "account_id",
+          "sourceColumn": "account_id",
+          "isParentId": true
+        }
+      }
+    },
+    "prodBtchList": {
+      "tableName": "product_batches",
+      "columns": {
+        "prodBtchID": {
+          "dbColumn": "id",
+          "sourceColumn": "id",
+          "primaryKey": true
+        },
+        "btchNbr": {
+          "dbColumn": "batch_number",
+          "sourceColumn": "batch_number",
+          "displayType": "text"
+        },
+        "btchStart": {
+          "dbColumn": "batch_start,'%Y-%m-%d')",
+          "sourceColumn": "batch_start,'%Y-%m-%d')",
+          "displayType": "date"
+        },
+        "btchLoc": {
+          "dbColumn": "location",
+          "sourceColumn": "location",
+          "displayType": "text"
+        },
+        "btchQty": {
+          "dbColumn": "batch_quantity",
+          "sourceColumn": "batch_quantity",
+          "displayType": "number"
+        },
+        "measID": {
+          "dbColumn": "global_measure_unit_id",
+          "sourceColumn": "global_measure_unit_id",
+          "selList": "measList"
+        },
+        "bestByDate": {
+          "dbColumn": "best_by_date,'%Y-%m-%d')",
+          "sourceColumn": "best_by_date,'%Y-%m-%d')",
+          "displayType": "date"
+        },
+        "comments": {
+          "dbColumn": "comments",
+          "sourceColumn": "comments",
+          "displayType": "multiline",
+          "multiLine": true
+        },
+        "prodID": {
+          "dbColumn": "product_id",
+          "sourceColumn": "product_id",
+          "isParentId": true
+        }
+      }
+    },
+    "prodList": {
+      "tableName": "products",
+      "columns": {
+        "prodID": {
+          "dbColumn": "id",
+          "sourceColumn": "id",
+          "primaryKey": true
+        },
+        "prodName": {
+          "dbColumn": "`name`",
+          "sourceColumn": "`name`",
+          "displayType": "text"
+        },
+        "prodCode": {
+          "dbColumn": "`code`",
+          "sourceColumn": "`code`",
+          "displayType": "text"
+        },
+        "prodDfltLoc": {
+          "dbColumn": "location",
+          "sourceColumn": "location",
+          "displayType": "text"
+        },
+        "prodDfltBestBy": {
+          "dbColumn": "best_by_days",
+          "sourceColumn": "best_by_days",
+          "displayType": "number"
+        },
+        "prodDesc": {
+          "dbColumn": "`description`",
+          "sourceColumn": "`description`",
+          "displayType": "multiline",
+          "multiLine": true
+        },
+        "prodUpcItemRef": {
+          "dbColumn": "upc_item_reference",
+          "sourceColumn": "upc_item_reference",
+          "displayType": "text"
+        },
+        "prodUpcChkDgt": {
+          "dbColumn": "upc_check_digit",
+          "sourceColumn": "upc_check_digit",
+          "displayType": "text"
+        },
+        "prodTypeID": {
+          "dbColumn": "product_type_id",
+          "sourceColumn": "product_type_id",
+          "isParentId": true
+        }
+      }
+    },
+    "prodTypeList": {
+      "tableName": "product_types",
+      "columns": {
+        "prodTypeID": {
+          "dbColumn": "id",
+          "sourceColumn": "id",
+          "primaryKey": true
+        },
+        "prodTypeName": {
+          "dbColumn": "name",
+          "sourceColumn": "name",
+          "displayType": "text"
+        },
+        "acctID": {
+          "dbColumn": "account_id",
+          "sourceColumn": "account_id",
+          "isParentId": true
+        }
+      }
+    },
+    "rcpeList": {
+      "tableName": "product_recipes",
+      "columns": {
+        "rcpeID": {
+          "dbColumn": "id",
+          "sourceColumn": "prd_rcpe_id",
+          "fromDirective": true
+        },
+        "ingrOrdr": {
+          "dbColumn": "ingredient_order",
+          "sourceColumn": "ingr_ordr",
+          "fromDirective": true
+        },
+        "ingrName": {
+          "dbColumn": "ingr_name",
+          "sourceColumn": "ingr_name",
+          "dbIgnore": true,
+          "displayType": "text"
+        },
+        "qtyMeas": {
+          "dbColumn": "ingr_qty_meas",
+          "sourceColumn": "ingr_qty_meas",
+          "dbIgnore": true,
+          "displayType": "text"
+        },
+        "prodID": {
+          "dbColumn": "product_id",
+          "sourceColumn": "prd_id",
+          "fromDirective": true
+        },
+        "ingrTypeSel": {
+          "dbColumn": "ingr_type_id",
+          "sourceColumn": "ingr_type_id",
+          "selList": "ingrTypeList"
+        },
+        "ingrSel": {
+          "dbColumn": "ingredient_id",
+          "sourceColumn": "ingr_id",
+          "fromDirective": true,
+          "selList": "ingrList"
+        },
+        "measID": {
+          "dbColumn": "global_measure_unit_id",
+          "sourceColumn": "ingr_meas_id",
+          "fromDirective": true,
+          "selList": "measList"
+        },
+        "Qty": {
+          "dbColumn": "quantity",
+          "sourceColumn": "ingr_qty",
+          "fromDirective": true
+        },
+        "Comments": {
+          "dbColumn": "comments",
+          "sourceColumn": "prd_ingr_desc",
+          "fromDirective": true
+        },
+        "a": {
+          "dbColumn": "v_prd_rcpe_dtl",
+          "sourceColumn": "v_prd_rcpe_dtl"
+        }
+      }
+    },
+    "vndrList": {
+      "tableName": "vendors",
+      "columns": {
+        "vndrID": {
+          "dbColumn": "id",
+          "sourceColumn": "id",
+          "primaryKey": true
+        },
+        "vndrName": {
+          "dbColumn": "`name`",
+          "sourceColumn": "`name`",
+          "displayType": "text"
+        },
+        "vndrContactName": {
+          "dbColumn": "contact_name",
+          "sourceColumn": "contact_name",
+          "displayType": "text"
+        },
+        "vndrContactPhone": {
+          "dbColumn": "contact_phone",
+          "sourceColumn": "contact_phone",
+          "displayType": "text"
+        },
+        "vndrContactEmail": {
+          "dbColumn": "contact_email",
+          "sourceColumn": "contact_email",
+          "displayType": "text"
+        },
+        "vndrComments": {
+          "dbColumn": "comments",
+          "sourceColumn": "comments",
+          "displayType": "multiline",
+          "multiLine": true
+        },
+        "acctID": {
+          "dbColumn": "account_id",
+          "sourceColumn": "account_id",
+          "isParentId": true
+        }
+      }
+    },
+    "wrkrList": {
+      "tableName": "workers",
+      "columns": {
+        "wrkrID": {
+          "dbColumn": "id",
+          "sourceColumn": "id",
+          "primaryKey": true
+        },
+        "wrkrName": {
+          "dbColumn": "`name`",
+          "sourceColumn": "`name`",
+          "displayType": "text"
+        },
+        "acctID": {
+          "dbColumn": "account_id",
+          "sourceColumn": "account_id",
+          "isParentId": true
+        }
+      }
+    }
+  }
+}

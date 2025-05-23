@@ -119,6 +119,9 @@ function resolveParams(requiredParams, params = {}, varMap = {}) {
 
 // Execute event with caller-provided variable map
 export const execEvent = async (eventConfig, params = {}, varMap = {}) => {
+  // Add debug logging at start of execution
+  console.log(`📡 Executing event: ${eventConfig}`, { params });
+  
   const cacheKey = JSON.stringify({ event: eventConfig, params });
   
   // Check cache first - no changes needed here
@@ -146,6 +149,7 @@ export const execEvent = async (eventConfig, params = {}, varMap = {}) => {
         }`;
         
         log.error(errorMsg);
+        console.error(`❌ Event ${eventConfig} failed:`, new Error(errorMsg));
         throw new Error(errorMsg);
       }
 
@@ -155,6 +159,7 @@ export const execEvent = async (eventConfig, params = {}, varMap = {}) => {
       
       if (missing.length > 0) {
         log.error('Missing parameters:', { event: eventConfig, missing });
+        console.error(`❌ Event ${eventConfig} failed:`, new Error(`Missing required parameters: ${missing.join(', ')}`));
         throw new Error(`Missing required parameters: ${missing.join(', ')}`);
       }
       
@@ -167,6 +172,12 @@ export const execEvent = async (eventConfig, params = {}, varMap = {}) => {
       
       const response = await execEventType(eventConfig, resolved);
       
+      // Add success debug log after execution
+      console.log(`✅ Event ${eventConfig} succeeded:`, { 
+        resultCount: Array.isArray(response) ? response.length : 'not an array',
+        firstItem: Array.isArray(response) && response.length > 0 ? response[0] : null
+      });
+      
       // Clear cache after debounce
       setTimeout(() => {
         executionCache.delete(cacheKey);
@@ -174,6 +185,9 @@ export const execEvent = async (eventConfig, params = {}, varMap = {}) => {
       
       resolve(response);
     } catch (error) {
+      // Add failure debug log
+      console.error(`❌ Event ${eventConfig} failed:`, error);
+      
       executionCache.delete(cacheKey);
       reject(error);
     }
@@ -259,3 +273,5 @@ export const resetEventTypeService = () => {
   initPromise = null;
   log.info('EventTypeService reset');
 };
+
+

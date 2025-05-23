@@ -1,7 +1,8 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '../components/1-page/a-layout/MainLayout';
-import Login from '../pages/Login/index';
+import Login from '../pages/0-Login/index';
+import Dashboard from '@dashboard'; // Import from @dashboard
 import { dashboardRoutes as importedDashboardRoutes } from './dashboard';
 import { ingredientRoutes as importedIngredientRoutes } from './ingredients';
 import { productRoutes as importedProductRoutes } from './products';
@@ -46,16 +47,21 @@ const AppRoutes = () => {
     );
   }
 
+  log.debug('Rendering routes:', {
+    ingredientRoutes: ingredientRoutes.map(r => r.path)
+  });
+
   return (
     <Routes>
-      {/* Login page - outside of MainLayout */}
+      {/* Login page as root/index route */}
+      <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
 
-      {/* Root redirects to login instead of welcome */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-
-      {/* All other pages - wrapped in MainLayout */}
+      {/* Dashboard and other pages in MainLayout */}
       <Route element={<MainLayout />}>
+        {/* Change Dashboard to a different path */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        
         {/* Dashboard routes */}
         {dashboardRoutes.map((route, index) => (
           <Route 
@@ -93,8 +99,20 @@ const AppRoutes = () => {
         ))}
       </Route>
       
-      {/* Catch-all for 404 - direct to login */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      {/* Catch-all for 404 */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+
+      {/* Debug route for development */}
+      {process.env.NODE_ENV === 'development' && (
+        <Route path="/route-debug" element={
+          <pre>{JSON.stringify({
+            dashboard: dashboardRoutes,
+            ingredients: ingredientRoutes,
+            products: productRoutes,
+            account: accountRoutes
+          }, null, 2)}</pre>
+        } />
+      )}
     </Routes>
   );
 };

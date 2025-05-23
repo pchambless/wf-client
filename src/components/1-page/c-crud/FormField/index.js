@@ -1,8 +1,7 @@
-import FormField from './FormField';
-import FormFieldRenderer from './Renderer';
-import { FormFieldPresenter } from './Presenter';
-
-// Export components
-export { FormFieldRenderer };
-export { FormFieldPresenter };
-export default FormField;
+/**
+ * FormField module exports
+ */
+export { default } from './FormField';
+export { default as rendererRegistry } from './renderers';
+export { FIELD_TYPES } from './types/FieldTypes';
+export { default as FormFieldStore } from './store/FormFieldStore';

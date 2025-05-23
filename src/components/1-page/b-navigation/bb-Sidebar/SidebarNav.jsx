@@ -1,180 +1,137 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { 
-  Box, 
-  Typography, 
   List, 
   ListItem, 
-  ListItemButton,
   ListItemIcon, 
   ListItemText, 
+  Collapse, 
   Divider 
 } from '@mui/material';
-
-// Replace with valid Material UI icons
-import CategoryIcon from '@mui/icons-material/Category';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
-import StorefrontIcon from '@mui/icons-material/Storefront';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
-import PeopleIcon from '@mui/icons-material/People';
-import ScaleIcon from '@mui/icons-material/Scale';
-import InventoryIcon from '@mui/icons-material/Inventory';
-import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
-import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
-
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord'; // Use this instead of CircleIcon
+import { useNavigate, useLocation } from 'react-router-dom';
+import * as Icons from '@mui/icons-material';
+// Update this import to use the new module
+import { getNavigationSections } from '../../../../navigation/NavigationUtils';
 import createLogger from '@utils/logger';
 
 const log = createLogger('SidebarNav');
 
-const SidebarNav = ({ onClose }) => {
+const SidebarNav = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const sections = getNavigationSections();
   
-  // Improved navigation function that doesn't trigger unnecessary account changes
-  const navigateTo = (path) => {
-    // Simple debug logging
-    log.debug(`Navigating to ${path}`);
-    
-    // Direct navigation without additional logic for MVP
-    navigate(path);
-    
-    // Close sidebar on mobile if needed
-    if (onClose) onClose();
+  // Track expanded sections
+  const [expandedSections, setExpandedSections] = useState(
+    sections.reduce((acc, section) => {
+      acc[section.id] = true; // Start with all sections expanded
+      return acc;
+    }, {})
+  );
+  
+  // Toggle section expansion
+  const toggleSection = (sectionId) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
   };
-
+  
+  // Check if a route is active
+  const isActiveRoute = (path) => {
+    // For parameterized routes, we need to check the base path
+    const basePath = path.split('/:')[0];
+    return location.pathname === path || 
+           location.pathname.startsWith(`${basePath}/`);
+  };
+  
+  // Navigate to route
+  const handleNavigate = (routeId, path, requiredParams) => {
+    // For routes that require params, we could:
+    if (requiredParams && requiredParams.length > 0) {
+      log.info(`Route ${routeId} requires parameters:`, requiredParams);
+      
+      // For now, if it's an ingredients route, navigate to ingredient types first
+      if (path.includes('/ingredients/') && path.includes('/:ingrTypeID/')) {
+        navigate('/ingredients/types');
+        return;
+      }
+      
+      // For product routes, navigate to product types first
+      if (path.includes('/products/') && path.includes('/:prodTypeID/')) {
+        navigate('/products/types');
+        return;
+      }
+    }
+    
+    navigate(path);
+  };
+  
   return (
-    <Box>
-      {/* Business Definition Section */}
-      <Typography 
-        variant="subtitle2" 
-        sx={{ 
-          px: 2,
-          mb: 1, 
-          fontWeight: 'bold',
-          textTransform: 'uppercase'
-        }}
-      >
-        Define your Business
-      </Typography>
-      
-      <List>
-        {/* Ingredients Subsection */}
-        <ListItem sx={{ pt: 1 }}>
-          <ListItemText 
-            primary="Ingredients" 
-            primaryTypographyProps={{ 
-              variant: 'subtitle2',
-              color: 'text.secondary',
-              fontWeight: 'medium'
-            }} 
-          />
-        </ListItem>
+    <List component="nav" sx={{ width: '100%', bgcolor: 'background.paper' }}>
+      {sections.map(section => {
+        // Get the icon component - with fallback
+        const SectionIconName = section.icon || 'FiberManualRecord';
+        const SectionIcon = Icons[SectionIconName] || FiberManualRecordIcon;
         
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => navigateTo('/ingredients')}>
-            <ListItemIcon><RestaurantMenuIcon /></ListItemIcon>
-            <ListItemText primary="Ingredients" />
-          </ListItemButton>
-        </ListItem>
-        
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => navigateTo('/ingredient-types')}>
-            <ListItemIcon><CategoryIcon /></ListItemIcon>
-            <ListItemText primary="Ingredient Types" />
-          </ListItemButton>
-        </ListItem>
-        
-        {/* Products Subsection */}
-        <ListItem sx={{ pt: 1 }}>
-          <ListItemText 
-            primary="Products" 
-            primaryTypographyProps={{ 
-              variant: 'subtitle2',
-              color: 'text.secondary',
-              fontWeight: 'medium'
-            }} 
-          />
-        </ListItem>
-        
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => navigateTo('/products')}>
-            <ListItemIcon><ShoppingBasketIcon /></ListItemIcon>
-            <ListItemText primary="Products" />
-          </ListItemButton>
-        </ListItem>
-        
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => navigateTo('/product-types')}>
-            <ListItemIcon><RestaurantIcon /></ListItemIcon>
-            <ListItemText primary="Product Types" />
-          </ListItemButton>
-        </ListItem>
-        
-        {/* Account data Entities Subsection */}
-        <ListItem sx={{ pt: 1 }}>
-          <ListItemText 
-            primary="Account Tables"
-            primaryTypographyProps={{ 
-              variant: 'subtitle2',
-              color: 'text.secondary',
-              fontWeight: 'medium'
-            }} 
-          />
-        </ListItem>
-        
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => navigateTo('/brands')}>
-            <ListItemIcon><StorefrontIcon /></ListItemIcon>
-            <ListItemText primary="Brands" />
-          </ListItemButton>
-        </ListItem>
-        
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => navigateTo('/vendors')}>
-            <ListItemIcon><LocalShippingIcon /></ListItemIcon>
-            <ListItemText primary="Vendors" />
-          </ListItemButton>
-        </ListItem>
-        
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => navigateTo('/workers')}>
-            <ListItemIcon><PeopleIcon /></ListItemIcon>
-            <ListItemText primary="Workers" />
-          </ListItemButton>
-        </ListItem>
-        
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => navigateTo('/measures')}>
-            <ListItemIcon><ScaleIcon /></ListItemIcon>
-            <ListItemText primary="Measures" />
-          </ListItemButton>
-        </ListItem>
-      </List>
-      
-      {/* Add divider here */}
-      <Divider sx={{ my: 2 }} />
-      
-      {/* Batches Section */}
-      <Typography 
-        variant="subtitle2" 
-        sx={{ 
-          px: 2,
-          mb: 1, 
-          fontWeight: 'bold',
-          textTransform: 'uppercase'
-        }}
-      >
-        Batches
-      </Typography>
-      
-      <List>
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => navigateTo('/batches')}>
-            <ListItemIcon><InventoryIcon /></ListItemIcon>
-            <ListItemText primary="Manage Batches" />
-          </ListItemButton>
-        </ListItem>
-      </List>
-    </Box>
+        return (
+          <React.Fragment key={section.id}>
+            {/* Section header with color indicator */}
+            <ListItem 
+              button 
+              onClick={() => toggleSection(section.id)}
+              sx={{
+                borderLeft: `4px solid ${section.color || '#ccc'}`,
+                bgcolor: expandedSections[section.id] ? 'rgba(0, 0, 0, 0.04)' : 'transparent'
+              }}
+            >
+              <ListItemIcon>
+                <SectionIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary={section.label} 
+                primaryTypographyProps={{ fontWeight: 'bold' }}
+              />
+              {expandedSections[section.id] ? <ExpandLess /> : <ExpandMore />}
+            </ListItem>
+            
+            {/* Section items */}
+            <Collapse in={expandedSections[section.id]} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {section.items.map(item => {
+                  // Get the icon component - with fallback
+                  const ItemIconName = item.icon || 'FiberManualRecord';
+                  const ItemIcon = Icons[ItemIconName] || FiberManualRecordIcon;
+                  const isActive = isActiveRoute(item.path);
+                  
+                  return (
+                    <ListItem 
+                      key={item.id}
+                      button 
+                      onClick={() => handleNavigate(item.id, item.path, item.requiredParams)}
+                      sx={{ 
+                        pl: 4,
+                        borderLeft: isActive ? `4px solid ${section.color || '#ccc'}` : '4px solid transparent',
+                        bgcolor: isActive ? 'rgba(0, 0, 0, 0.08)' : 'transparent'
+                      }}
+                    >
+                      <ListItemIcon>
+                        <ItemIcon />
+                      </ListItemIcon>
+                      <ListItemText primary={item.label} />
+                    </ListItem>
+                  );
+                })}
+              </List>
+            </Collapse>
+            
+            <Divider variant="middle" />
+          </React.Fragment>
+        );
+      })}
+    </List>
   );
 };
 
